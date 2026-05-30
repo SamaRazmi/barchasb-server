@@ -1,0 +1,6 @@
+{
+  "platform": "node",
+  "node": {
+    "mirror": false
+  }
+}
