@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const AdMarkCtrl = require("../controllers/AdMarkCtrl");
-const authenticateToken = require("../middleware/authMidleware"); // در صورت نیاز
+const {authenticateToken} = require("../middleware/authMidleware"); // در صورت نیاز
 
 // ------------------- مدیریت مارک آگهی -------------------
 

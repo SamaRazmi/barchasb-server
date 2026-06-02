@@ -1,0 +1,91 @@
+const Question = require('../../../models/Question');
+
+const questionsData = [
+    // Vocabulary
+    { subject: "Vocabulary", level: "C2", text: "Il est parfaitement ___ des enjeux de cette situation.", options: ["conscient", "sûr", "certain", "clair"], correct: 0 },
+    { subject: "Vocabulary", level: "C2", text: "Il est nécessaire que tous les documents soient ___ examinés attentivement.", options: ["correctement", "rapidement", "partiellement", "peu"], correct: 0 },
+    { subject: "Vocabulary", level: "C2", text: "Nous supposons que le projet sera ___ dans les délais.", options: ["achevé", "terminé", "complété", "toutes correctes"], correct: 0 },
+    { subject: "Vocabulary", level: "C2", text: "Les résultats doivent être vérifiés ___ tous les critères.", options: ["selon", "conformément à", "d’après", "tous corrects"], correct: 0 },
+    { subject: "Vocabulary", level: "C2", text: "Son discours était si ___ qu'il a rallié même ses opposants.", options: ["péremptoire", "loquace", "prolixe", "fuligineux"], correct: 0 },
+    { subject: "Vocabulary", level: "C2", text: "Il a répondu avec une ___ déconcertante.", options: ["outrecuidance", "fierté", "force", "vitesse"], correct: 0 },
+    { subject: "Vocabulary", level: "C2", text: "L'auteur utilise de nombreux ___ pour perdre le lecteur.", options: ["subterfuges", "mots", "livres", "idées"], correct: 0 },
+    { subject: "Vocabulary", level: "C2", text: "C'est un argument ___, on ne peut pas le contredire.", options: ["imparable", "bon", "grand", "vrai"], correct: 0 },
+    { subject: "Vocabulary", level: "C2", text: "Il a fait preuve d'une grande ___ dans cette affaire délicate.", options: ["sagacité", "intelligence", "beauté", "force"], correct: 0 },
+    { subject: "Vocabulary", level: "C2", text: "Le ministre a voulu ___ les tensions sociales par le dialogue.", options: ["apaiser", "finir", "tuer", "fermer"], correct: 0 },
+    { subject: "Vocabulary", level: "C2", text: "Cette loi est tombée en ___, elle n'est plus appliquée.", options: ["désuétude", "poussière", "oubli", "fin"], correct: 0 },
+    { subject: "Vocabulary", level: "C2", text: "Les réformes ont été ___ par le Conseil constitutionnel.", options: ["entérinées", "faites", "dites", "vues"], correct: 0 },
+    { subject: "Vocabulary", level: "C2", text: "Il y a une ___ flagrante entre ses paroles et ses actes.", options: ["dichotomie", "différence", "coupure", "fin"], correct: 0 },
+    { subject: "Vocabulary", level: "C2", text: "Le pouvoir en place est accusé de ___.", options: ["népotisme", "gentillesse", "travail", "partage"], correct: 0 },
+    { subject: "Vocabulary", level: "C2", text: "Cette œuvre est le ___ de plusieurs années de recherche.", options: ["point d'orgue", "bout", "fin", "milieu"], correct: 0 },
+    { subject: "Vocabulary", level: "C2", text: "Il a su ___ les pièges tendus par ses adversaires.", options: ["déjouer", "arrêter", "voir", "casser"], correct: 0 },
+    { subject: "Vocabulary", level: "C2", text: "L'artiste cherche à ___ l'essence de la nature.", options: ["sublimer", "montrer", "faire", "peindre"], correct: 0 },
+    { subject: "Vocabulary", level: "C2", text: "Ce sentiment de solitude est ___ chez cet écrivain.", options: ["omniprésent", "partout", "grand", "beau"], correct: 0 },
+    { subject: "Vocabulary", level: "C2", text: "Il est resté ___ malgré les honneurs.", options: ["imperturbable", "calme", "droit", "fixe"], correct: 0 },
+    { subject: "Vocabulary", level: "C2", text: "Il a agi de ___ avec ses complices.", options: ["concert", "groupe", "nom", "fait"], correct: 0 },
+    { subject: "Vocabulary", level: "C2", text: "Cette nouvelle a été le ___ de la révolte.", options: ["déclencheur", "début", "bout", "feu"], correct: 0 },
+    { subject: "Vocabulary", level: "C2", text: "Il s'est attiré les ___ de la presse.", options: ["foudres", "colères", "mots", "cris"], correct: 0 },
+    { subject: "Vocabulary", level: "C2", text: "Elle possède une culture ___.", options: ["encyclopédique", "grande", "bonne", "belle"], correct: 0 },
+    { subject: "Vocabulary", level: "C2", text: "Il a dû ___ à ses ambitions personnelles.", options: ["renoncer", "partir", "laisser", "donner"], correct: 0 },
+
+    // Grammar
+    { subject: "Grammar", level: "C2", text: "Si j’avais su ___ les conséquences, j’aurais agi autrement.", options: ["que", "comment", "si", "quand"], correct: 1 },
+    { subject: "Grammar", level: "C2", text: "S’il avait été informé plus tôt, ___ le problème aurait pu être évité.", options: ["aurait", "aurait été", "aurait pu", "serait"], correct: 1 },
+    { subject: "Grammar", level: "C2", text: "Je souhaite que j’___ la possibilité de voyager plus longtemps.", options: ["aie", "avais", "aurais", "eu"], correct: 0 },
+    { subject: "Grammar", level: "C2", text: "Il est rapporté que les propositions ont déjà ___ mises en œuvre.", options: ["été", "avoir été", "été mises", "toutes correctes"], correct: 2 },
+    { subject: "Grammar", level: "C2", text: "S’il avait reçu plus de soutien, il ___ accompli la tâche sans difficulté.", options: ["aurait", "aurait pu", "aurait été", "aurait dû"], correct: 1 },
+    { subject: "Grammar", level: "C2", text: "Je ne sais pas exactement ___ la décision a été prise.", options: ["comment", "quand", "si", "que"], correct: 0 },
+    { subject: "Grammar", level: "C2", text: "On suppose que l’équipe a ___ les consignes correctement.", options: ["suivi", "suivre", "suit", "suivi correctement"], correct: 0 },
+    { subject: "Grammar", level: "C2", text: "Si elle avait réagi plus tôt, ___ la crise aurait peut-être été évitée.", options: ["aurait", "aurait pu", "aurait été", "aurait dû"], correct: 1 },
+    { subject: "Grammar", level: "C2", text: "Il est attendu que les participants ___ activement.", options: ["contribuent", "contribueront", "contribuer", "contribuent à"], correct: 0 },
+    { subject: "Grammar", level: "C2", text: "Je suis convaincu que les mesures ___ un effet durable.", options: ["auront", "ont", "aient", "auront eu"], correct: 0 },
+    { subject: "Grammar", level: "C2", text: "J’espère que nous ___ relever les défis avec succès.", options: ["pourrons", "allons pouvoir", "pouvons", "allons"], correct: 0 },
+    { subject: "Grammar", level: "C2", text: "Si nous avions reçu les documents plus tôt, nous ___ le rapport à temps.", options: ["aurions terminé", "avons terminé", "aurions pu terminer", "terminerions"], correct: 2 },
+    { subject: "Grammar", level: "C2", text: "Je souhaite qu’il ___ informé à temps.", options: ["ait été", "était", "a été", "aurait été"], correct: 0 },
+    { subject: "Grammar", level: "C2", text: "S’il avait mieux analysé la situation, ___ la décision aurait été différente.", options: ["aurait", "aurait été", "aurait pu", "aurait dû"], correct: 1 },
+    
+    // Preposition
+    { subject: "Preposition", level: "C2", text: "Je m’intéresse ___ les développements politiques actuels.", options: ["à", "pour", "sur", "de"], correct: 0 },
+    { subject: "Preposition", level: "C2", text: "Je m’intéresse profondément ___ les questions philosophiques.", options: ["pour", "à", "sur", "de"], correct: 1 },
+    { subject: "Preposition", level: "C2", text: "Il a des doutes ___ la stratégie proposée.", options: ["sur", "contre", "à", "de"], correct: 0 },
+    { subject: "Preposition", level: "C2", text: "Il a exprimé des doutes ___ la véracité des informations.", options: ["à", "sur", "au sujet de", "concernant"], correct: 0 },
+    { subject: "Preposition", level: "C2", text: "Elle est responsable ___ l’organisation de l’événement.", options: ["de", "pour", "sur", "à"], correct: 0 },
+    { subject: "Preposition", level: "C2", text: "J’ai critiqué mon avis ___ la proposition des collègues.", options: ["sur", "à", "de", "concernant"], correct: 3 },
+    { subject: "Preposition", level: "C2", text: "Nous devons adapter nos plans ___ les nouvelles directives.", options: ["conformément à", "selon", "en fonction de", "tous corrects"], correct: 2 },
+    { subject: "Preposition", level: "C2", text: "Il est fier ___ ses réalisations scientifiques.", options: ["de", "sur", "à", "pour"], correct: 0 },
+    { subject: "Preposition", level: "C2", text: "Je me réjouis ___ la possibilité d’y participer.", options: ["de", "à", "pour", "sur"], correct: 0 },
+    { subject: "Preposition", level: "C2", text: "Il existe une incertitude ___ la mise en œuvre de la réforme.", options: ["sur", "de", "à", "concernant"], correct: 0 },
+    { subject: "Preposition", level: "C2", text: "J’ai des réserves ___ la méthode proposée.", options: ["à propos de", "sur", "contre", "à"], correct: 0 },
+    { subject: "Preposition", level: "C2", text: "Le projet est réalisé ___ toutes les normes pertinentes.", options: ["selon", "conformément à", "en accord avec", "toutes correctes"], correct: 1 },
+    { subject: "Preposition", level: "C2", text: "Il doutait ___ l’efficacité du programme.", options: ["de", "à", "sur", "concernant"], correct: 0 },
+    { subject: "Preposition", level: "C2", text: "Nous sommes convaincus ___ le succès des mesures.", options: ["du", "de", "sur", "concernant"], correct: 1 },
+    { subject: "Preposition", level: "C2", text: "Elle est responsable ___ le respect des règles de sécurité.", options: ["de", "pour", "sur", "à"], correct: 0 },
+    { subject: "Preposition", level: "C2", text: "Nous avons discuté ___ les conséquences de la décision.", options: ["de", "sur", "à", "avec"], correct: 0 },
+    { subject: "Preposition", level: "C2", text: "Elle est fière ___ ses publications scientifiques.", options: ["de", "sur", "à", "pour"], correct: 0 },
+    { subject: "Preposition", level: "C2", text: "Je me réjouis ___ l’invitation à la conférence.", options: ["de", "à", "pour", "sur"], correct: 0 },
+    { subject: "Preposition", level: "C2", text: "Il a peur ___ la réaction du public.", options: ["de", "sur", "à", "chez"], correct: 0 },
+    { subject: "Preposition", level: "C2", text: "Nous avons convenu ___ la mise en œuvre des recommandations.", options: ["de", "sur", "à", "pour"], correct: 0 },
+    { subject: "Preposition", level: "C2", text: "Je me souviens encore ___ ma première présentation.", options: ["de", "sur", "à", "en"], correct: 0 },
+    { subject: "Preposition", level: "C2", text: "Je suis responsable ___ le respect des normes de qualité.", options: ["de", "pour", "sur", "à"], correct: 0 }
+];
+
+const FrenchC2Data = async (typeId) => {
+    try {
+        const formattedQuestions = questionsData.map(q => ({
+            typeId: typeId,
+            subject: q.subject,
+            level: q.level,
+            questionText: q.text,
+            options: q.options.map((opt, index) => ({
+                text: opt,
+                isCorrect: index === q.correct
+            })),
+        }));
+        
+        await Question.insertMany(formattedQuestions);
+        console.log(`Successfully imported ${formattedQuestions.length} French C2 questions!`);
+    } catch (err) {
+        console.error("French C2 Import failed:", err);
+    }
+}
+
+module.exports = FrenchC2Data;

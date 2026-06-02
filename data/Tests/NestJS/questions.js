@@ -1,0 +1,169 @@
+const Question = require('../../../models/Question');
+
+const NestJsQuestions = async (typeId) => {
+    const rawQuestions = [
+        // ==========================================
+        // A1: Basics (8 Questions)
+        // ==========================================
+        { text: "NestJS بر پایه کدام زبان برنامه‌نویسی بنا شده است؟", subject: "Basics", level: "A1", opts: ["TypeScript", "Python", "PHP", "Go"], ans: 0 },
+        { text: "فلسفه اصلی NestJS فراهم کردن چه چیزی برای Node.js است؟", subject: "Basics", level: "A1", opts: ["یک معماری (Architecture) استاندارد و قابل تست", "یک دیتابیس داخلی", "یک رابط کاربری گرافیکی", "سرعت اجرای کدهای پایتون"], ans: 0 },
+        { text: "کدام کتابخانه زیرین (Underlying) به صورت پیش‌فرض وظیفه مدیریت HTTP را در Nest دارد؟", subject: "Basics", level: "A1", opts: ["Express", "Fastify", "Koa", "Hapi"], ans: 0 },
+        { text: "Decorator در NestJS با چه علامتی شروع می‌شود؟", subject: "Basics", level: "A1", opts: ["@", "#", "$", "!"], ans: 0 },
+        { text: "وظیفه فایل main.ts در یک پروژه NestJS چیست؟", subject: "Basics", level: "A1", opts: ["بوت‌استرپ (Bootstrap) و راه‌اندازی اولیه اپلیکیشن", "تعریف مدل‌های دیتابیس", "نوشتن کدهای فرانت‌بند", "تنظیمات وب‌پک"], ans: 0 },
+        { text: "در NestJS، مفهوم IoC Container به چه معناست؟", subject: "Basics", level: "A1", opts: ["مدیریت خودکار نمونه‌سازی و تزریق وابستگی‌ها", "یک محیط ایزوله برای اجرای جاوااسکریپت", "سیستم کش کردن فایل‌ها", "کنترل پنل مدیریتی سرور"], ans: 0 },
+        { text: "کدام گزینه یکی از اجزای اصلی (Core) هر اپلیکیشن NestJS است؟", subject: "Basics", level: "A1", opts: ["Module", "Component", "View", "Style"], ans: 0 },
+        { text: "برای تعریف یک کلاس به عنوان 'تزریق‌پذیر' از کدام دکوراتور استفاده می‌شود؟", subject: "Basics", level: "A1", opts: ["@Injectable()", "@Service()", "@Provider()", "@Component()"], ans: 0 },
+
+        // ==========================================
+        // A1: CLI (8 Questions)
+        // ==========================================
+        { text: "دستور نصب سراسری NestJS CLI چیست؟", subject: "CLI", level: "A1", opts: ["npm i -g @nestjs/cli", "npm install nest", "npm get nest-cli", "nest install -g"], ans: 0 },
+        { text: "با کدام دستور می‌توان یک پروژه جدید NestJS ایجاد کرد؟", subject: "CLI", level: "A1", opts: ["nest new project-name", "nest create project-name", "nest init project-name", "nest generate project"], ans: 0 },
+        { text: "فرمان کوتاه برای ساخت یک Controller جدید با استفاده از CLI؟", subject: "CLI", level: "A1", opts: ["nest g co name", "nest make controller name", "nest add controller", "nest create co"], ans: 0 },
+        { text: "دستور 'nest g resource' چه کاری انجام می‌دهد؟", subject: "CLI", level: "A1", opts: ["ساخت کامل Controller، Service، Module و DTO به صورت یکجا", "فقط ساخت فایل‌های دیتابیس", "ساخت یک پکیج جدید", "پاک کردن فایل‌های اضافی"], ans: 0 },
+        { text: "برای اجرای اپلیکیشن در حالت توسعه و مشاهده تغییرات آنی (Watch Mode)؟", subject: "CLI", level: "A1", opts: ["npm run start:dev", "npm run watch", "nest start --watch", "گزینه ۱ و ۳"], ans: 3 },
+        { text: "چگونه می‌توان یک کلاس Service را بدون فایل تست (.spec) تولید کرد؟", subject: "CLI", level: "A1", opts: ["--no-spec", "--skip-tests", "--dry-run", "--flat"], ans: 0 },
+        { text: "دستور 'nest info' چه اطلاعاتی را نمایش می‌دهد؟", subject: "CLI", level: "A1", opts: ["نسخه سیستم‌عامل، Node.js و پکیج‌های Nest نصب شده", "لیست روت‌های API", "پسوردهای دیتابیس", "تعداد خطوط کد پروژه"], ans: 0 },
+        { text: "کاربرد پرچم '--dry-run' در دستورات generate چیست؟", subject: "CLI", level: "A1", opts: ["نمایش خروجی دستور بدون ایجاد فیزیکی فایل‌ها", "اجرای سریع‌تر دستور", "حذف فایل‌های قدیمی", "اجرا در محیط سرور"], ans: 0 },
+
+        // ==========================================
+        // A2: Modules (8 Questions)
+        // ==========================================
+        { text: "دکوراتور @Module() چه ویژگی‌هایی را دریافت می‌کند؟", subject: "Modules", level: "A2", opts: ["providers, controllers, imports, exports", "services, routes, database", "entities, schemas, pipes", "models, views, controllers"], ans: 0 },
+        { text: "هر اپلیکیشن NestJS حداقل باید دارای چند ماژول باشد؟", subject: "Modules", level: "A2", opts: ["یک ماژول (Root Module)", "دو ماژول", "به تعداد کنترلرها", "محدودیتی ندارد"], ans: 0 },
+        { text: "کاربرد بخش 'exports' در یک ماژول چیست؟", subject: "Modules", level: "A2", opts: ["اجازه استفاده از Providerهای این ماژول در ماژول‌های دیگر", "ارسال داده به خارج از سرور", "خروجی گرفتن از دیتابیس", "تعریف روت‌های عمومی"], ans: 0 },
+        { text: "دکوراتور @Global() برای یک ماژول چه کاربردی دارد؟", subject: "Modules", level: "A2", opts: ["ماژول را در کل پروژه بدون نیاز به Import مجدد در دسترس قرار می‌دهد", "پروژه را به اینترنت متصل می‌کند", "امنیت کل پروژه را تضمین می‌کند", "فقط برای دیتابیس است"], ans: 0 },
+        { text: "تفاوت 'imports' و 'providers' در تنظیمات ماژول چیست؟", subject: "Modules", level: "A2", opts: ["imports برای وارد کردن ماژول‌ها، providers برای ثبت سرویس‌ها/کلاس‌ها", "تفاوتی ندارند", "imports برای CSS است", "providers برای کنترلرهاست"], ans: 0 },
+        { text: "مفهوم Dynamic Modules در NestJS چیست؟", subject: "Modules", level: "A2", opts: ["ماژول‌هایی که می‌توانند در زمان اجرا با تنظیمات خاص پیکربندی شوند (مثل ConfigModule)", "ماژول‌هایی که با JS نوشته شده‌اند", "ماژول‌هایی که خودبه‌خود پاک می‌شوند", "فقط برای Microservices"], ans: 0 },
+        { text: "متد مرسوم برای راه‌اندازی یک ماژول داینامیک چیست؟", subject: "Modules", level: "A2", opts: ["forRoot() یا register()", "init()", "setup()", "bootstrap()"], ans: 0 },
+        { text: "در NestJS، پیشنهاد می‌شود ماژول‌ها بر چه اساسی تقسیم‌بندی شوند؟", subject: "Modules", level: "A2", opts: ["بر اساس ویژگی (Feature-based)", "بر اساس نوع فایل (همه سرویس‌ها در یک جا)", "بر اساس حروف الفبا", "تک ماژول بزرگ"], ans: 0 },
+
+        // ==========================================
+        // A2: Controllers (8 Questions)
+        // ==========================================
+        { text: "وظیفه اصلی یک Controller در NestJS چیست؟", subject: "Controllers", level: "A2", opts: ["مدیریت درخواست‌های ورودی و بازگرداندن پاسخ به کلاینت", "اتصال به پایگاه داده", "رمزنگاری پسوردها", "تعریف استایل‌های CSS"], ans: 0 },
+        { text: "چگونه یک پیشوند (Prefix) برای تمام مسیرهای یک کنترلر تعریف کنیم؟", subject: "Controllers", level: "A2", opts: ["پاسخ دادن نام مسیر به @Controller('prefix')", "استفاده از @Route('prefix')", "در داخل فایل main.ts", "در داخل متد constructor"], ans: 0 },
+        { text: "کدام دکوراتور برای دسترسی به بدنه (Body) درخواست POST استفاده می‌شود؟", subject: "Controllers", level: "A2", opts: ["@Body()", "@Payload()", "@Req.body", "@PostData()"], ans: 0 },
+        { text: "برای تغییر کد وضعیت HTTP در پاسخ یک متد از کدام دکوراتور استفاده می‌شود؟", subject: "Controllers", level: "A2", opts: ["@HttpCode()", "@Status()", "@ResCode()", "@ResponseCode()"], ans: 0 },
+        { text: "دکوراتور @Query() چه کاری انجام می‌دهد؟", subject: "Controllers", level: "A2", opts: ["استخراج پارامترهای Query String از URL (مثل ?id=1)", "اجرای کوئری مستقیم روی دیتابیس", "جستجو در فایل‌های پروژه", "تغییر ورژن API"], ans: 0 },
+        { text: "چگونه می‌توان به کل شیء Request (در پلتفرم Express) دسترسی پیدا کرد؟", subject: "Controllers", level: "A2", opts: ["@Req()", "@Request()", "هر دو گزینه ۱ و ۲", "@ExpressReq()"], ans: 2 },
+        { text: "برای تعریف یک مسیر با پارامتر داینامیک (مثل users/1) چه باید کرد؟", subject: "Controllers", level: "A2", opts: ["@Get(':id')", "@Get('{id}')", "@Get('/id')", "@Get('*id')"], ans: 0 },
+        { text: "دکوراتور @Header() در کنترلر چه کاربردی دارد؟", subject: "Controllers", level: "A2", opts: ["تنظیم یک Response Header سفارشی برای پاسخ", "خواندن هدرهای ورودی", "تعریف نام نویسنده کد", "امنیت روت"], ans: 0 },
+
+        // ==========================================
+        // B1: Pipes (8 Questions)
+        // ==========================================
+        { text: "دو کاربرد اصلی Pipeها در NestJS کدامند؟", subject: "Pipes", level: "B1", opts: ["Transformation (تبدیل داده) و Validation (اعتبارسنجی)", "Logging و Security", "Database connection و Routing", "Caching و Intercepting"], ans: 0 },
+        { text: "کدام Pipe داخلی برای تبدیل رشته به عدد صحیح استفاده می‌شود؟", subject: "Pipes", level: "B1", opts: ["ParseIntPipe", "ToNumberPipe", "CastIntPipe", "StringToIntPipe"], ans: 0 },
+        { text: "برای فعال‌سازی اعتبارسنجی خودکار با استفاده از DTOها، از کدام Pipe استفاده می‌کنیم؟", subject: "Pipes", level: "B1", opts: ["ValidationPipe", "ClassValidatorPipe", "SchemaPipe", "DtoPipe"], ans: 0 },
+        { text: "Pipeها در چه سطوحی قابل استفاده هستند؟", subject: "Pipes", level: "B1", opts: ["سطح پارامتر، سطح متد، سطح کنترلر و سطح Global", "فقط سطح Global", "فقط سطح متد", "فقط در فایل main.ts"], ans: 0 },
+        { text: "برای اینکه ValidationPipe فیلدهای اضافی را که در DTO نیستند حذف کند، کدام گزینه را تنظیم می‌کنیم؟", subject: "Pipes", level: "B1", opts: ["whitelist: true", "forbidNonWhitelisted: true", "transform: true", "strict: true"], ans: 0 },
+        { text: "در یک Custom Pipe، متد اجباری که باید پیاده‌سازی شود چیست؟", subject: "Pipes", level: "B1", opts: ["transform()", "execute()", "handle()", "validate()"], ans: 0 },
+        { text: "کدام کتابخانه معمولاً در کنار ValidationPipe برای دکوراتورهای اعتبارسنجی استفاده می‌شود؟", subject: "Pipes", level: "B1", opts: ["class-validator", "joi", "zod", "yup"], ans: 0 },
+        { text: "ParseUUIDPipe برای چه کاری استفاده می‌شود؟", subject: "Pipes", level: "B1", opts: ["تایید اینکه پارامتر ورودی حتماً یک UUID معتبر است", "تولید یک UUID جدید", "تبدیل UUID به String", "اتصال به دیتابیس Postgres"], ans: 0 },
+
+        // ==========================================
+        // B1: Guards (8 Questions)
+        // ==========================================
+        { text: "وظیفه اصلی Guard در NestJS چیست؟", subject: "Guards", level: "B1", opts: ["تعیین اجازه دسترسی (Authorization) به یک مسیر خاص در زمان اجرا", "جلوگیری از حملات XSS", "مدیریت خطاهای دیتابیس", "فیلتر کردن بدنه درخواست"], ans: 0 },
+        { text: "Guardها باید کدام اینترفیس (Interface) را پیاده‌سازی کنند؟", subject: "Guards", level: "B1", opts: ["CanActivate", "GuardInterface", "AuthGuard", "SecureRequest"], ans: 0 },
+        { text: "مقدار برگشتی متد canActivate() در Guard چه چیزی را تعیین می‌کند؟", subject: "Guards", level: "B1", opts: ["اگر true باشد دسترسی مجاز است، اگر false باشد دسترسی منع می‌شود", "نوع دیتابیس را", "زمان انقضای توکن را", "پیام خطای کاربر را"], ans: 0 },
+        { text: "Guardها چه زمانی اجرا می‌شوند؟", subject: "Guards", level: "B1", opts: ["بعد از Middlewareها و قبل از Interceptorها/Pipes", "بعد از اتمام اجرای متد کنترلر", "قبل از رسیدن درخواست به سرور", "فقط در هنگام لاگین"], ans: 0 },
+        { text: "برای دسترسی به Metadata (مثلاً نقش‌های کاربر) در Guard از چه کلاسی استفاده می‌شود؟", subject: "Guards", level: "B1", opts: ["Reflector", "MetadataScanner", "DiscoveryService", "GuardContext"], ans: 0 },
+        { text: "دکوراتور @UseGuards() در کجا قابل استفاده است؟", subject: "Guards", level: "B1", opts: ["هم در سطح کنترلر و هم در سطح متد (Handler)", "فقط در سطح کلاس", "فقط در فایل ماژول", "فقط در فایل main.ts"], ans: 0 },
+        { text: "چگونه یک Guard را به صورت سراسری (Global) در کل اپلیکیشن اعمال کنیم؟", subject: "Guards", level: "B1", opts: ["app.useGlobalGuards() در main.ts یا ثبت در APP_GUARD", "در فایل .env", "با دکوراتور @GlobalGuard", "در داخل فایل روت"], ans: 0 },
+        { text: "تفاوت Guard با Middleware در چیست؟", subject: "Guards", level: "B1", opts: ["Guard به ExecutionContext دسترسی دارد و می‌داند کدام هندلر قرار است اجرا شود", "Middleware امنیت بیشتری دارد", "Guard فقط برای توکن JWT است", "تفاوتی ندارند"], ans: 0 },
+
+        // ==========================================
+        // B2: Interceptors (8 Questions)
+        // ==========================================
+        { text: "Interceptorها با الهام از کدام مفهوم برنامه‌نویسی ساخته شده‌اند؟", subject: "Interceptors", level: "B2", opts: ["Aspect-Oriented Programming (AOP)", "Object-Oriented Programming (OOP)", "Functional Programming", "Reactive Programming"], ans: 0 },
+        { text: "کدام متد در Interceptor برای مدیریت جریان درخواست/پاسخ استفاده می‌شود؟", subject: "Interceptors", level: "B2", opts: ["intercept()", "handle()", "execute()", "catch()"], ans: 0 },
+        { text: "برای تغییر یا نگاشت (Map) پاسخ برگشتی از کنترلر، از کدام کتابخانه استفاده می‌شود؟", subject: "Interceptors", level: "B2", opts: ["RxJS", "Axios", "Lodash", "Moment.js"], ans: 0 },
+        { text: "یکی از کاربردهای رایج Interceptorها چیست؟", subject: "Interceptors", level: "B2", opts: ["تبدیل فرمت پاسخ (مثلاً رپ کردن در فیلد data) یا اندازه‌گیری زمان اجرا", "اتصال به دیتابیس", "تعریف روت‌های جدید", "نصب پکیج‌های npm"], ans: 0 },
+        { text: "آرگومان دوم متد intercept() یعنی 'next' چه کاری انجام می‌دهد؟", subject: "Interceptors", level: "B2", opts: ["فراخوانی هندلر بعدی در زنجیره با استفاده از next.handle()", "قطع درخواست", "ارسال پاسخ به کلاینت", "لاگ کردن خطا"], ans: 0 },
+        { text: "چگونه می‌توان با استفاده از Interceptor یک Timeout برای درخواست‌ها تعریف کرد؟", subject: "Interceptors", level: "B2", opts: ["استفاده از اپراتور timeout در RxJS روی جریان خروجی", "با استفاده از setTimeout پایتون", "تغییر تنظیمات سیستم‌عامل", "امکان‌پذیر نیست"], ans: 0 },
+        { text: "Interceptorها چه زمانی اجرا می‌شوند؟", subject: "Interceptors", level: "B2", opts: ["هم قبل و هم بعد از اجرای متد کنترلر", "فقط قبل از رسیدن به کنترلر", "فقط بعد از اتمام کار کنترلر", "فقط در صورت بروز خطا"], ans: 0 },
+        { text: "برای حذف فیلدهای حساس (مانند password) از پاسخ خروجی با Interceptor از چه کلاسی استفاده می‌شود؟", subject: "Interceptors", level: "B2", opts: ["ClassSerializerInterceptor", "ExcludeInterceptor", "SensitiveDataInterceptor", "JsonFilterInterceptor"], ans: 0 },
+
+        // ==========================================
+        // B2: TypeORM (8 Questions)
+        // ==========================================
+        { text: "انتیتی (Entity) در TypeORM نشان‌دهنده چیست؟", subject: "TypeORM", level: "B2", opts: ["یک کلاس که به یک جدول در پایگاه داده نگاشت (Map) می‌شود", "یک متد برای اعتبارسنجی", "نوعی کنترلر", "یک متغیر محیطی"], ans: 0 },
+        { text: "برای تعریف کلید اصلی خودکار (Auto-increment) از کدام دکوراتور استفاده می‌شود؟", subject: "TypeORM", level: "B2", opts: ["@PrimaryGeneratedColumn()", "@PrimaryColumn()", "@AutoId()", "@Column({primary: true})"], ans: 0 },
+        { text: "چگونه یک انتیتی را در ماژول NestJS ثبت می‌کنیم؟", subject: "TypeORM", level: "B2", opts: ["TypeOrmModule.forFeature([EntityName])", "TypeOrmModule.forRoot()", "در بخش providers", "در بخش exports"], ans: 0 },
+        { text: "Repository در TypeORM چه وظیفه‌ای دارد؟", subject: "TypeORM", level: "B2", opts: ["فراهم کردن متدهایی برای انجام عملیات CRUD روی یک انتیتی خاص", "ذخیره فایل‌ها روی دیسک", "مدیریت روت‌های کنترلر", "تزریق وابستگی‌ها"], ans: 0 },
+        { text: "برای تعریف رابطه یک‌به‌چند بین دو Entity از کدام دکوراتورها استفاده می‌شود؟", subject: "TypeORM", level: "B2", opts: ["@OneToMany() و @ManyToOne()", "@OneToOne()", "@ManyToMany()", "@Relation()"], ans: 0 },
+        { text: "Migration در TypeORM برای چیست؟", subject: "TypeORM", level: "B2", opts: ["مدیریت نسخه و اعمال تغییرات ساختار دیتابیس بدون از دست رفتن داده‌ها", "انتقال کدها به سرور دیگر", "تبدیل دیتابیس به اکسل", "بهینه‌سازی سرعت کوئری‌ها"], ans: 0 },
+        { text: "کدام گزینه برای جلوگیری از بارگذاری فیلدها در زمان کوئری (مثل password) صحیح است؟", subject: "TypeORM", level: "B2", opts: ["@Column({ select: false })", "@Column({ hidden: true })", "@Exclude()", "@PrivateColumn()"], ans: 0 },
+        { text: "تفاوت متد save() و insert() در TypeORM Repository چیست؟", subject: "TypeORM", level: "B2", opts: ["save ابتدا چک می‌کند اگر موجود بود Update می‌کند، insert فقط درج می‌کند", "تفاوتی ندارند", "insert امنیت بیشتری دارد", "save فقط برای دیتابیس SQL است"], ans: 0 },
+
+        // ==========================================
+        // C1: Microservices (8 Questions)
+        // ==========================================
+        { text: "متد ایجاد یک Microservice در فایل main.ts چیست؟", subject: "Microservices", level: "C1", opts: ["app.connectMicroservice()", "app.createMicroservice()", "NestFactory.createMicroservice()", "همه موارد"], ans: 3 },
+        { text: "در Microserviceها برای پاسخ به پیام‌های Request-Response از کدام دکوراتور استفاده می‌شود؟", subject: "Microservices", level: "C1", opts: ["@MessagePattern()", "@EventPattern()", "@Get()", "@Subscribe()"], ans: 0 },
+        { text: "تفاوت @MessagePattern() و @EventPattern() در چیست؟", subject: "Microservices", level: "C1", opts: ["MessagePattern انتظار پاسخ دارد، EventPattern فقط اطلاع‌رسانی است (Fire and Forget)", "تفاوتی ندارند", "EventPattern مخصوص دیتابیس است", "MessagePattern فقط برای TCP است"], ans: 0 },
+        { text: "کدام کلاس برای ارسال پیام از یک کلاینت به یک Microservice استفاده می‌شود؟", subject: "Microservices", level: "C1", opts: ["ClientProxy", "MicroserviceClient", "TransportClient", "PacketSender"], ans: 0 },
+        { text: "معروف‌ترین Transport Layerها در NestJS کدامند؟", subject: "Microservices", level: "C1", opts: ["TCP, Redis, RabbitMQ, MQTT, NATS, Kafka", "HTTP, FTP, SMTP", "WebSockets, Socket.io", "فقط TCP"], ans: 0 },
+        { text: "مفهوم 'Hybrid Application' در NestJS چیست؟", subject: "Microservices", level: "C1", opts: ["اپلیکیشنی که همزمان هم به درخواست‌های HTTP پاسخ می‌دهد و هم به عنوان Microservice عمل می‌کند", "ترکیبی از پایتون و نود", "ترکیبی از دیتابیس SQL و NoSQL", "اپلیکیشنی که روی اندروید اجرا می‌شود"], ans: 0 },
+        { text: "برای اعتبارسنجی داده‌ها در ورودی یک Microservice از چه ابزاری استفاده می‌شود؟", subject: "Microservices", level: "C1", opts: ["همان Pipeهای معمولی NestJS", "فقط Middleware", "نیاز به کدنویسی دستی دارد", "در Microservice اعتبارسنجی نداریم"], ans: 0 },
+        { text: "در RabbitMQ، فیلد 'queue' در تنظیمات Microservice چه نقشی دارد؟", subject: "Microservices", level: "C1", opts: ["تعیین نام صفی که Microservice باید پیام‌ها را از آن بخواند", "تعیین اولویت پیام‌ها", "تعیین تعداد یوزرهای آنلاین", "نام دیتابیس است"], ans: 0 },
+
+        // ==========================================
+        // C1: WebSockets (8 Questions)
+        // ==========================================
+        { text: "دکوراتور اصلی برای ساخت یک کلاس WebSocket در NestJS چیست؟", subject: "WebSockets", level: "C1", opts: ["@WebSocketGateway()", "@SocketHandler()", "@Gateway()", "@WS()"], ans: 0 },
+        { text: "برای گوش دادن به یک ایونت خاص در WebSocket از کدام دکوراتور استفاده می‌شود؟", subject: "WebSockets", level: "C1", opts: ["@SubscribeMessage()", "@OnMessage()", "@HandleEvent()", "@WSEvent()"], ans: 0 },
+        { text: "کدام کتابخانه‌ها توسط NestJS برای WebSocket پشتیبانی می‌شوند؟", subject: "WebSockets", level: "C1", opts: ["socket.io و ws", "signalR", "sockjs", "فقط socket.io"], ans: 0 },
+        { text: "برای دسترسی به نمونه مستقیم سرور (Server Instance) از کدام دکوراتور استفاده می‌شود؟", subject: "WebSockets", level: "C1", opts: ["@WebSocketServer()", "@Server()", "@SocketServer()", "@InjectServer()"], ans: 0 },
+        { text: "چگونه می‌توان داده‌های ورودی در WebSocket را اعتبارسنجی کرد؟", subject: "WebSockets", level: "C1", opts: ["استفاده از Pipeها روی متدهای @SubscribeMessage", "استفاده از Guardها", "امکان‌پذیر نیست", "فقط در فرانت‌بند"], ans: 0 },
+        { text: "Life-cycle Hook برای لحظه اتصال یک کلاینت جدید در Gateway چیست؟", subject: "WebSockets", level: "C1", opts: ["handleConnection()", "onConnect()", "afterInit()", "connected()"], ans: 0 },
+        { text: "تفاوت Gateway با Controller معمولی چیست؟", subject: "WebSockets", level: "C1", opts: ["Gateway بر پایه پروتکل WebSocket و ارتباط دوطرفه است", "Gateway امنیت کمتری دارد", "Gateway فقط برای فایل است", "تفاوتی ندارند"], ans: 0 },
+        { text: "چگونه یک پیام را به تمام کلاینت‌های متصل (Broadcast) ارسال کنیم؟", subject: "WebSockets", level: "C1", opts: ["استفاده از شیء server و متد emit()", "استفاده از return ساده در متد", "استفاده از دکوراتور @Broadcast()", "امکان‌پذیر نیست"], ans: 0 },
+
+        // ==========================================
+        // C2: CQRS (8 Questions)
+        // ==========================================
+        { text: "CQRS مخفف چیست؟", subject: "CQRS", level: "C2", opts: ["Command Query Responsibility Segregation", "Code Quality Review System", "Centralized Query Reporting Service", "Core Queue Routing System"], ans: 0 },
+        { text: "تفاوت اصلی Command و Query در معماری CQRS چیست؟", subject: "CQRS", level: "C2", opts: ["Command داده را تغییر می‌دهد (State Change)، Query داده را فقط می‌خواند", "Query سریع‌تر است", "Command فقط در دیتابیس است", "تفاوتی ندارند"], ans: 0 },
+        { text: "در پکیج @nestjs/cqrs، وظیفه 'Command Bus' چیست؟", subject: "CQRS", level: "C2", opts: ["دریافت یک Command و ارسال آن به Handler مربوطه", "ذخیره دستورات در دیتابیس", "پاک کردن لاگ‌ها", "تغییر روت‌های API"], ans: 0 },
+        { text: "برای مدیریت یک Command، کلاس هندلر باید کدام اینترفیس را پیاده‌سازی کند؟", subject: "CQRS", level: "C2", opts: ["ICommandHandler", "ICommandExecute", "BaseHandler", "CommandHandlerInterface"], ans: 0 },
+        { text: "Saga در معماری CQRS لاراول/Nest چه کاربردی دارد؟", subject: "CQRS", level: "C2", opts: ["مدیریت جریان‌های کاری پیچیده و طولانی که شامل چندین ایونت هستند", "نوعی دیتابیس گرافی است", "برای تست‌های واحد استفاده می‌شود", "جایگزین برای Controller است"], ans: 0 },
+        { text: "کدام جزء مسئول گوش دادن به تغییرات و انجام کارهای جانبی (مثل ارسال ایمیل) بعد از یک دستور است؟", subject: "CQRS", level: "C2", opts: ["Events / EventHandlers", "QueryBus", "CommandBus", "Saga"], ans: 0 },
+        { text: "مزیت اصلی استفاده از CQRS در پروژه‌های بزرگ چیست؟", subject: "CQRS", level: "C2", opts: ["مقیاس‌پذیری مجزا برای بخش خواندن و نوشتن و کاهش پیچیدگی مدل‌های داده", "افزایش سرعت تایپ کد", "عدم نیاز به دیتابیس SQL", "حذف تمام کنترلرها"], ans: 0 },
+        { text: "در CQRS، 'Query Handler' معمولاً چه چیزی را برمی‌گرداند؟", subject: "CQRS", level: "C2", opts: ["داده‌های مورد نیاز برای نمایش (DTO یا View Model)", "کد وضعیت SUCCESS", "یک ایونت جدید", "فقط مقدار boolean"], ans: 0 },
+
+        // ==========================================
+        // C2: Architecture (8 Questions)
+        // ==========================================
+        { text: "معماری 'Hexagonal' یا 'Onion' در NestJS بر چه پایه‌ای است؟", subject: "Architecture", level: "C2", opts: ["قرار دادن منطق تجاری در مرکز و ایزوله کردن آن از فریم‌ورک و دیتابیس", "استفاده از لایه‌های CSS پیچیده", "نوشتن کدها به صورت دایره‌ای", "فقط استفاده از Microservices"], ans: 0 },
+        { text: "کاربرد 'Custom Providers' با استفاده از useFactory چیست؟", subject: "Architecture", level: "C2", opts: ["ایجاد داینامیک یک Provider بر اساس شرایط یا وابستگی‌های دیگر در زمان اجرا", "تغییر نام کلاس‌ها", "بهبود استایل‌های کد", "حذف نیاز به ماژول"], ans: 0 },
+        { text: "مفهوم 'Scope.REQUEST' در یک Provider به چه معناست؟", subject: "Architecture", level: "C2", opts: ["برای هر درخواست HTTP یک نمونه جدید از کلاس ساخته می‌شود", "سرویس فقط یکبار در کل برنامه ساخته می‌شود (Singleton)", "سرویس فقط در حالت تست کار می‌کند", "سرویس به اینترنت دسترسی دارد"], ans: 0 },
+        { text: "در پروژه‌های مونو-ریپو (Monorepo) در NestJS، پوشه 'libs' برای چیست؟", subject: "Architecture", level: "C2", opts: ["اشتراک‌گذاری کدهای مشترک، انتیتی‌ها و سرویس‌ها بین چندین اپلیکیشن", "ذخیره تصاویر", "نصب پکیج‌های npm", "فقط برای کدهای فرانت‌بند"], ans: 0 },
+        { text: "وظیفه اصلی DiscoveryService در معماری‌های پیشرفته چیست؟", subject: "Architecture", level: "C2", opts: ["اسکن و پیدا کردن داینامیک دکوراتورها و کلاس‌های خاص در کل پروژه", "پیدا کردن باگ‌های کد", "جستجو در دیتابیس", "اتصال به اینترنت"], ans: 0 },
+        { text: "کاربرد 'Circular Dependency' چیست و چگونه حل می‌شود؟", subject: "Architecture", level: "C2", opts: ["وقتی دو کلاس به هم وابسته‌اند؛ با استفاده از forwardRef() حل می‌شود", "یک نوع باگ دیتابیس است", "با حذف یکی از کلاس‌ها حل می‌شود", "در Nest پشتیبانی نمی‌شود"], ans: 0 },
+        { text: "چرا استفاده از Domain Driven Design (DDD) در NestJS پیشنهاد می‌شود؟", subject: "Architecture", level: "C2", opts: ["برای مدیریت بهتر پیچیدگی‌های بیزنس در پروژه‌های بزرگ سازمانی", "برای کاهش تعداد فایل‌ها", "برای استفاده از پایتون", "برای افزایش سرعت دانلود"], ans: 0 },
+        { text: "تکنیک 'Database Per Service' در معماری Microservices یعنی چه؟", subject: "Architecture", level: "C2", opts: ["هر سرویس دیتابیس مستقل خود را دارد تا وابستگی‌ها به حداقل برسد (Decoupling)", "همه سرویس‌ها از یک جدول استفاده می‌کنند", "دیتابیس فقط روی یک سرور است", "استفاده از دیتابیس ممنوع است"], ans: 0 }
+    ];
+    try{
+        const formattedQuestions = rawQuestions.map(q => ({
+        questionText: q.text,
+        subject: q.subject,
+        level: q.level,
+        typeId: typeId,
+        options: q.opts.map((o, i) => ({
+            text: o,
+            value: i,
+            isCorrect: i === q.ans
+        }))
+    }));
+
+    await Question.insertMany(formattedQuestions);
+    console.log(`Successfully imported ${formattedQuestions.length} NestJS questions!`);
+    } catch (err) {
+        console.error("NestJS Import failed:", err);
+    }
+};
+
+module.exports = NestJsQuestions;

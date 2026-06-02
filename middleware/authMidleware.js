@@ -46,4 +46,43 @@ const authenticateToken = (req, res, next) => {
   }
 };
 
-module.exports = authenticateToken;
+// for Extensions
+const authenticateUser = (req, res, next) => {
+    const token = req.cookies?.accessToken || req.headers.authorization?.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ message: "دسترسی غیرمجاز: توکن ارسال نشده است." });
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        
+        req.user = decoded; 
+        next();
+    } catch (err) {
+        return res.status(401).json({ message: "توکن نامعتبر یا منقضی شده است." });
+    }
+};
+
+// for Extensions
+const authenticateAdmin = (req, res, next) => {
+    const token = req.cookies?.accessToken || req.headers.authorization?.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ message: "دسترسی غیرمجاز: توکن ارسال نشده است." });
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET_ADMIN);
+        req.admin = decoded;
+        next();
+    } catch (err) {
+        return res.status(401).json({ message: "توکن نامعتبر یا منقضی شده است." });
+    }
+};
+
+module.exports = {
+  authenticateToken,
+  authenticateUser,
+  authenticateAdmin
+};
