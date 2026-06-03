@@ -5,7 +5,7 @@ const UsersCtrl = require("../controllers/UsersCtrl");
 const RegisterCtrl = require("../controllers/RegisterCtrl");
 const LoginCtrl = require("../controllers/LoginCtrl");
 const AuthCtrl = require("../controllers/AuthCtrl");
-const authenticateToken = require("../middleware/authMidleware");
+const {authenticateToken} = require("../middleware/authMidleware");
 const LogoutCtrl = require("../controllers/LogoutCtrl");
 
 /**

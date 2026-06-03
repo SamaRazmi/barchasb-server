@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const { imagesUpload } = require("../middleware/upload");
 const employerController = require("../controllers/EmployerAdCtrl");
-const authenticateToken = require("../middleware/authMidleware");
+const {authenticateToken} = require("../middleware/authMidleware");
 
 /**
  * @swagger

@@ -5,6 +5,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const http = require("http");
 const socketIo = require("socket.io");
+const {authenticateUser, authenticateAdmin} = require("./middleware/authMidleware");
 
 // ✅ Swagger اضافه شد
 const swaggerUi = require("swagger-ui-express");
@@ -106,7 +107,18 @@ const swaggerOptions = {
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+const swaggerUiOptions = {
+  swaggerOptions: {
+    requestInterceptor: (req) => {
+      if (req.headers && req.headers['Content-Type'] === 'multipart/form-data') {
+        delete req.headers['Content-Type'];
+      }
+      return req;
+    },
+  },
+};
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
 
 /* =====================================================
    =====================================================
@@ -155,6 +167,12 @@ app.use("/api", userProfileRoutes);
 app.use("/api", UploadFileRoutes);
 app.use("/api", ChatRoutes);
 
+app.use("/api/tests", authenticateUser, require("./routes/TestRoutes")); 
+app.use('/api/resume', authenticateUser, require('./routes/ResumeRoutes'));
+app.use("/api/converter", authenticateUser, require("./routes/converterRoutes"));
+app.use("/api/admin", authenticateAdmin, require("./routes/AdminExtensionsRoutes"));
+app.use("/api/user", authenticateUser, require("./routes/UserExtensionsRoutes"));
+
 // اتصال به MongoDB
 const dbUrl = process.env.MONGO_URL;
 const port = process.env.PORT || 5000;
@@ -170,6 +188,83 @@ mongoose
   })
   .catch((err) => {
     console.error("❌ Failed to connect to MongoDB:", err.message);
+  });
+
+  // Run Extensions Seeders
+  const loadData = require("./utils/dataLoader");
+  if (process.env.ENABLE_DATA_SEEDING === 'true') {
+      (async () => {
+          console.log(' Starting data seeding...');
+          await loadData();
+          console.log("Seeders finished successfully.");
+      })();
+  } else {
+      console.log('Data seeding skipped (ENABLE_DATA_SEEDING is not true)');
+  }
+  
+
+  // Global Error Handler
+  // --------------------------
+  // 404
+  app.use((req, res, next) => {
+    res.status(404).json({
+      success: false,
+      message: 'مسیر مورد نظر یافت نشد',
+      error: 'Not Found'
+    });
+  });
+  // error handler
+  app.use((err, req, res, next) => {
+    console.error('Global Error:', err);
+
+    let statusCode = err.status || 500;
+    let message = err.message || 'خطای داخلی سرور';
+    let errorType = err.name || 'InternalError';
+
+    // Multer error
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      statusCode = 400;
+      message = 'حجم فایل ارسالی بیش از حد مجاز است (حداکثر ۵۰ مگابایت)';
+      errorType = 'FileTooLarge';
+    } 
+    else if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+      statusCode = 400;
+      message = 'تعداد فایل‌های ارسالی بیش از حد مجاز است';
+      errorType = 'TooManyFiles';
+    }
+    else if (err.message && err.message.includes('فرمت فایل پشتیبانی نمی‌شود')) {
+      statusCode = 400;
+      message = err.message;
+      errorType = 'UnsupportedFileFormat';
+    }
+    else if (err instanceof SyntaxError && err.type === 'entity.parse.failed') {
+      statusCode = 400;
+      message = 'فرمت JSON ارسالی نامعتبر است';
+      errorType = 'InvalidJSON';
+    }
+    else if (err.name === 'ValidationError') {
+      statusCode = 400;
+      message = err.message;
+      errorType = 'ValidationError';
+    }
+    else if (err.name === 'UnauthorizedError' || err.status === 401) {
+      statusCode = 401;
+      message = 'احراز هویت ناموفق';
+      errorType = 'Unauthorized';
+    }
+    else if (statusCode === 500) {
+      if (process.env.NODE_ENV === 'production') {
+        message = 'خطای داخلی سرور، لطفاً بعداً تلاش کنید';
+        errorType = 'InternalServerError';
+      }
+    }
+    res.status(statusCode).json({
+      success: false,
+      statusCode,
+      message,
+      error: errorType,
+      ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
+    });
   });
 
 // ========== وضعیت آنلاین و آخرین بازدید ==========
