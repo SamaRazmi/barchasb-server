@@ -27,6 +27,18 @@ const ForgotPasswordCtrl = require("../controllers/ForgotPasswordCtrl");
  *     responses:
  *       200:
  *         description: لیست کاربران
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: ok
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
  *       401:
  *         description: توکن معتبر نیست
  */
@@ -50,6 +62,16 @@ router.get("/users", authenticateToken, UsersCtrl.getAllUsers);
  *     responses:
  *       200:
  *         description: اطلاعات کاربر
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: ok
+ *                 data:
+ *                   $ref: '#/components/schemas/User'
  *       401:
  *         description: توکن معتبر نیست
  *       404:
@@ -72,6 +94,16 @@ router.get("/get-one-user/:id", authenticateToken, UsersCtrl.getOneUser);
  *     responses:
  *       201:
  *         description: کاربر ایجاد شد
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: کاربر ایجاد شد
+ *                 data:
+ *                   $ref: '#/components/schemas/User'
  *       400:
  *         description: خطا در ایجاد کاربر
  */
@@ -95,6 +127,16 @@ router.post("/new-user", UsersCtrl.createUser);
  *     responses:
  *       200:
  *         description: اطلاعات کاربر
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: ok
+ *                 data:
+ *                   $ref: '#/components/schemas/User'
  *       401:
  *         description: توکن معتبر نیست
  */
@@ -111,6 +153,14 @@ router.get("/auth/me", authenticateToken, AuthCtrl.getMe);
  *     responses:
  *       200:
  *         description: خروج موفق
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: خروج موفق
  *       401:
  *         description: توکن معتبر نیست
  */
@@ -131,6 +181,16 @@ router.post("/auth/logout", authenticateToken, LogoutCtrl.logoutUser);
  *     responses:
  *       200:
  *         description: ثبت‌نام موفق
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: ثبت‌نام موفق
+ *                 data:
+ *                   $ref: '#/components/schemas/User'
  *       400:
  *         description: خطا در ثبت‌نام
  */
@@ -161,6 +221,19 @@ router.post("/auth/register", RegisterCtrl.registerUser);
  *     responses:
  *       200:
  *         description: ورود موفق، کوکی و Bearer Token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: ورود موفق
+ *                 token:
+ *                   type: string
+ *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
  *       400:
  *         description: شماره یا رمز اشتباه
  *       500:
@@ -187,9 +260,18 @@ router.post("/auth/login", LoginCtrl.loginUser);
  *             properties:
  *               email:
  *                 type: string
+ *                 example: "user@example.com"
  *     responses:
  *       200:
  *         description: کد ارسال شد
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: کد تایید ارسال شد
  *       400:
  *         description: خطا
  */
@@ -212,9 +294,18 @@ router.post("/send-register-email", UsersCtrl.sendRegisterEmail);
  *             properties:
  *               phone:
  *                 type: string
+ *                 example: "09123456789"
  *     responses:
  *       200:
  *         description: کد ارسال شد
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: کد ثبت‌نام ارسال شد
  *       400:
  *         description: خطا
  */
@@ -239,11 +330,24 @@ router.post("/send-register-phone", UsersCtrl.sendRegisterPhone);
  *             properties:
  *               userId:
  *                 type: string
+ *                 example: "550e8400-e29b-41d4-a716-446655440000"
  *     responses:
  *       200:
  *         description: شماره تایید شد
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: شماره تلفن تایید شد
+ *                 data:
+ *                   $ref: '#/components/schemas/User'
  *       400:
  *         description: اطلاعات ناقص
+ *       404:
+ *         description: کاربر پیدا نشد
  */
 router.post("/verify-phone", UsersCtrl.verifyUserPhone);
 
@@ -261,6 +365,7 @@ router.post("/verify-phone", UsersCtrl.verifyUserPhone);
  *         required: true
  *         schema:
  *           type: string
+ *         description: شناسه کاربر
  *     requestBody:
  *       required: true
  *       content:
@@ -272,11 +377,22 @@ router.post("/verify-phone", UsersCtrl.verifyUserPhone);
  *             properties:
  *               email:
  *                 type: string
+ *                 example: "user@example.com"
  *     responses:
  *       200:
  *         description: کد ارسال شد
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: کد تایید ارسال شد
  *       400:
  *         description: خطا
+ *       404:
+ *         description: کاربر پیدا نشد
  */
 router.post("/send-verify-email/:id", UsersCtrl.sendVerifyEmail);
 
@@ -292,6 +408,7 @@ router.post("/send-verify-email/:id", UsersCtrl.sendVerifyEmail);
  *         required: true
  *         schema:
  *           type: string
+ *         description: شناسه کاربر
  *     requestBody:
  *       required: true
  *       content:
@@ -303,11 +420,22 @@ router.post("/send-verify-email/:id", UsersCtrl.sendVerifyEmail);
  *             properties:
  *               code:
  *                 type: string
+ *                 example: "123456"
  *     responses:
  *       200:
  *         description: ایمیل تایید شد
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: ایمیل با موفقیت تایید شد
  *       400:
  *         description: کد اشتباه یا منقضی شده
+ *       404:
+ *         description: کاربر پیدا نشد
  */
 router.post("/verify-email-code/:id", UsersCtrl.verifyEmailByCode);
 
@@ -323,9 +451,18 @@ router.post("/verify-email-code/:id", UsersCtrl.verifyEmailByCode);
  *         required: true
  *         schema:
  *           type: string
+ *         description: توکن تایید ایمیل
  *     responses:
  *       200:
  *         description: ایمیل تایید شد
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: ایمیل با موفقیت تایید شد
  *       400:
  *         description: لینک نامعتبر
  */
@@ -373,7 +510,7 @@ router.get("/verify-email/:token", UsersCtrl.verifyEmail);
  *                   example: true
  *                 msg:
  *                   type: string
- *                   example: "رمز عبور با موفقیت تغییر کرد"
+ *                   example: رمز عبور با موفقیت تغییر کرد
  *       400:
  *         description: اطلاعات ناقص یا رمز ضعیف یا کد نامعتبر
  *       404:

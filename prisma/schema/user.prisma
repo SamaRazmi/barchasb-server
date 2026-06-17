@@ -1,0 +1,32 @@
+model User {
+  id                      String   @id @default(uuid()) @db.Uuid
+  name                    String   @db.VarChar(50)
+  lastName                String   @db.VarChar(50)
+  username                String?  @unique @db.VarChar(30)
+  nationalCode            String   @unique @db.VarChar(10)
+  phone                   String   @unique @db.VarChar(11)
+  password                String   @db.VarChar(255)
+  birthDate               String   @db.VarChar(20)
+  gender                  String   @db.VarChar(10)
+  province                String   @db.VarChar(100)
+  city                    String   @db.VarChar(100)
+  acceptTerms             Boolean  @default(false)
+  role                    Int      @default(0)
+  joinedAt                String   @db.VarChar(50)
+  email                   String?  @unique @db.VarChar(100)
+  email_confirmed         Boolean  @default(false)
+  tempEmail               String?  @unique @db.VarChar(100)
+  emailVerificationCode   String?  @db.VarChar(255)
+  emailVerificationExpires DateTime?
+  phone_confirmed         Boolean  @default(false)
+  email_log_num           Int      @default(0)
+  phone_log_num           Int      @default(0)
+  referralCode            String   @default("") @db.VarChar(100)
+  online                  Boolean  @default(false)
+  lastSeen                DateTime @default(now())
+  
+  sessions                Session[]
+  otps                    EmailOtp[]
+
+  @@map("users")
+}

@@ -1,12 +1,13 @@
-const User = require("../models/User");
+const { PrismaClient } = require("@prisma/client");
 const nodemailer = require("nodemailer");
-const EmailOtp = require("../models/EmailOTP");
 const crypto = require("crypto");
 
 // =================== دریافت همه کاربران ===================
 const getAllUsers = async (req, res) => {
   try {
-    const allUsers = await User.find().sort({ id: -1 });
+    const allUsers = await prisma.user.findMany({
+      orderBy: { id: "desc" },
+    });
     res.status(200).json({ msg: "ok", data: allUsers });
   } catch (e) {
     console.log(e);
@@ -18,7 +19,9 @@ module.exports.getAllUsers = getAllUsers;
 // =================== دریافت یک کاربر ===================
 const getOneUser = async (req, res) => {
   try {
-    const theUser = await User.findById(req.params.id);
+    const theUser = await prisma.user.findUnique({
+      where: { id: req.params.id },
+    });
     if (!theUser) {
       return res.status(404).json({ msg: "کاربر پیدا نشد" });
     }
@@ -33,8 +36,15 @@ module.exports.getOneUser = getOneUser;
 // =================== ایجاد کاربر جدید ===================
 const createUser = async (req, res) => {
   try {
-    const newUser = new User(req.body);
-    await newUser.save();
+    const newUser = await prisma.user.create({
+      data: {
+        ...req.body,
+        joinedAt: new Date().toLocaleDateString("fa-IR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      },
+    });
     res.status(201).json({ msg: "کاربر ایجاد شد", data: newUser });
   } catch (e) {
     console.log(e);
@@ -73,11 +83,10 @@ const verifyUserPhone = async (req, res) => {
   }
 
   try {
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { phone_confirmed: true },
-      { new: true },
-    );
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { phone_confirmed: true },
+    });
 
     if (!user) return res.status(404).json({ msg: "کاربر پیدا نشد" });
 
@@ -99,19 +108,24 @@ const sendVerifyEmail = async (req, res) => {
     if (!email) return res.status(400).json({ msg: "ایمیل ارسال نشده" });
     if (!userId) return res.status(400).json({ msg: "شناسه کاربر ارسال نشده" });
 
-    const user = await User.findById(userId);
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
     if (!user) return res.status(404).json({ msg: "کاربر پیدا نشد" });
 
     // کد ۶ رقمی
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const hashedCode = crypto.createHash("sha256").update(code).digest("hex");
 
-    user.tempEmail = email;
-    user.emailVerificationCode = hashedCode;
-    user.emailVerificationExpires = Date.now() + 10 * 60 * 1000; // 10 دقیقه
-    user.email_confirmed = false;
-
-    await user.save();
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        tempEmail: email,
+        emailVerificationCode: hashedCode,
+        emailVerificationExpires: new Date(Date.now() + 10 * 60 * 1000),
+        email_confirmed: false,
+      },
+    });
 
     const transporter = nodemailer.createTransport({
       host: process.env.LIARA_EMAIL_HOST,
@@ -137,7 +151,6 @@ const sendVerifyEmail = async (req, res) => {
     res.status(500).json({ msg: "خطا در سرور" });
   }
 };
-
 module.exports.sendVerifyEmail = sendVerifyEmail;
 
 // =================== تایید ایمیل ===================
@@ -150,24 +163,27 @@ const verifyEmail = async (req, res) => {
 
     const hashedCode = crypto.createHash("sha256").update(code).digest("hex");
 
-    const user = await User.findOne({
-      tempEmail: email,
-      emailVerificationCode: hashedCode,
-      emailVerificationExpires: { $gt: Date.now() },
+    const user = await prisma.user.findFirst({
+      where: {
+        tempEmail: email,
+        emailVerificationCode: hashedCode,
+        emailVerificationExpires: { gt: new Date() },
+      },
     });
 
     if (!user) return res.status(400).json({ msg: "کد نامعتبر یا منقضی شده" });
 
     // تایید نهایی
-    user.email = email;
-    user.email_confirmed = true;
-
-    // پاکسازی
-    user.tempEmail = undefined;
-    user.emailVerificationCode = undefined;
-    user.emailVerificationExpires = undefined;
-
-    await user.save();
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        email: email,
+        email_confirmed: true,
+        tempEmail: null,
+        emailVerificationCode: null,
+        emailVerificationExpires: null,
+      },
+    });
 
     res.status(200).json({ msg: "ایمیل با موفقیت تایید شد" });
   } catch (e) {
@@ -175,9 +191,10 @@ const verifyEmail = async (req, res) => {
     res.status(500).json({ msg: "خطا در سرور" });
   }
 };
-
 module.exports.verifyEmail = verifyEmail;
-exports.verifyEmailByCode = async (req, res) => {
+
+// =================== تایید ایمیل با کد ===================
+const verifyEmailByCode = async (req, res) => {
   const { code } = req.body;
   const userId = req.params.id;
 
@@ -185,24 +202,28 @@ exports.verifyEmailByCode = async (req, res) => {
 
   const hashedCode = crypto.createHash("sha256").update(code).digest("hex");
 
-  const user = await User.findOne({
-    _id: userId,
-    emailVerificationCode: hashedCode,
-    emailVerificationExpires: { $gt: Date.now() },
+  const user = await prisma.user.findFirst({
+    where: {
+      id: userId,
+      emailVerificationCode: hashedCode,
+      emailVerificationExpires: { gt: new Date() },
+    },
   });
 
   if (!user) return res.status(400).json({ msg: "کد اشتباه یا منقضی شده است" });
 
   // تایید ایمیل
-  user.email = user.tempEmail;
-  user.email_confirmed = true;
-
-  // پاکسازی
-  user.tempEmail = undefined;
-  user.emailVerificationCode = undefined;
-  user.emailVerificationExpires = undefined;
-
-  await user.save();
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      email: user.tempEmail,
+      email_confirmed: true,
+      tempEmail: null,
+      emailVerificationCode: null,
+      emailVerificationExpires: null,
+    },
+  });
 
   res.json({ msg: "ایمیل با موفقیت تایید شد" });
 };
+module.exports.verifyEmailByCode = verifyEmailByCode;

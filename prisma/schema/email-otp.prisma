@@ -1,0 +1,10 @@
+model EmailOtp {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @db.VarChar(100)
+  code      String   @db.VarChar(10)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  used      Boolean  @default(false)
+
+  @@map("email_otps")
+}
