@@ -54,7 +54,7 @@
 | **User → Notification (فرستنده)**         | One‑to‑Many      | `User`         | `Notification`         | `fromUserId`              | هر کاربر چندین اعلان ارسال می‌کند                 |
 | **User → Report (گزارش‌دهنده)**           | One‑to‑Many      | `User`         | `Report`               | `reporterUserId`          | هر کاربر می‌تواند چندین گزارش ثبت کند             |
 | **User → ReportReason (ایجادکننده)**      | One‑to‑Many      | `User`         | `ReportReason`         | `createdById`             | هر کاربر می‌تواند چندین دلیل گزارش ایجاد کند      |
-| **User → Resume**                         | One‑to‑Many      | `User`         | `Resume`               | `userId`                  | هر کاربر می‌تواند چندین(دو) رزومه داشته باشد      |
+| **User → Resume**                         | One‑to‑Many      | `User`         | `Resume`               | `userId`                  | هر کاربر می‌تواند چندین رزومه داشته باشد          |
 | **User → Ticket**                         | One‑to‑Many      | `User`         | `Ticket`               | `user`                    | هر کاربر می‌تواند چندین تیکت ایجاد کند            |
 | **User → TicketReply**                    | One‑to‑Many      | `User`         | `TicketReply`          | `userId`                  | هر کاربر می‌تواند چندین پاسخ تیکت بدهد            |
 | **User → ToolUsageLog**                   | One‑to‑Many      | `User`         | `ToolUsageLog`         | `userId`                  | هر کاربر چندین لاگ استفاده از ابزار دارد          |
