@@ -1,0 +1,45 @@
+erDiagram
+    User ||--o{ UserProfile : has
+    User ||--o{ AdMark : has
+    User ||--o{ AdView : has
+    User ||--o{ Chat : "sends (from)"
+    User ||--o{ Chat : "receives (to)"
+    User ||--o{ DigitalAd : owns
+    User ||--o{ EmployerAd : owns
+    User ||--o{ JobSeekerAd : owns
+    User ||--o{ SellerAd : owns
+    User ||--o{ Notification : "receives"
+    User ||--o{ Notification : "sends"
+    User ||--o{ Report : creates
+    User ||--o{ ReportReason : creates
+    User ||--o{ Resume : has
+    User ||--o{ Session : has
+    User ||--o{ Ticket : creates
+    User ||--o{ TicketReply : writes
+    User ||--o{ ToolUsageLog : has
+    User ||--o{ RecentView : has
+    User ||--o{ TestSession : participates
+    User ||--o{ Conversation : "participates in"
+
+    AdCategory ||--o{ AdCategoryAttributes : has
+    AdCategory ||--o{ AdCategory : "has children"
+
+    Chat }o--|| Conversation : belongs
+    Conversation ||--o{ Chat : contains
+
+    DigitalAd }o--|| User : owned_by
+    EmployerAd }o--|| User : owned_by
+    JobSeekerAd }o--|| User : owned_by
+    SellerAd }o--|| User : owned_by
+
+    Question }o--|| TestType : belongs
+    TestSession }o--|| User : belongs
+    TestSession }o--|| TestType : belongs
+    TestType }o--|| TestCategory : belongs
+
+    Ticket ||--o{ TicketReply : has
+    TicketReply }o--|| Ticket : belongs
+    TicketReply }o--|| User : written_by
+    ReportReason }o--|| User : created_by
+    Notification }o--|| User : "sent_to"
+    Notification }o--|| User : "sent_by"

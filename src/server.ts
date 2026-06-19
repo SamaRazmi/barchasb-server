@@ -1,5 +1,4 @@
 import express, { Request, Response, NextFunction, Application } from "express";
-import mongoose from "mongoose";
 import cors, { CorsOptions } from "cors";
 import cookieParser from "cookie-parser";
 import http from "http";
@@ -7,6 +6,7 @@ import { Server, Socket } from "socket.io";
 import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 import "dotenv/config";
+import prisma from "./config/prisma";
 
 // Middlewares
 import {
@@ -14,7 +14,7 @@ import {
   authenticateAdmin,
 } from "./middleware/authMidleware";
 
-// Routes Imports (بدون پسوند .js یا .ts)
+// Routes Imports
 import UserRoutes from "./routes/UserRoutes";
 import ProvinceRoutes from "./routes/ProvinceRoutes";
 import ticketRoutes from "./routes/ticketRoutes";
@@ -40,6 +40,9 @@ import ResumeRoutes from "./routes/ResumeRoutes";
 import converterRoutes from "./routes/converterRoutes";
 import AdminExtensionsRoutes from "./routes/AdminExtensionsRoutes";
 import UserExtensionsRoutes from "./routes/UserExtensionsRoutes";
+
+// 👇 بارگذاری dataLoader (CommonJS)
+const loadData = require("./utils/dataLoader");
 
 interface CustomSocket extends Socket {
   userId?: string;
@@ -175,18 +178,17 @@ app.use("/api", userProfileRoutes);
 app.use("/api", UploadFileRoutes);
 app.use("/api", ChatRoutes);
 
-// Protected routes using your auth middleware hooks
+// Protected routes
 app.use("/api/tests", authenticateUser, TestRoutes);
 app.use("/api/resume", authenticateUser, ResumeRoutes);
 app.use("/api/converter", authenticateUser, converterRoutes);
-app.use("/api/admin", authenticateAdmin, AdminExtensionsRoutes); // ✅ از کامنت خارج شد
+app.use("/api/admin", authenticateAdmin, AdminExtensionsRoutes);
 app.use("/api/user", authenticateUser, UserExtensionsRoutes);
 
 /* =====================================================
    =============== GLOBAL ERROR HANDLING ===============
    ===================================================== */
 
-// 404 Route handler
 app.use((req: Request, res: Response, next: NextFunction) => {
   res.status(404).json({
     success: false,
@@ -195,7 +197,6 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-// Main error wrapper middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error("Global Error:", err);
 
@@ -334,7 +335,43 @@ io.on("connection", (socket: CustomSocket) => {
    ===================================================== */
 const port = process.env.PORT || 5000;
 
-server.listen(port, () => {
-  console.log(`🚀 Server is running on http://localhost:${port}`);
-  console.log(`📄 Swagger docs: http://localhost:${port}/api-docs`);
+// ✅ اتصال به PostgreSQL از طریق Prisma
+async function startServer() {
+  try {
+    await prisma.$connect();
+    console.log("✅ Connected to PostgreSQL via Prisma!");
+
+    if (process.env.ENABLE_DATA_SEEDING === "true") {
+      console.log("🌱 Starting data seeding...");
+      try {
+        await loadData();
+        console.log("✅ Seeders finished successfully.");
+      } catch (seedErr) {
+        console.error("❌ Error during seeding:", seedErr);
+      }
+    } else {
+      console.log("⏩ Data seeding skipped (ENABLE_DATA_SEEDING is not true)");
+    }
+
+    server.listen(port, () => {
+      console.log(`🚀 Server is running on http://localhost:${port}`);
+      console.log(`📄 Swagger docs: http://localhost:${port}/api-docs`);
+    });
+  } catch (err: unknown) {
+    // ✅ رفع خطای `err` از نوع unknown
+    console.error(
+      "❌ Failed to connect to PostgreSQL:",
+      err instanceof Error ? err.message : String(err),
+    );
+    process.exit(1);
+  }
+}
+
+startServer();
+
+// مدیریت graceful shutdown
+process.on("SIGINT", async () => {
+  await prisma.$disconnect();
+  console.log("🛑 Server shut down gracefully.");
+  process.exit(0);
 });
