@@ -1,0 +1,340 @@
+import express, { Request, Response, NextFunction, Application } from "express";
+import mongoose from "mongoose";
+import cors, { CorsOptions } from "cors";
+import cookieParser from "cookie-parser";
+import http from "http";
+import { Server, Socket } from "socket.io";
+import swaggerUi from "swagger-ui-express";
+import swaggerJsdoc from "swagger-jsdoc";
+import "dotenv/config";
+
+// Middlewares
+import {
+  authenticateUser,
+  authenticateAdmin,
+} from "./middleware/authMidleware";
+
+// Routes Imports (بدون پسوند .js یا .ts)
+import UserRoutes from "./routes/UserRoutes";
+import ProvinceRoutes from "./routes/ProvinceRoutes";
+import ticketRoutes from "./routes/ticketRoutes";
+import AdCategoryRoutes from "./routes/AdCategoryRoutes";
+import JobCategoryRoutes from "./routes/JobCategoryRoutes";
+import OtpRoutes from "./routes/OtpRoutes";
+import AdCategoryAttributesRoutes from "./routes/AdCategoryAttributesRoutes";
+import RecentViewRoutes from "./routes/RecentViewRoutes";
+import EmployerAdRoutes from "./routes/EmployerAdRoutes";
+import SellerAdRoutes from "./routes/SellerAdRoutes";
+import JobSeekerAdRoutes from "./routes/JobSeekerAdRoutes";
+import DigitalAdRoutes from "./routes/DigitalAdRoutes";
+import AdMarkRoutes from "./routes/AdMarkRoutes";
+import userProfileRoutes from "./routes/UserProfileRoutes";
+import UploadFileRoutes from "./routes/UploadFileRoutes";
+import ChatRoutes from "./routes/ChatRoutes";
+import StatsRoutes from "./routes/StatsRoutes";
+import sessionRoutes from "./routes/SessionRoutes";
+import reportReasonRoutes from "./routes/reportReasonRoutes";
+import reportRoutes from "./routes/reportRoutes";
+import TestRoutes from "./routes/TestRoutes";
+import ResumeRoutes from "./routes/ResumeRoutes";
+import converterRoutes from "./routes/converterRoutes";
+import AdminExtensionsRoutes from "./routes/AdminExtensionsRoutes";
+import UserExtensionsRoutes from "./routes/UserExtensionsRoutes";
+
+interface CustomSocket extends Socket {
+  userId?: string;
+}
+
+interface SocketMessage {
+  receiverId: string;
+  [key: string]: any;
+}
+
+const app: Application = express();
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: [
+      "http://localhost:3000",
+      "https://barchasb.liara.run",
+      "https://barchasb.org",
+      "https://www.barchasb.org",
+      "https://barchasb-main-server.ir",
+      "https://www.barchasb-main-server.ir",
+    ],
+    credentials: true,
+  },
+  transports: ["polling", "websocket"],
+});
+
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://barchasb.liara.run",
+  "https://barchasb.org",
+  "https://www.barchasb.org",
+  "http://localhost:5000",
+  "https://barchasb-server.liara.run",
+  "https://barchasb-main-server.ir",
+  "https://www.barchasb-main-server.ir",
+];
+
+const corsOptions: CorsOptions = {
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("این دامین اجازه دسترسی ندارد!"), false);
+    }
+  },
+  credentials: true,
+};
+
+// Express Global Middlewares
+app.use(cors(corsOptions));
+app.use(express.json({ limit: "50mb" }));
+app.use(
+  express.urlencoded({ limit: "50mb", extended: true, parameterLimit: 50000 }),
+);
+app.use(cookieParser());
+
+/* =====================================================
+   ================== SWAGGER SETUP ====================
+   ===================================================== */
+const swaggerOptions = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "Barchasb API",
+      version: "1.0.0",
+      description: "API documentation for Barchasb backend",
+    },
+    servers: [{ url: "/" }],
+    components: {
+      securitySchemes: {
+        BearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
+    },
+    security: [{ BearerAuth: [] }],
+  },
+  apis: ["./src/routes/*.ts", "./src/routes/*.js"],
+};
+
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+
+const swaggerUiOptions = {
+  swaggerOptions: {
+    requestInterceptor: (req: any) => {
+      if (
+        req.headers &&
+        req.headers["Content-Type"] === "multipart/form-data"
+      ) {
+        delete req.headers["Content-Type"];
+      }
+      return req;
+    },
+  },
+};
+
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, swaggerUiOptions),
+);
+
+/* =====================================================
+   ==================== ROUTES =========================
+   ===================================================== */
+app.get("/", (req: Request, res: Response) => {
+  res.status(200).json({ msg: "auth server main page" });
+});
+
+app.use("/api", reportReasonRoutes);
+app.use("/api", reportRoutes);
+app.use("/api", StatsRoutes);
+app.use("/api", UserRoutes);
+app.use("/api", ProvinceRoutes);
+app.use("/api", ticketRoutes);
+app.use("/api", AdCategoryRoutes);
+app.use("/api", JobCategoryRoutes);
+app.use("/api", sessionRoutes);
+app.use("/api", AdCategoryAttributesRoutes);
+app.use("/api", OtpRoutes);
+app.use("/api", EmployerAdRoutes);
+app.use("/api", SellerAdRoutes);
+app.use("/api", JobSeekerAdRoutes);
+app.use("/api", DigitalAdRoutes);
+app.use("/api", AdMarkRoutes);
+app.use("/api", RecentViewRoutes);
+app.use("/api", userProfileRoutes);
+app.use("/api", UploadFileRoutes);
+app.use("/api", ChatRoutes);
+
+// Protected routes using your auth middleware hooks
+app.use("/api/tests", authenticateUser, TestRoutes);
+app.use("/api/resume", authenticateUser, ResumeRoutes);
+app.use("/api/converter", authenticateUser, converterRoutes);
+app.use("/api/admin", authenticateAdmin, AdminExtensionsRoutes); // ✅ از کامنت خارج شد
+app.use("/api/user", authenticateUser, UserExtensionsRoutes);
+
+/* =====================================================
+   =============== GLOBAL ERROR HANDLING ===============
+   ===================================================== */
+
+// 404 Route handler
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.status(404).json({
+    success: false,
+    message: "مسیر مورد نظر یافت نشد",
+    error: "Not Found",
+  });
+});
+
+// Main error wrapper middleware
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  console.error("Global Error:", err);
+
+  let statusCode = err.status || 500;
+  let message = err.message || "خطای داخلی سرور";
+  let errorType = err.name || "InternalError";
+
+  if (err.code === "LIMIT_FILE_SIZE") {
+    statusCode = 400;
+    message = "حجم فایل ارسالی بیش از حد مجاز است (حداکثر ۵۰ مگابایت)";
+    errorType = "FileTooLarge";
+  } else if (err.code === "LIMIT_UNEXPECTED_FILE") {
+    statusCode = 400;
+    message = "تعداد فایل‌های ارسالی بیش از حد مجاز است";
+    errorType = "TooManyFiles";
+  } else if (
+    err.message &&
+    err.message.includes("فرمت فایل پشتیبانی نمی‌شود")
+  ) {
+    statusCode = 400;
+    message = err.message;
+    errorType = "UnsupportedFileFormat";
+  } else if (
+    err instanceof SyntaxError &&
+    "type" in err &&
+    err.type === "entity.parse.failed"
+  ) {
+    statusCode = 400;
+    message = "فرمت JSON ارسالی نامعتبر است";
+    errorType = "InvalidJSON";
+  } else if (err.name === "ValidationError") {
+    statusCode = 400;
+    message = err.message;
+    errorType = "ValidationError";
+  } else if (err.name === "UnauthorizedError" || err.status === 401) {
+    statusCode = 401;
+    message = "احراز هویت ناموفق";
+    errorType = "Unauthorized";
+  } else if (statusCode === 500) {
+    if (process.env.NODE_ENV === "production") {
+      message = "خطای داخلی سرور، لطفاً بعداً تلاش کنید";
+      errorType = "InternalServerError";
+    }
+  }
+
+  res.status(statusCode).json({
+    success: false,
+    statusCode,
+    message,
+    error: errorType,
+    ...(process.env.NODE_ENV !== "production" && { stack: err.stack }),
+  });
+});
+
+/* =====================================================
+   ================== SOCKET.IO LAYER ==================
+   ===================================================== */
+const onlineUsers = new Map<string, Set<string>>();
+const lastSeenMap = new Map<string, Date>();
+
+io.on("connection", (socket: CustomSocket) => {
+  console.log("User connected:", socket.id);
+
+  socket.on("join", ({ userId }: { userId: string }) => {
+    if (!userId) return;
+    socket.userId = userId;
+
+    if (!onlineUsers.has(userId)) onlineUsers.set(userId, new Set<string>());
+    onlineUsers.get(userId)!.add(socket.id);
+
+    socket.join(userId);
+    console.log(`✅ User ${userId} joined room ${userId}`);
+    console.log("Online users:", Array.from(onlineUsers.keys()));
+
+    io.emit("userStatus", {
+      userId,
+      online: true,
+      lastSeen: null,
+    });
+  });
+
+  socket.on("getUserStatus", ({ userId }: { userId: string }) => {
+    const isOnline = onlineUsers.has(userId);
+    let lastSeen: Date | null = null;
+    if (!isOnline) {
+      lastSeen = lastSeenMap.get(userId) || new Date();
+    }
+    socket.emit("userStatus", {
+      userId,
+      online: isOnline,
+      lastSeen,
+    });
+  });
+
+  socket.on("sendMessage", (msg: SocketMessage) => {
+    io.to(msg.receiverId).emit("receiveMessage", msg);
+  });
+
+  socket.on(
+    "typing",
+    ({ toUserId, isTyping }: { toUserId: string; isTyping: boolean }) => {
+      const clients = onlineUsers.get(toUserId);
+      if (clients && clients.size > 0) {
+        io.to(toUserId).emit("typingStatus", {
+          fromUserId: socket.userId,
+          isTyping,
+        });
+      }
+    },
+  );
+
+  socket.on("disconnect", () => {
+    const userId = socket.userId;
+    if (userId && onlineUsers.has(userId)) {
+      onlineUsers.get(userId)!.delete(socket.id);
+      if (onlineUsers.get(userId)!.size === 0) {
+        onlineUsers.delete(userId);
+        const now = new Date();
+        lastSeenMap.set(userId, now);
+        console.log(`❌ User ${userId} is now offline (lastSeen: ${now})`);
+
+        io.emit("userStatus", {
+          userId,
+          online: false,
+          lastSeen: now,
+        });
+      }
+    }
+    console.log("User disconnected:", socket.id);
+    console.log("Online users:", Array.from(onlineUsers.keys()));
+  });
+});
+
+/* =====================================================
+   ================ DATABASE & LIFECYCLE ===============
+   ===================================================== */
+const port = process.env.PORT || 5000;
+
+server.listen(port, () => {
+  console.log(`🚀 Server is running on http://localhost:${port}`);
+  console.log(`📄 Swagger docs: http://localhost:${port}/api-docs`);
+});
