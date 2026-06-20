@@ -8,6 +8,69 @@ import LogoutCtrl from "../controllers/LogoutCtrl";
 import ForgotPasswordCtrl from "../controllers/ForgotPasswordCtrl";
 
 const router = express.Router();
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       required:
+ *         - name
+ *         - lastName
+ *         - phone
+ *         - nationalCode
+ *         - birthDate
+ *         - gender
+ *         - province
+ *         - city
+ *         - password
+ *         - acceptTerms
+ *       properties:
+ *         name:
+ *           type: string
+ *           example: "علی"
+ *         lastName:
+ *           type: string
+ *           example: "محمدی"
+ *         phone:
+ *           type: string
+ *           example: "09123456789"
+ *         nationalCode:
+ *           type: string
+ *           example: "1234567890"
+ *         birthDate:
+ *           type: string
+ *           example: "1370-01-01"
+ *         gender:
+ *           type: string
+ *           enum: [male, female]
+ *           example: "male"
+ *         province:
+ *           type: string
+ *           example: "تهران"
+ *         city:
+ *           type: string
+ *           example: "تهران"
+ *         password:
+ *           type: string
+ *           minLength: 5
+ *           example: "12345"
+ *         acceptTerms:
+ *           type: boolean
+ *           example: true
+ *         email:
+ *           type: string
+ *           format: email
+ *           example: "user@example.com"
+ *         username:
+ *           type: string
+ *           example: "alimohammadi"
+ *         joinedAt:
+ *           type: string
+ *           example: "1402-01-01"
+ */
+
 /**
  * @swagger
  * tags:
