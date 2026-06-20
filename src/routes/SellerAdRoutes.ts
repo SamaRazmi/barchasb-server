@@ -1,4 +1,3 @@
-// src/routes/SellerAdRoutes.ts
 import express from "express";
 import { imagesUpload } from "../middleware/upload";
 import SellerAdCtrl from "../controllers/SellerAdCtrl";

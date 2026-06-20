@@ -1,4 +1,3 @@
-// src/routes/DigitalAdRoutes.ts
 import express from "express";
 import { imagesUpload } from "../middleware/upload";
 import DigitalAdCtrl from "../controllers/DigitalAdCtrl";

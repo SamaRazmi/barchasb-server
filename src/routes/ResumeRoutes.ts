@@ -1,4 +1,3 @@
-// src/routes/ResumeRoutes.ts
 import { Router } from "express";
 import ResumeCtrl from "../controllers/ResumeCtrl";
 import multer from "multer";
@@ -12,7 +11,7 @@ const upload = multer({
     if (file.mimetype === "application/pdf") {
       cb(null, true);
     } else {
-      cb(new Error("فقط فایل‌های PDF مجاز هستند."), false as any);
+      cb(new Error("فقط فایل‌های PDF مجاز هستند.") as any, false);
     }
   },
   limits: { fileSize: 15 * 1024 * 1024 }, // 15 MB

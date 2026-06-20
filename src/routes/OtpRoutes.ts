@@ -1,4 +1,3 @@
-// src/routes/OtpRoutes.ts
 import { Router } from "express";
 import OtpCtrl from "../controllers/OtpCtrl";
 

@@ -1,4 +1,3 @@
-// src/routes/ProvinceRoutes.ts
 import { Router } from "express";
 import ProvinceCtrl from "../controllers/ProvinceCtrl";
 

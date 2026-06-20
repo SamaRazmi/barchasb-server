@@ -1,4 +1,3 @@
-// src/routes/StatsRoutes.ts
 import { Router } from "express";
 import StatsController from "../controllers/StatsController";
 

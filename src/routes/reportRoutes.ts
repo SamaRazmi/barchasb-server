@@ -1,4 +1,3 @@
-// src/routes/reportReasonRoutes.ts
 import { Router } from "express";
 import reportReasonCtrl from "../controllers/reportReasonCtrl";
 import { isAdmin } from "../middleware/authAdmin";

@@ -97,6 +97,7 @@ enum ScoringMethod {
   trait_accumulation
   forced_choice_mbti
   likert_sum
+   mbti_polar 
 }
 
 enum TimeUnit {

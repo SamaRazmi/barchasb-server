@@ -1,4 +1,3 @@
-// src/routes/reportRoutes.ts
 import { Router } from "express";
 import reportController from "../controllers/reportController";
 import { authenticateUser } from "../middleware/authMidleware";
@@ -6,11 +5,12 @@ import { authenticateUser } from "../middleware/authMidleware";
 const router = Router();
 
 // تابع کمکی برای تنظیم req.body
-const setReportData = (reportType: string) => (req: any, res: any, next: any) => {
-  req.body.targetId = req.params.targetId;
-  req.body.reportType = reportType;
-  next();
-};
+const setReportData =
+  (reportType: string) => (req: any, res: any, next: any) => {
+    req.body.targetId = req.params.targetId;
+    req.body.reportType = reportType;
+    next();
+  };
 
 /**
  * @swagger

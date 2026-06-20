@@ -1,4 +1,3 @@
-// src/routes/JobSeekerAdRoutes.ts
 import express from "express";
 import { imagesUpload, fileUpload } from "../middleware/upload";
 import JobSeekerAdCtrl from "../controllers/JobSeekerAdCtrl";

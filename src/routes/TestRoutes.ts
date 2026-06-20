@@ -1,4 +1,3 @@
-// src/routes/TestRoutes.ts
 import { Router } from "express";
 import testController from "../controllers/TestCtrl";
 

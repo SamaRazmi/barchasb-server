@@ -1,11 +1,10 @@
-// src/routes/UserProfileRoutes.ts
 import express from "express";
 import {
   getProfile,
   updateProfile,
   uploadProfilePhoto,
 } from "../controllers/UserProfileCtrl";
-import { imagesUpload } from "../middleware/upload"; // middleware آپلود فایل
+import { imagesUpload } from "../middleware/upload";
 
 const router = express.Router();
 

@@ -1,4 +1,3 @@
-// src/routes/AuthRoutes.ts
 import { Router } from "express";
 import LoginCtrl from "../controllers/LoginCtrl";
 import LogoutCtrl from "../controllers/LogoutCtrl";

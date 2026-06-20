@@ -1,4 +1,3 @@
-// src/routes/AdminExtensionsRoutes.ts
 import { Router } from "express";
 import testController from "../controllers/TestCtrl";
 import resumeController from "../controllers/ResumeCtrl";

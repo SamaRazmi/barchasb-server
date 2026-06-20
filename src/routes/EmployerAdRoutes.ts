@@ -1,4 +1,3 @@
-// src/routes/EmployerAdRoutes.ts
 import { Router } from "express";
 import { imagesUpload } from "../middleware/upload";
 import EmployerAdCtrl from "../controllers/EmployerAdCtrl";
