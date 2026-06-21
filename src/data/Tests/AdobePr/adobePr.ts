@@ -26,7 +26,7 @@ const AdobePrTypeData = async (categoryId: string) => {
         structure: {
           A1: { Basics: 2, Import: 1 },
           A2: { Tools: 2, Sequence: 1 },
-          B1: { Color: 1, Audio: 1, Transitions: 1 },
+          B1: { Color: 1, Audio: 2, Transitions: 1 },
           B2: { Keyframes: 2, Masking: 1, Graphics: 1 },
           C1: { Workflow: 2, Multicam: 1 },
           C2: { Export: 1, TimeRemapping: 2 },

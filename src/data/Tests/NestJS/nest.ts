@@ -23,7 +23,7 @@ const NestJSTestTypeData = async (categoryId: string) => {
       ],
       blueprint: {
         structure: {
-          A1: { Basics: 2, CLI: 2 },
+          A1: { Basics: 1, CLI: 1 },
           A2: { Modules: 2, Controllers: 2 },
           B1: { Pipes: 2, Guards: 2 },
           B2: { Interceptors: 2, TypeORM: 2 },

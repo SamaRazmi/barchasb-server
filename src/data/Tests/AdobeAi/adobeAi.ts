@@ -28,7 +28,7 @@ const AdobeAiTypeData = async (categoryId: string) => {
           A2: { Tools: 2, Pathfinder: 1, Groups: 1 },
           B1: { PenTool: 1, Masking: 1, Brushes: 1 },
           B2: { Appearance: 1, Typography: 1, Effects: 1 },
-          C1: { Mesh: 1, "3D": 1, Perspective: 1 },
+          C1: { Mesh: 1, "3D": 2, Perspective: 1 },
           C2: { Automation: 1, PrintTech: 1 },
         },
         levelWeights: {

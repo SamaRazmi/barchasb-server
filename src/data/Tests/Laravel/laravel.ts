@@ -23,7 +23,7 @@ const LaravelTypeData = async (categoryId: string) => {
       ],
       blueprint: {
         structure: {
-          A1: { Basics: 2, Artisan: 2 },
+          A1: { Basics: 1, Artisan: 1 },
           A2: { Eloquent: 2, Migrations: 2 },
           B1: { Middleware: 2, Validation: 2 },
           B2: { Auth: 2, Queues: 2 },
