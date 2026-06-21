@@ -40,6 +40,8 @@ import ResumeRoutes from "./routes/ResumeRoutes";
 import converterRoutes from "./routes/converterRoutes";
 import AdminExtensionsRoutes from "./routes/AdminExtensionsRoutes";
 import UserExtensionsRoutes from "./routes/UserExtensionsRoutes";
+import SubAdmin from './routes/admin/authentication/sub-admin'
+import { swaggerAdminOptions } from "./config/swagger-admin";
 
 // 👇 بارگذاری dataLoader (CommonJS)
 const loadData = require("./utils/dataLoader");
@@ -113,7 +115,6 @@ const swaggerOptions = {
       version: "1.0.0",
       description: "API documentation for Barchasb backend",
     },
-    servers: [{ url: "/" }],
     components: {
       securitySchemes: {
         BearerAuth: {
@@ -129,6 +130,7 @@ const swaggerOptions = {
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
+const swaggerAdminSpec = swaggerJsdoc(swaggerAdminOptions);
 
 const swaggerUiOptions = {
   swaggerOptions: {
@@ -149,6 +151,11 @@ app.use(
   swaggerUi.serve,
   swaggerUi.setup(swaggerSpec, swaggerUiOptions),
 );
+
+app.use('/admin-api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerAdminSpec, swaggerUiOptions)
+)
 
 /* =====================================================
    ==================== ROUTES =========================
@@ -177,6 +184,7 @@ app.use("/api", RecentViewRoutes);
 app.use("/api", userProfileRoutes);
 app.use("/api", UploadFileRoutes);
 app.use("/api", ChatRoutes);
+app.use('/auth', SubAdmin)
 
 // Protected routes
 app.use("/api/tests", authenticateUser, TestRoutes);
@@ -356,6 +364,7 @@ async function startServer() {
     server.listen(port, () => {
       console.log(`🚀 Server is running on http://localhost:${port}`);
       console.log(`📄 Swagger docs: http://localhost:${port}/api-docs`);
+      console.log(`📄 Swagger Admin docs: http://localhost:${port}/admin-api-docs`);
     });
   } catch (err: unknown) {
     // ✅ رفع خطای `err` از نوع unknown

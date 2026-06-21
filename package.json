@@ -6,9 +6,9 @@
   "scripts": {
     "start": "node dist/server.js",
     "dev": "nodemon",
-    "prisma:generate": "prisma generate --schema=prisma/schema/schema.prisma",
-    "prisma:push": "prisma db push --schema=prisma/schema/schema.prisma",
-    "postinstall": "prisma generate --schema=prisma/schema/schema.prisma"
+    "prisma:generate": "prisma generate --schema=prisma/schema.prisma",
+    "prisma:push": "prisma db push --schema=prisma/schema.prisma",
+    "postinstall": "prisma generate --schema=prisma/schema.prisma"
   },
   "prisma": {
     "schema": "prisma/schema.prisma",

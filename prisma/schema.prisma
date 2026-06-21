@@ -1,6 +1,6 @@
 // prisma/schema.prisma
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
   engineType = "client"
 }
 
@@ -49,10 +49,10 @@ enum Gender {
 }
 
 enum UserRole {
-  USER   @map("0")
-  EMPLOYER @map("1")
+  USER       @map("0")
+  EMPLOYER   @map("1")
   JOB_SEEKER @map("3")
-  SELLER @map("5")
+  SELLER     @map("5")
 }
 
 enum ReportType {
@@ -97,7 +97,7 @@ enum ScoringMethod {
   trait_accumulation
   forced_choice_mbti
   likert_sum
-   mbti_polar 
+  mbti_polar
 }
 
 enum TimeUnit {
@@ -108,103 +108,108 @@ enum TimeUnit {
   year
 }
 
+enum AdminRole {
+  admin
+  super_admin
+}
+
 // ============================================
 // مدل‌ها (دقیقاً با همان نام و فیلدها)
 // ============================================
 
 model User {
-  id                       String          @id @default(uuid())
+  id                       String    @id @default(uuid())
   name                     String
   lastName                 String
-  username                 String?         @unique
-  nationalCode             String          @unique
-  phone                    String          @unique
+  username                 String?   @unique
+  nationalCode             String    @unique
+  phone                    String    @unique
   password                 String
   birthDate                String
   gender                   Gender
   province                 String
   city                     String
-  acceptTerms              Boolean         @default(false)
-  role                     UserRole        @default(USER)
+  acceptTerms              Boolean   @default(false)
+  role                     UserRole  @default(USER)
   joinedAt                 String
-  email                    String?         @unique
-  email_confirmed          Boolean         @default(false)
-  tempEmail                String?         @unique
+  email                    String?   @unique
+  email_confirmed          Boolean   @default(false)
+  tempEmail                String?   @unique
   emailVerificationCode    String?
   emailVerificationExpires DateTime?
-  phone_confirmed          Boolean         @default(false)
-  email_log_num            Int             @default(0)
-  phone_log_num            Int             @default(0)
-  referralCode             String          @default("")
-  online                   Boolean         @default(false)
-  lastSeen                 DateTime        @default(now())
-  sessions                 Session[]       @relation("UserSessions")
-  createdAt                DateTime        @default(now())
-  updatedAt                DateTime        @updatedAt
+  phone_confirmed          Boolean   @default(false)
+  email_log_num            Int       @default(0)
+  phone_log_num            Int       @default(0)
+  referralCode             String    @default("")
+  online                   Boolean   @default(false)
+  lastSeen                 DateTime  @default(now())
+  sessions                 Session[] @relation("UserSessions")
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
 
   // روابط
-  adMarks                  AdMark[]
-  adViews                  AdView[]
-  chatFrom                 Chat[]          @relation("ChatFrom")
-  chatTo                   Chat[]          @relation("ChatTo")
-  digitalAds               DigitalAd[]
-  employerAds              EmployerAd[]
-  jobSeekerAds             JobSeekerAd[]
-  sellerAds                SellerAd[]
-  notifications            Notification[]  @relation("NotificationUser")
-  sentNotifications        Notification[]  @relation("NotificationFromUser")
-  reports                  Report[]        @relation("Reporter")
-  reportReasons            ReportReason[]  @relation("ReasonCreator")
-  resumes                  Resume[]
-  tickets                  Ticket[]
-  ticketReplies            TicketReply[]
-  toolUsageLogs            ToolUsageLog[]
-  userProfiles             UserProfile[]
-  recentViews              RecentView[]
-  testSessions             TestSession[]
+  adMarks           AdMark[]
+  adViews           AdView[]
+  chatFrom          Chat[]         @relation("ChatFrom")
+  chatTo            Chat[]         @relation("ChatTo")
+  digitalAds        DigitalAd[]
+  employerAds       EmployerAd[]
+  jobSeekerAds      JobSeekerAd[]
+  sellerAds         SellerAd[]
+  notifications     Notification[] @relation("NotificationUser")
+  sentNotifications Notification[] @relation("NotificationFromUser")
+  reports           Report[]       @relation("Reporter")
+  reportReasons     ReportReason[] @relation("ReasonCreator")
+  resumes           Resume[]
+  tickets           Ticket[]
+  ticketReplies     TicketReply[]
+  toolUsageLogs     ToolUsageLog[]
+  userProfiles      UserProfile[]
+  recentViews       RecentView[]
+  testSessions      TestSession[]
 }
 
 model UserProfile {
-  id              String   @id @default(uuid())
-  user            String   @unique
-  profileImage    String   @default("")
-  address         String   @default("")
-  educationLevel  String?
-  aboutMe         String?
-  interests       String[]
-  skills          String[]
-  resumeFile      String?
-  portfolioFiles  String[]
-  documents       Json[]   // [{title: String, file: String}]
-  completed       Boolean  @default(false)
-  updatedAt       DateTime @default(now())
+  id             String   @id @default(uuid())
+  user           String   @unique
+  profileImage   String   @default("")
+  address        String   @default("")
+  educationLevel String?
+  aboutMe        String?
+  interests      String[]
+  skills         String[]
+  resumeFile     String?
+  portfolioFiles String[]
+  documents      Json[] // [{title: String, file: String}]
+  completed      Boolean  @default(false)
+  updatedAt      DateTime @default(now())
 
-  userRelation    User     @relation(fields: [user], references: [id])
+  userRelation User @relation(fields: [user], references: [id])
 }
 
 model Province {
-  id      String   @id @default(uuid())
-  name    String
-  cities  String[]
+  id     String   @id @default(uuid())
+  name   String
+  cities String[]
 }
 
 model AdCategory {
-  id        String   @id @default(uuid())
-  name      String
-  parent    String?
+  id     String  @id @default(uuid())
+  name   String
+  parent String?
 
-  parentRelation AdCategory? @relation("AdCategoryParent", fields: [parent], references: [id])
-  children      AdCategory[] @relation("AdCategoryParent")
-  attributes    AdCategoryAttributes[]
+  parentRelation AdCategory?            @relation("AdCategoryParent", fields: [parent], references: [id])
+  children       AdCategory[]           @relation("AdCategoryParent")
+  attributes     AdCategoryAttributes[]
 }
 
 model AdCategoryAttributes {
-  id             String   @id @default(uuid())
-  adCategoryId   String   @unique
-  categoryId     Int
-  attributes     Json     @default("{}")
+  id           String @id @default(uuid())
+  adCategoryId String @unique
+  categoryId   Int
+  attributes   Json   @default("{}")
 
-  adCategory     AdCategory @relation(fields: [adCategoryId], references: [id])
+  adCategory AdCategory @relation(fields: [adCategoryId], references: [id])
 }
 
 model AdMark {
@@ -215,19 +220,19 @@ model AdMark {
   type      MarkType @default(favorite)
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@unique([userId, adId, adType])
 }
 
 model AdView {
-  id        String   @id @default(uuid())
-  adId      String
-  adType    AdType
-  ownerId   String
-  viewedAt  DateTime @default(now())
+  id       String   @id @default(uuid())
+  adId     String
+  adType   AdType
+  ownerId  String
+  viewedAt DateTime @default(now())
 
-  owner     User     @relation(fields: [ownerId], references: [id])
+  owner User @relation(fields: [ownerId], references: [id])
 
   @@index([ownerId, viewedAt])
 }
@@ -244,9 +249,9 @@ model Chat {
   read           Boolean  @default(false)
   createdAt      DateTime @default(now())
 
-  fromUser       User     @relation("ChatFrom", fields: [from], references: [id])
-  toUser         User     @relation("ChatTo", fields: [to], references: [id])
-  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  fromUser     User         @relation("ChatFrom", fields: [from], references: [id])
+  toUser       User         @relation("ChatTo", fields: [to], references: [id])
+  conversation Conversation @relation(fields: [conversationId], references: [id])
 
   @@index([conversationId])
 }
@@ -259,13 +264,13 @@ model Conversation {
   lastMessage  String?
   updatedAt    DateTime @default(now())
 
-  chats        Chat[]
+  chats Chat[]
 }
 
 model DigitalAd {
-  id                  String          @id @default(uuid())
+  id                  String        @id @default(uuid())
   owner               String
-  images              Json[]          // [{url: String, isMain: Boolean}]
+  images              Json[] // [{url: String, isMain: Boolean}]
   title               String
   description         String
   digitalTotalDesc    String?
@@ -273,19 +278,19 @@ model DigitalAd {
   projectDescriptions String[]
   minBudget           String?
   maxBudget           String?
-  requiredSkills      Json[]          // [{name: String}]
-  person              PersonType      @default(self)
-  remote              Boolean         @default(false)
-  thursdayHalf        Boolean         @default(false)
+  requiredSkills      Json[] // [{name: String}]
+  person              PersonType    @default(self)
+  remote              Boolean       @default(false)
+  thursdayHalf        Boolean       @default(false)
   verifyCode          String?
-  paymentMethod       PaymentMethod   @default(Bank_card)
-  adStatus            AdStatus        @default(pending)
-  requestType         String?         // "requester" | "provider"
-  durationUnit        TimeUnit?       @default(day)
+  paymentMethod       PaymentMethod @default(Bank_card)
+  adStatus            AdStatus      @default(pending)
+  requestType         String? // "requester" | "provider"
+  durationUnit        TimeUnit?     @default(day)
   durationAmount      String?
-  createdAt           DateTime        @default(now())
+  createdAt           DateTime      @default(now())
 
-  ownerRelation       User            @relation(fields: [owner], references: [id])
+  ownerRelation User @relation(fields: [owner], references: [id])
 }
 
 model EmailOTP {
@@ -298,57 +303,57 @@ model EmailOTP {
 }
 
 model EmployerAd {
-  id                  String          @id @default(uuid())
-  owner               String
-  images              Json[]          // [{url: String, isMain: Boolean}]
-  name                String
-  title               String
-  categories          Json[]          // [{name: String, subCategories: [String]}]
-  state               String?
-  city                String?
-  cooperationType     String?
-  gender              String?
-  militaryStatus      String?         @default("None")
-  experience          String?
-  paymentMethod       String?
-  isRemote            Boolean         @default(false)
-  thursdayUntilNoon   Boolean         @default(false)
-  startTime           String?
-  endTime             String?
-  minSalary           String?
-  maxSalary           String?
-  companyName         String?
-  companyType         String?
-  benefits            String?
-  insurance           String?
-  education           String?
-  companyDescription  String?
-  jobDetails          Json[]          // [{title: String, description: String}]
-  rating              Json            @default("{\"average\":0,\"count\":0}")
-  person              PersonType      @default(self)
-  isVerified          Boolean         @default(false)
-  enableChat          Boolean         @default(false)
-  enablePhone         Boolean         @default(false)
-  adPaymentMethod     PaymentMethod   @default(Bank_card)
-  adStatus            AdStatus        @default(pending)
-  createdAt           DateTime        @default(now())
+  id                 String        @id @default(uuid())
+  owner              String
+  images             Json[] // [{url: String, isMain: Boolean}]
+  name               String
+  title              String
+  categories         Json[] // [{name: String, subCategories: [String]}]
+  state              String?
+  city               String?
+  cooperationType    String?
+  gender             String?
+  militaryStatus     String?       @default("None")
+  experience         String?
+  paymentMethod      String?
+  isRemote           Boolean       @default(false)
+  thursdayUntilNoon  Boolean       @default(false)
+  startTime          String?
+  endTime            String?
+  minSalary          String?
+  maxSalary          String?
+  companyName        String?
+  companyType        String?
+  benefits           String?
+  insurance          String?
+  education          String?
+  companyDescription String?
+  jobDetails         Json[] // [{title: String, description: String}]
+  rating             Json          @default("{\"average\":0,\"count\":0}")
+  person             PersonType    @default(self)
+  isVerified         Boolean       @default(false)
+  enableChat         Boolean       @default(false)
+  enablePhone        Boolean       @default(false)
+  adPaymentMethod    PaymentMethod @default(Bank_card)
+  adStatus           AdStatus      @default(pending)
+  createdAt          DateTime      @default(now())
 
-  ownerRelation       User            @relation(fields: [owner], references: [id])
+  ownerRelation User @relation(fields: [owner], references: [id])
 }
 
 model JobCategory {
-  id        String   @id @default(uuid())
-  name      String
-  parent    String?
+  id     String  @id @default(uuid())
+  name   String
+  parent String?
 
-  parentRelation JobCategory? @relation("JobCategoryParent", fields: [parent], references: [id])
-  children      JobCategory[] @relation("JobCategoryParent")
+  parentRelation JobCategory?  @relation("JobCategoryParent", fields: [parent], references: [id])
+  children       JobCategory[] @relation("JobCategoryParent")
 }
 
 model JobSeekerAd {
-  id                 String          @id @default(uuid())
+  id                 String        @id @default(uuid())
   owner              String
-  images             Json[]          // [{url: String, isMain: Boolean}]
+  images             Json[] // [{url: String, isMain: Boolean}]
   name               String
   age                String?
   gender             String?
@@ -367,18 +372,18 @@ model JobSeekerAd {
   instagram          String?
   linkedIn           String?
   gitHub             String?
-  careerHistory      Json[]          // [{title: String, description: String}]
-  rating             Json            @default("{\"average\":0,\"count\":0}")
-  person             PersonType      @default(self)
-  isVerified         Boolean         @default(false)
-  enableChat         Boolean         @default(true)
-  enablePhone        Boolean         @default(false)
-  paymentMethod      PaymentMethod   @default(Bank_card)
-  adStatus           AdStatus        @default(pending)
-  userDesc           String          @default("")
-  createdAt          DateTime        @default(now())
+  careerHistory      Json[] // [{title: String, description: String}]
+  rating             Json          @default("{\"average\":0,\"count\":0}")
+  person             PersonType    @default(self)
+  isVerified         Boolean       @default(false)
+  enableChat         Boolean       @default(true)
+  enablePhone        Boolean       @default(false)
+  paymentMethod      PaymentMethod @default(Bank_card)
+  adStatus           AdStatus      @default(pending)
+  userDesc           String        @default("")
+  createdAt          DateTime      @default(now())
 
-  ownerRelation      User            @relation(fields: [owner], references: [id])
+  ownerRelation User @relation(fields: [owner], references: [id])
 }
 
 model Notification {
@@ -391,8 +396,8 @@ model Notification {
   isRead     Boolean  @default(false)
   createdAt  DateTime @default(now())
 
-  user       User     @relation("NotificationUser", fields: [userId], references: [id])
-  fromUser   User     @relation("NotificationFromUser", fields: [fromUserId], references: [id])
+  user     User @relation("NotificationUser", fields: [userId], references: [id])
+  fromUser User @relation("NotificationFromUser", fields: [fromUserId], references: [id])
 }
 
 model Otp {
@@ -412,24 +417,24 @@ model Question {
   subject         String
   level           String
   questionText    String
-  options         Json[]   // [{text: String, value: Int, isCorrect: Boolean, traitPoints: Json}]
+  options         Json[] // [{text: String, value: Int, isCorrect: Boolean, traitPoints: Json}]
   dimension       String?
   isReverseScored Boolean  @default(false)
   explanation     String?
   createdAt       DateTime @default(now())
   metadata        Json?
 
-  testType        TestType @relation(fields: [typeId], references: [id])
+  testType TestType @relation(fields: [typeId], references: [id])
 }
 
 model RecentView {
-  id        String   @id @default(uuid())
-  user      String
-  ad        String
-  adType    AdType
-  viewedAt  DateTime @default(now())
+  id       String   @id @default(uuid())
+  user     String
+  ad       String
+  adType   AdType
+  viewedAt DateTime @default(now())
 
-  userRelation User   @relation(fields: [user], references: [id])
+  userRelation User @relation(fields: [user], references: [id])
 
   @@unique([user, ad])
   @@index([user, viewedAt])
@@ -437,31 +442,31 @@ model RecentView {
 }
 
 model Report {
-  id             String         @id @default(uuid())
+  id             String       @id @default(uuid())
   reporterUserId String
   targetId       String
   reportType     ReportType
   reason         String
   description    String
-  status         ReportStatus   @default(pending)
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  status         ReportStatus @default(pending)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
-  reporter       User           @relation("Reporter", fields: [reporterUserId], references: [id])
+  reporter User @relation("Reporter", fields: [reporterUserId], references: [id])
 }
 
 model ReportReason {
-  id          String             @id @default(uuid())
-  type        ReportReasonType   @default(general)
+  id          String           @id @default(uuid())
+  type        ReportReasonType @default(general)
   key         String
   label       String
   description String
-  order       Int                @default(0)
-  isActive    Boolean            @default(true)
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
+  order       Int              @default(0)
+  isActive    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 
-  createdBy   User               @relation("ReasonCreator", fields: [createdById], references: [id])
+  createdBy   User   @relation("ReasonCreator", fields: [createdById], references: [id])
   createdById String
 
   @@unique([type, key])
@@ -469,71 +474,71 @@ model ReportReason {
 }
 
 model Resume {
-  id                  String   @id @default(uuid())
-  userId              String
-  updateCount         Int      @default(0)
-  fullName            String?
-  phoneNumber         String?
-  birthDate           String?
-  gender              String?
-  maritalStatus       String?
-  address             String?
-  expectedSalary      String?
-  cooperationType     String?
-  hasInsuranceHistory Boolean  @default(false)
-  willingToGoOnMission Boolean @default(false)
-  skills              String[]
-  education           Json[]   // [{major: String, university: String, gpa: String}]
-  workExperience      Json[]   // [{jobTitle: String, companyName: String, duration: String}]
-  certificates        Json[]   // [{title: String, provider: String, date: String}]
-  fileUrl             String?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  id                   String   @id @default(uuid())
+  userId               String
+  updateCount          Int      @default(0)
+  fullName             String?
+  phoneNumber          String?
+  birthDate            String?
+  gender               String?
+  maritalStatus        String?
+  address              String?
+  expectedSalary       String?
+  cooperationType      String?
+  hasInsuranceHistory  Boolean  @default(false)
+  willingToGoOnMission Boolean  @default(false)
+  skills               String[]
+  education            Json[] // [{major: String, university: String, gpa: String}]
+  workExperience       Json[] // [{jobTitle: String, companyName: String, duration: String}]
+  certificates         Json[] // [{title: String, provider: String, date: String}]
+  fileUrl              String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
-  user                User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }
 
 model SellerAd {
-  id             String          @id @default(uuid())
-  title          String
-  description    String          @default("")
-  category       String
-  state          String
-  city           String
-  application    String?
-  status         String?
-  images         Json[]          // [{url: String, isMain: Boolean}]
-  priceIRT       Int             @default(0)
-  isFixedPrice   Boolean         @default(false)
-  isNegotiable   Boolean         @default(false)
-  hasWarranty    Boolean         @default(false)
-  isShippable    Boolean         @default(false)
-  extraFeatures  Json            @default("{}")
-  rating         Json            @default("{\"average\":0,\"count\":0}")
-  person         PersonType      @default(self)
-  isVerified     Boolean         @default(false)
-  enableChat     Boolean         @default(false)
-  enablePhone    Boolean         @default(false)
-  paymentMethod  PaymentMethod   @default(Bank_card)
-  adStatus       AdStatus        @default(pending)
-  createdAt      DateTime        @default(now())
-  owner          String
+  id            String        @id @default(uuid())
+  title         String
+  description   String        @default("")
+  category      String
+  state         String
+  city          String
+  application   String?
+  status        String?
+  images        Json[] // [{url: String, isMain: Boolean}]
+  priceIRT      Int           @default(0)
+  isFixedPrice  Boolean       @default(false)
+  isNegotiable  Boolean       @default(false)
+  hasWarranty   Boolean       @default(false)
+  isShippable   Boolean       @default(false)
+  extraFeatures Json          @default("{}")
+  rating        Json          @default("{\"average\":0,\"count\":0}")
+  person        PersonType    @default(self)
+  isVerified    Boolean       @default(false)
+  enableChat    Boolean       @default(false)
+  enablePhone   Boolean       @default(false)
+  paymentMethod PaymentMethod @default(Bank_card)
+  adStatus      AdStatus      @default(pending)
+  createdAt     DateTime      @default(now())
+  owner         String
 
-  ownerRelation  User            @relation(fields: [owner], references: [id])
+  ownerRelation User @relation(fields: [owner], references: [id])
 }
 
 model Session {
-  id             String   @id @default(uuid())
-  user           String
-  deviceInfo     Json     // {userAgent, ip, deviceType, browser, os}
-  refreshToken   String
-  isActive       Boolean  @default(true)
-  lastActiveAt   DateTime @default(now())
-  isRead         Boolean  @default(false)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id           String   @id @default(uuid())
+  user         String
+  deviceInfo   Json // {userAgent, ip, deviceType, browser, os}
+  refreshToken String
+  isActive     Boolean  @default(true)
+  lastActiveAt DateTime @default(now())
+  isRead       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  userRelation   User     @relation("UserSessions", fields: [user], references: [id])
+  userRelation User @relation("UserSessions", fields: [user], references: [id])
 }
 
 model TestCategory {
@@ -545,88 +550,97 @@ model TestCategory {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  testTypes   TestType[]
+  testTypes TestType[]
 }
 
 model TestType {
-  id            String          @id @default(uuid())
+  id            String        @id @default(uuid())
   categoryId    String
   name          String
   tags          String[]
   description   String?
   scoringMethod ScoringMethod
   dimensions    String[]
-  blueprint     Json            // {structure: Json, levelWeights: Map, totalQuestions: Int, timeLimit: Int}
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  blueprint     Json // {structure: Json, levelWeights: Map, totalQuestions: Int, timeLimit: Int}
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
-  category      TestCategory    @relation(fields: [categoryId], references: [id])
-  questions     Question[]
-  testSessions  TestSession[]
+  category     TestCategory  @relation(fields: [categoryId], references: [id])
+  questions    Question[]
+  testSessions TestSession[]
 }
 
 model TestSession {
-  id              String                   @id @default(uuid())
-  userId          String
-  typeId          String
-  questions       Json[]                   // [{questionId, userAnswer, isCorrect, pointsEarned, dimension, subject, level}]
-  score           Int?
-  assignedLevel   String?
-  levelResults    Json?                    // Map
-  status          TestSessionStatus        @default(in_progress)
-  startedAt       DateTime                 @default(now())
-  finishedAt      DateTime?
-  quickResult     Json?
-  detailedResult  Json?
+  id             String            @id @default(uuid())
+  userId         String
+  typeId         String
+  questions      Json[] // [{questionId, userAnswer, isCorrect, pointsEarned, dimension, subject, level}]
+  score          Int?
+  assignedLevel  String?
+  levelResults   Json? // Map
+  status         TestSessionStatus @default(in_progress)
+  startedAt      DateTime          @default(now())
+  finishedAt     DateTime?
+  quickResult    Json?
+  detailedResult Json?
 
-  testType        TestType                 @relation(fields: [typeId], references: [id])
-  user            User                     @relation(fields: [userId], references: [id])
+  testType TestType @relation(fields: [typeId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
 }
 
 model Ticket {
-  id            String          @id @default(uuid())
+  id            String       @id @default(uuid())
   user          String
   email         String
   phone         String
   title         String
   description   String
-  status        TicketStatus    @default(open)
-  statusHistory Json[]          // [{status: TicketStatus, changedAt: String}]
+  status        TicketStatus @default(open)
+  statusHistory Json[] // [{status: TicketStatus, changedAt: String}]
   createdAt     String
   updatedAt     String
 
-  userRelation  User            @relation(fields: [user], references: [id])
-  replies       TicketReply[]
+  userRelation User          @relation(fields: [user], references: [id])
+  replies      TicketReply[]
 }
 
 model TicketReply {
-  id         String   @id @default(uuid())
-  ticketId   String
-  userId     String
-  message    String
-  isAdmin    Boolean  @default(false)
-  createdAt  DateTime @default(now())
+  id        String   @id @default(uuid())
+  ticketId  String
+  userId    String
+  message   String
+  isAdmin   Boolean  @default(false)
+  createdAt DateTime @default(now())
 
-  ticket     Ticket   @relation(fields: [ticketId], references: [id])
-  user       User     @relation(fields: [userId], references: [id])
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
 }
 
 model ToolUsageLog {
-  id           String    @id @default(uuid())
+  id           String   @id @default(uuid())
   userId       String
-  toolName     String    // "convert-image", "merge-pdf", ...
-  status       String    // "success" | "failed"
+  toolName     String // "convert-image", "merge-pdf", ...
+  status       String // "success" | "failed"
   errorMessage String?
-  metadata     Json?     // {inputSize, outputSize, inputFormat, outputFormat}
+  metadata     Json? // {inputSize, outputSize, inputFormat, outputFormat}
   durationMs   Int?
   ip           String?
   userAgent    String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  user         User      @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@index([createdAt])
   @@index([toolName, status, createdAt])
   @@index([userId, createdAt])
+}
+
+model Admin {
+  id        String @id @default(uuid())
+  role      AdminRole
+  firstname String?
+  lastname  String?
+  phone     String @unique
+  password  String
 }
