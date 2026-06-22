@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import * as jwt from 'jsonwebtoken';
 import prisma from "../../config/prisma";
 import { hash } from 'bcrypt'
 
@@ -10,7 +11,7 @@ type RegisterSubAdminInput = {
   passwordConfirm: string; // Must match password field
 };
 
-export async function AdminRegisterController(req: Request, res: Response) {
+export async function AdminRegister(req: Request, res: Response) {
   const body: RegisterSubAdminInput = req.body
 
   if (!body?.firstName || !body?.lastName || !body?.phone || !body?.password || !body?.passwordConfirm) {
@@ -49,7 +50,72 @@ export async function AdminRegisterController(req: Request, res: Response) {
   })
 
   return res.status(201).json({
-      message: 'Super Admin registered',
-      superAdminId: createdAdmin.id,
-    })
+    message: 'Super Admin registered',
+    superAdminId: createdAdmin.id,
+  })
+}
+
+// only super admin can see the pending admins 
+export async function AdminPending(req: Request, res: Response) {
+  if (!verifySuperAdmin(req, res)) return;
+
+
+  return await prisma.admin.findMany()
+}
+
+// only super admin can see the pending admins
+export async function AdminActivate(req: Request, res: Response) {
+  if (!verifySuperAdmin(req, res)) return;
+
+
+  const admin_parameter = req.params.id as string
+  const activated_admin = await prisma.admin.update({
+    where: {
+      id: admin_parameter
+    },
+    data: {
+      verified: true
+    }
+  })
+
+  return res.status(200).json(activated_admin)
+}
+
+
+export async function AdminReject(req: Request, res: Response) {
+  if (!verifySuperAdmin(req, res)) return;
+
+
+  const admin_parameter = req.params.id as string
+  const activated_admin = await prisma.admin.delete({
+    where: {
+      id: admin_parameter
+    },
+  })
+
+  return res.status(200).json(activated_admin)
+}
+
+
+function verifySuperAdmin(req: Request, res: Response): boolean {
+  const token = req.cookies?.accessToken || req.headers.authorization?.split(" ")[1];
+
+  if (!token) {
+    res.status(401).json({
+      message: "دسترسی غیرمجاز: توکن ارسال نشده است.",
+    });
+    return false;
+  }
+
+  try {
+    jwt.verify(token, process.env.JWT_SECRET_SUPER_ADMIN!);
+    return true;
+  } catch (err) {
+    res.status(403).json({
+      message: "Only Super Admin can perform this action",
+      error: "Forbidden",
+      statusCode: 403
+    });
+    return false;
+  }
 }

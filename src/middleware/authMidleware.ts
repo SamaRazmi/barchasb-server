@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
-
+import * as jwt from "jsonwebtoken";
+import 'dotenv/config'
 // ====== اضافه کردن تایپ به Express ======
 declare global {
   namespace Express {
@@ -11,10 +12,8 @@ declare global {
 }
 // =========================================
 
-const jwt = require("jsonwebtoken");
-require("dotenv").config();
-
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET!;
+const JWT_ADMIN_SECRET = process.env.JWT_SECRET_ADMIN!;
 
 /* =========================
    MAIN AUTH (User) - FULL VERSION
@@ -120,7 +119,7 @@ export const authenticateAdmin = (
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_ADMIN);
+    const decoded = jwt.verify(token, JWT_ADMIN_SECRET);
 
     req.admin = {
       id: decoded.id,
