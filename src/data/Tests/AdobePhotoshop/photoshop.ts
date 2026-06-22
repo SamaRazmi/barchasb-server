@@ -24,7 +24,7 @@ const AdobePsTypeData = async (categoryId: string) => {
       ],
       blueprint: {
         structure: {
-          A1: { Basics: 2, Tools: 2 },
+          A1: { Basics: 1, Tools: 1 },
           A2: { Layers: 2, Selection: 2 },
           B1: { Retouching: 2, Adjustment: 2 },
           B2: { SmartObjects: 2, Masking: 2 },

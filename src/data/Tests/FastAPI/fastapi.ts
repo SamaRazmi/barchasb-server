@@ -22,7 +22,7 @@ const FastApiTypeData = async (categoryId: string) => {
       ],
       blueprint: {
         structure: {
-          A1: { Basics: 2, Routing: 2 },
+          A1: { Basics: 1, Routing: 1 },
           A2: { Pydantic: 2, Parameters: 2 },
           B1: { DI: 2, Exceptions: 2 },
           B2: { Security: 2, BackgroundTasks: 2 },

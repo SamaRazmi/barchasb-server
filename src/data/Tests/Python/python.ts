@@ -26,7 +26,7 @@ const PythonTestTypeData = async (categoryId: string) => {
       ],
       blueprint: {
         structure: {
-          A1: { Basics: 2, Syntax: 1, DataTypes: 1 },
+          A1: { Basics: 1, Syntax: 1, DataTypes: 1 },
           A2: { DataStructures: 2, Logic: 1 },
           B1: { Functions: 2, OOP: 2, Exceptions: 1 },
           B2: { OOP: 1, Advanced: 1, Exceptions: 1 },
