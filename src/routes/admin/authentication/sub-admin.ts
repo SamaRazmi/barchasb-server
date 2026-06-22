@@ -1,15 +1,15 @@
 import { Router } from "express";
-import { AdminRegisterController } from "../../../controllers/admin/sub-admin";
+import { AdminPending, AdminRegister, AdminActivate, AdminReject } from "../../../controllers/admin/sub-admin";
 
 const router = Router();
 
-router.post('/sub-admin/register', AdminRegisterController);
+router.post('/sub-admin/register', AdminRegister);
 
+router.get('/sub-admin/pending', AdminPending);
 
-// router.post('/auth/sub-admin/approve/:id');
+router.post('/sub-admin/approve/:id', AdminActivate);
 
-
-// router.post('/auth/sub-admin/reject/:id');
+router.get('/sub-admin/reject/:id', AdminReject);
 
 
 // router.get('/sub-admins/active');
