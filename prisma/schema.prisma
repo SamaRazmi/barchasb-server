@@ -167,6 +167,7 @@ model User {
   userProfiles      UserProfile[]
   recentViews       RecentView[]
   testSessions      TestSession[]
+  wallet            Wallet?
 }
 
 model UserProfile {
@@ -183,8 +184,10 @@ model UserProfile {
   documents      Json[] // [{title: String, file: String}]
   completed      Boolean  @default(false)
   updatedAt      DateTime @default(now())
+  wallet         Wallet?  @relation(fields: [walletId], references: [id])
 
-  userRelation User @relation(fields: [user], references: [id])
+  userRelation User    @relation(fields: [user], references: [id])
+  walletId     String?
 }
 
 model Province {
@@ -645,4 +648,76 @@ model Admin {
   password  String
   verified  Boolean   @default(false)
   createdAt DateTime  @default(now())
+}
+
+// ========================
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  HOLD
+  REFUND
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELED
+}
+
+model Pricing {
+  id          String   @id @default(uuid())
+  key         String   @unique //  "base_ad_price", "special_price", "ladder_price", "renewal_price"
+  value       Int // IRT
+  description String?
+  updatedAt   DateTime @updatedAt
+}
+
+model AdEnhancement {
+  id     String @id @default(uuid())
+  adId   String
+  adType AdType
+
+  // ویژه
+  isSpecial        Boolean   @default(false)
+  specialStartDate DateTime?
+  specialEndDate   DateTime?
+
+  // پله
+  isStepped       Boolean   @default(false)
+  stepScheduledAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Wallet {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  balance     Int @default(1000000)
+  heldBalance Int @default(0)
+
+  transactions Transaction[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  userProfiles UserProfile[]
+}
+
+model Transaction {
+  id       String @id @default(uuid())
+  walletId String
+  wallet   Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  amount        Int
+  type          TransactionType
+  status        TransactionStatus @default(PENDING)
+  description   String
+  referenceId   String?
+  paymentMethod PaymentMethod
+  metadata      Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
