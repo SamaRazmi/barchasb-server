@@ -9,7 +9,7 @@ const shahrPath = path.join(__dirname, "../src/data/shahr.json");
 const provincesData = JSON.parse(fs.readFileSync(ostanPath, "utf8"));
 const citiesData = JSON.parse(fs.readFileSync(shahrPath, "utf8"));
 
-async function seedProvinces() {
+export async function seedProvinces() {
   console.log("🌱 شروع seed استان‌ها و شهرها...");
 
   // حذف تمام استان‌های قبلی (برای جلوگیری از تکراری)
@@ -41,11 +41,15 @@ async function seedProvinces() {
   console.log("🎉 Seed استان‌ها و شهرها با موفقیت انجام شد!");
 }
 
-seedProvinces()
-  .catch((e) => {
-    console.error("❌ خطا در Seed استان‌ها:", e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+if (require.main === module) {
+  seedProvinces()
+    .catch((e) => {
+      console.error(" خطا در Seed استان‌ها:", e);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}
+
+export default seedProvinces;

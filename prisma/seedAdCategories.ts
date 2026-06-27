@@ -1,7 +1,7 @@
 import prisma from "../src/config/prisma";
 import adCategoriesData from "../src/data/adCategoriesData";
 
-async function seedAdCategories() {
+export async function seedAdCategories() {
   console.log("🌱 شروع seed دسته‌بندی آگهی‌ها...");
 
   // ساخت Map از id عددی به name
@@ -81,11 +81,15 @@ async function seedAdCategories() {
   console.log("🎉 Seed دسته‌بندی آگهی‌ها با موفقیت انجام شد!");
 }
 
-seedAdCategories()
-  .catch((e) => {
-    console.error("❌ خطا در Seed:", e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+if (require.main === module) {
+  seedAdCategories()
+    .catch((e) => {
+      console.error("خطا در Seed دسته‌بندی آگهی‌ها:", e);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}
+
+export default seedAdCategories;
