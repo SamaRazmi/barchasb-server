@@ -184,7 +184,6 @@ app.use("/api", RecentViewRoutes);
 app.use("/api", userProfileRoutes);
 app.use("/api", UploadFileRoutes);
 app.use("/api", ChatRoutes);
-app.use('/auth', SubAdmin)
 
 // Protected routes
 app.use("/api/tests", authenticateUser, TestRoutes);
@@ -192,6 +191,11 @@ app.use("/api/resume", authenticateUser, ResumeRoutes);
 app.use("/api/converter", authenticateUser, converterRoutes);
 app.use("/api/admin", authenticateAdmin, AdminExtensionsRoutes);
 app.use("/api/user", authenticateUser, UserExtensionsRoutes);
+
+// admin route
+app.use('/auth', SubAdmin);
+// app.use('/public/ad-categories', );
+
 
 /* =====================================================
    =============== GLOBAL ERROR HANDLING ===============
