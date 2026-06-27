@@ -40,8 +40,10 @@ import ResumeRoutes from "./routes/ResumeRoutes";
 import converterRoutes from "./routes/converterRoutes";
 import AdminExtensionsRoutes from "./routes/AdminExtensionsRoutes";
 import UserExtensionsRoutes from "./routes/UserExtensionsRoutes";
-import SubAdmin from './routes/admin/authentication/sub-admin'
+import SubAdmin from './routes/admin/authentication/sub-admin';
 import { swaggerAdminOptions } from "./config/swagger-admin";
+import walletRoutes from "./routes/WalletRoutes";
+import pricingRoutes from "./routes/PricingRoutes";
 
 // 👇 بارگذاری dataLoader (CommonJS)
 const loadData = require("./utils/dataLoader");
@@ -185,6 +187,8 @@ app.use("/api", userProfileRoutes);
 app.use("/api", UploadFileRoutes);
 app.use("/api", ChatRoutes);
 app.use('/auth', SubAdmin)
+app.use("/api", walletRoutes);
+app.use("/api", pricingRoutes);
 
 // Protected routes
 app.use("/api/tests", authenticateUser, TestRoutes);
