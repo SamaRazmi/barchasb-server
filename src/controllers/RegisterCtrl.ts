@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import prisma from "../config/prisma";
+import * as WalletService from "../services/WalletService";
 
 // ========== تابع تبدیل میلادی به شمسی (با ساعت و دقیقه) ==========
 function toPersianDateWithTime(date: Date): string {
@@ -156,6 +157,12 @@ export const registerUser = async (req: Request, res: Response) => {
         phone_log_num: 0,
       },
     });
+
+    try {
+      await WalletService.createWalletForUser(newUser.id);
+    } catch (walletError) {
+      console.error("Failed to create wallet for user:", walletError);
+    }
 
     // ایجاد توکن JWT
     const payload = {
