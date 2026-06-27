@@ -1,102 +1,102 @@
-const TestCategory = require('../models/TestCategory');
-const TestType = require('../models/TestType');
-const Question = require('../models/Question');
+import TestCategory from '../models/TestCategory';
+import TestType from '../models/TestType';
+import Question from '../models/Question';
 
-const LanguageCatData = require('../data/Tests/Language');
+import LanguageCatData from '../data/Tests/Language';
 
-const EnglishData = require('../data/Tests/English/English');
+import EnglishData from '../data/Tests/English/English';
 
-const EnglishA1Data = require('../data/Tests/English/EnglishA1');
-const EnglishA2Data = require('../data/Tests/English/EnglishA2');
-const EnglishB1Data = require('../data/Tests/English/EnglishB1');
-const EnglishB2Data = require('../data/Tests/English/EnglishB2');
-const EnglishC1Data = require('../data/Tests/English/EnglishC1');
-const EnglishC2Data = require('../data/Tests/English/EnglishC2');
+import EnglishA1Data from '../data/Tests/English/EnglishA1';
+import EnglishA2Data from '../data/Tests/English/EnglishA2';
+import EnglishB1Data from '../data/Tests/English/EnglishB1';
+import EnglishB2Data from '../data/Tests/English/EnglishB2';
+import EnglishC1Data from '../data/Tests/English/EnglishC1';
+import EnglishC2Data from '../data/Tests/English/EnglishC2';
 
-const ArabicData = require('../data/Tests/Arabic/Arabic');
+import ArabicData from '../data/Tests/Arabic/Arabic';
 
-const ArabicA1Data = require('../data/Tests/Arabic/ArabicA1');
-const ArabicA2Data = require('../data/Tests/Arabic/ArabicA2');
-const ArabicB1Data = require('../data/Tests/Arabic/ArabicB1');
-const ArabicB2Data = require('../data/Tests/Arabic/ArabicB2');
-const ArabicC1Data = require('../data/Tests/Arabic/ArabicC1');
-const ArabicC2Data = require('../data/Tests/Arabic/ArabicC2');
+import ArabicA1Data from '../data/Tests/Arabic/ArabicA1';
+import ArabicA2Data from '../data/Tests/Arabic/ArabicA2';
+import ArabicB1Data from '../data/Tests/Arabic/ArabicB1';
+import ArabicB2Data from '../data/Tests/Arabic/ArabicB2';
+import ArabicC1Data from '../data/Tests/Arabic/ArabicC1';
+import ArabicC2Data from '../data/Tests/Arabic/ArabicC2';
 
-const SpanishData = require('../data/Tests/Spanish/Spanish');
+import SpanishData from '../data/Tests/Spanish/Spanish';
 
-const SpanishA1Data = require('../data/Tests/Spanish/SpanishA1');
-const SpanishA2Data = require('../data/Tests/Spanish/SpanishA2');
-const SpanishB1Data = require('../data/Tests/Spanish/SpanishB1');
-const SpanishB2Data = require('../data/Tests/Spanish/SpanishB2');
-const SpanishC1Data = require('../data/Tests/Spanish/SpanishC1');
-const SpanishC2Data = require('../data/Tests/Spanish/SpanishC2');
+import SpanishA1Data from '../data/Tests/Spanish/SpanishA1';
+import SpanishA2Data from '../data/Tests/Spanish/SpanishA2';
+import SpanishB1Data from '../data/Tests/Spanish/SpanishB1';
+import SpanishB2Data from '../data/Tests/Spanish/SpanishB2';
+import SpanishC1Data from '../data/Tests/Spanish/SpanishC1';
+import SpanishC2Data from '../data/Tests/Spanish/SpanishC2';
 
-const GermanData = require('../data/Tests/German/German');
+import GermanData from '../data/Tests/German/German';
 
-const GermanA1Data = require('../data/Tests/German/GermanA1');
-const GermanA2Data = require('../data/Tests/German/GermanA2');
-const GermanB1Data = require('../data/Tests/German/GermanB1');
-const GermanB2Data = require('../data/Tests/German/GermanB2');
-const GermanC1Data = require('../data/Tests/German/GermanC1');
-const GermanC2Data = require('../data/Tests/German/GermanC2');
+import GermanA1Data from '../data/Tests/German/GermanA1';
+import GermanA2Data from '../data/Tests/German/GermanA2';
+import GermanB1Data from '../data/Tests/German/GermanB1';
+import GermanB2Data from '../data/Tests/German/GermanB2';
+import GermanC1Data from '../data/Tests/German/GermanC1';
+import GermanC2Data from '../data/Tests/German/GermanC2';
 
-const FrenchData = require('../data/Tests/French/French');
+import FrenchData from '../data/Tests/French/French';
 
-const FrenchA1Data = require('../data/Tests/French/FrenchA1');
-const FrenchA2Data = require('../data/Tests/French/FrenchA2');
-const FrenchB1Data = require('../data/Tests/French/FrenchB1');
-const FrenchB2Data = require('../data/Tests/French/FrenchB2');
-const FrenchC1Data = require('../data/Tests/French/FrenchC1');
-const FrenchC2Data = require('../data/Tests/French/FrenchC2');
+import FrenchA1Data from '../data/Tests/French/FrenchA1';
+import FrenchA2Data from '../data/Tests/French/FrenchA2';
+import FrenchB1Data from '../data/Tests/French/FrenchB1';
+import FrenchB2Data from '../data/Tests/French/FrenchB2';
+import FrenchC1Data from '../data/Tests/French/FrenchC1';
+import FrenchC2Data from '../data/Tests/French/FrenchC2';
 
-const PsychologicCatData = require('../data/Tests/psychologic');
+import PsychologicCatData from '../data/Tests/psychologic';
 
-const BARONData = require('../data/Tests/BAR-ON/BARON');
-const BARONQuestions = require('../data/Tests/BAR-ON/questions');
+import BARONData from '../data/Tests/BAR-ON/BARON';
+import BARONQuestions from '../data/Tests/BAR-ON/questions';
 
-const GardnerMIData = require('../data/Tests/GardnerMI/GardnerMI');
-const GardnerMIQuestions = require('../data/Tests/GardnerMI/questions');
+import GardnerMIData from '../data/Tests/GardnerMI/GardnerMI';
+import GardnerMIQuestions from '../data/Tests/GardnerMI/questions';
 
-const NEOData = require('../data/Tests/NEO/NEOType');
-const NEOQuestions = require('../data/Tests/NEO/questions');
+import NEOData from '../data/Tests/NEO/NEOType';
+import NEOQuestions from '../data/Tests/NEO/questions';
 
-const MBTIData = require('../data/Tests/MBTI/MBTIType');
-const MBTIQuestions = require('../data/Tests/MBTI/questions');
+import MBTIData from '../data/Tests/MBTI/MBTIType';
+import MBTIQuestions from '../data/Tests/MBTI/questions';
 
-const HollandData = require('../data/Tests/Holland/HollandType');
-const HollandQuestions = require('../data/Tests/Holland/questions');
+import HollandData from '../data/Tests/Holland/HollandType';
+import HollandQuestions from '../data/Tests/Holland/questions';
 
-const TechnicalCatData = require('../data/Tests/Technical');
+import TechnicalCatData from '../data/Tests/Technical';
 
-const AdobePsData = require('../data/Tests/AdobePhotoshop/photoshop');
-const AdobePsQuestions = require('../data/Tests/AdobePhotoshop/questions');
+import AdobePsData from '../data/Tests/AdobePhotoshop/photoshop';
+import AdobePsQuestions from '../data/Tests/AdobePhotoshop/questions';
 
-const AdobeAiData = require('../data/Tests/AdobeAi/adobeAi');
-const AdobeAiQuestions = require('../data/Tests/AdobeAi/questions');
+import AdobeAiData from '../data/Tests/AdobeAi/adobeAi';
+import AdobeAiQuestions from '../data/Tests/AdobeAi/questions';
 
-const AdobePrData = require('../data/Tests/AdobePr/adobePr');
-const AdobePrQuestions = require('../data/Tests/AdobePr/questions');
+import AdobePrData from '../data/Tests/AdobePr/adobePr';
+import AdobePrQuestions from '../data/Tests/AdobePr/questions';
 
-const FastAPIData = require('../data/Tests/FastAPI/fastapi');
-const FastAPIQuestions = require('../data/Tests/FastAPI/questions');
+import FastAPIData from '../data/Tests/FastAPI/fastapi';
+import FastAPIQuestions from '../data/Tests/FastAPI/questions';
 
-const FigmaData = require('../data/Tests/Figma/figma');
-const FigmaQuestions = require('../data/Tests/Figma/questions');
+import FigmaData from '../data/Tests/Figma/figma';
+import FigmaQuestions from '../data/Tests/Figma/questions';
 
-const LaravelData = require('../data/Tests/Laravel/laravel');
-const LaravelQuestions = require('../data/Tests/Laravel/questions');
+import LaravelData from '../data/Tests/Laravel/laravel';
+import LaravelQuestions from '../data/Tests/Laravel/questions';
 
-const NestjsData = require('../data/Tests/NestJS/nest');
-const NestjsQuestions = require('../data/Tests/NestJS/questions');
+import NestjsData from '../data/Tests/NestJS/nest';
+import NestjsQuestions from '../data/Tests/NestJS/questions';
 
-const NextjsData = require('../data/Tests/NextJS/next');
-const NextjsQuestions = require('../data/Tests/NextJS/questions');
+import NextjsData from '../data/Tests/NextJS/next';
+import NextjsQuestions from '../data/Tests/NextJS/questions';
 
-const PythonData = require('../data/Tests/Python/python');
-const PythonQuestions = require('../data/Tests/Python/questions');
+import PythonData from '../data/Tests/Python/python';
+import PythonQuestions from '../data/Tests/Python/questions';
 
-const SQLData = require('../data/Tests/SQL/sql');
-const SQLQuestions = require('../data/Tests/SQL/questions');
+import SQLData from '../data/Tests/SQL/sql';
+import SQLQuestions from '../data/Tests/SQL/questions';
 
 const loadData = async () => {
   try {
@@ -112,9 +112,9 @@ const loadData = async () => {
     ];
 
     for (const lang of languages) {
-      const langType = await lang.main(langCategory._id);
-      await Promise.all(lang.levels.map(levelFn => levelFn(langType._id)));
-      console.log(`ynced Language: ${langType.name}`);
+      const langType = await lang.main(langCategory.id);
+      await Promise.all(lang.levels.map(levelFn => levelFn(langType.id)));
+      console.log(`Synced Language: ${langType.name}`);
     }
     console.log("Syncing Psychology tests...");
     const psychCategory = await PsychologicCatData(); 
@@ -128,9 +128,9 @@ const loadData = async () => {
     ];
 
     for (const test of psychTests) {
-      const createdType = await test.typeFn(psychCategory._id);
+      const createdType = await test.typeFn(psychCategory.id);
       if (test.questFn) {
-        await test.questFn(createdType._id);
+        await test.questFn(createdType.id);
       }
       console.log(`Synced Psychology Test: ${test.name}`);
     }
@@ -152,9 +152,9 @@ const loadData = async () => {
     ];
 
     for (const test of techTests) {
-      const createdType = await test.typeFn(techCategory._id);
+      const createdType = await test.typeFn(techCategory.id);
       if (test.questFn) {
-        await test.questFn(createdType._id);
+        await test.questFn(createdType.id);
       }
       console.log(`Synced Technical Test: ${test.name}`);
     }
@@ -164,4 +164,4 @@ const loadData = async () => {
   }
 };
 
-module.exports = loadData;
+export default loadData;
