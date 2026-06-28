@@ -302,7 +302,7 @@ model DigitalAd {
   // فیلدهای جدید برای مدیریت انقضای آگهی تایید شده
   approvedAt          DateTime?     // زمان تایید آگهی
   expiresAt           DateTime?     // یک ماه بعد از approvedAt
-
+  isPaid              Boolean       @default(true)
   ownerRelation User @relation(fields: [owner], references: [id])
 }
 
@@ -354,7 +354,7 @@ model EmployerAd {
   // فیلدهای جدید برای مدیریت انقضای آگهی تایید شده
   approvedAt          DateTime?     // زمان تایید آگهی
   expiresAt           DateTime?     // یک ماه بعد از approvedAt
-
+  isPaid              Boolean     @default(true)
   ownerRelation User @relation(fields: [owner], references: [id])
 }
 
@@ -403,6 +403,7 @@ model JobSeekerAd {
   // فیلدهای جدید برای مدیریت انقضای آگهی تایید شده
   approvedAt          DateTime?     // زمان تایید آگهی
   expiresAt           DateTime?     // یک ماه بعد از approvedAt
+  isPaid              Boolean      @default(false)
 
   ownerRelation User @relation(fields: [owner], references: [id])
 }
@@ -548,7 +549,7 @@ model SellerAd {
   // فیلدهای جدید برای مدیریت انقضای آگهی تایید شده
   approvedAt          DateTime?     // زمان تایید آگهی
   expiresAt           DateTime?     // یک ماه بعد از approvedAt
-
+  isPaid        Boolean       @default(false)
   ownerRelation User @relation(fields: [owner], references: [id])
 }
 
@@ -794,6 +795,19 @@ model Pricing {
   updatedAt   DateTime @updatedAt
 }
 
+model AdLadder {
+  id                 String   @id @default(uuid())
+  adEnhancementId    String   
+  adEnhancement      AdEnhancement @relation(fields: [adEnhancementId], references: [id], onDelete: Cascade)
+  
+  scheduledAt        DateTime 
+  executedAt         DateTime? 
+  isExecuted         Boolean  @default(false) 
+  
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
 model AdEnhancement {
   id     String @id @default(uuid())
   adId   String
@@ -805,8 +819,7 @@ model AdEnhancement {
   specialEndDate   DateTime?
 
   // پله
-  isStepped       Boolean   @default(false)
-  stepScheduledAt DateTime?
+  ladders            AdLadder[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
