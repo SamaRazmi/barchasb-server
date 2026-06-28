@@ -40,13 +40,15 @@ import ResumeRoutes from "./routes/ResumeRoutes";
 import converterRoutes from "./routes/converterRoutes";
 import AdminExtensionsRoutes from "./routes/AdminExtensionsRoutes";
 import UserExtensionsRoutes from "./routes/UserExtensionsRoutes";
-import SubAdmin from './routes/admin/authentication/sub-admin';
-import { swaggerAdminOptions } from "./config/swagger-admin";
+import SubAdmin from "./routes/admin/authentication/sub-admin";
 import walletRoutes from "./routes/WalletRoutes";
 import pricingRoutes from "./routes/PricingRoutes";
 
-// 👇 بارگذاری dataLoader (CommonJS)
-const loadData = require("./utils/dataLoader");
+import SuggestionRoutes from "./routes/SuggestionRoutes";
+
+import cron from "node-cron";
+import { cleanExpiredAds } from "./jobs/cleanExpiredAds";
+import loadData from "./utils/dataLoader";
 
 interface CustomSocket extends Socket {
   userId?: string;
@@ -98,7 +100,6 @@ const corsOptions: CorsOptions = {
   credentials: true,
 };
 
-// Express Global Middlewares
 app.use(cors(corsOptions));
 app.use(express.json({ limit: "50mb" }));
 app.use(
@@ -115,8 +116,16 @@ const swaggerOptions = {
     info: {
       title: "Barchasb API",
       version: "1.0.0",
-      description: "API documentation for Barchasb backend",
+      description:
+        "API documentation for Barchasb backend (including Admin APIs)",
     },
+    servers: [{ url: "/" }],
+    tags: [
+      {
+        name: "Admin",
+        description: "Admin-only endpoints (authenticated with admin role)",
+      },
+    ],
     components: {
       securitySchemes: {
         BearerAuth: {
@@ -128,11 +137,15 @@ const swaggerOptions = {
     },
     security: [{ BearerAuth: [] }],
   },
-  apis: ["./src/routes/*.ts", "./src/routes/*.js"],
+  apis: [
+    "./src/routes/*.ts",
+    "./src/routes/*.js",
+    "./src/routes/admin/**/*.ts",
+    "./src/routes/admin/**/*.js",
+  ],
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
-const swaggerAdminSpec = swaggerJsdoc(swaggerAdminOptions);
 
 const swaggerUiOptions = {
   swaggerOptions: {
@@ -153,11 +166,6 @@ app.use(
   swaggerUi.serve,
   swaggerUi.setup(swaggerSpec, swaggerUiOptions),
 );
-
-app.use('/admin-api-docs',
-  swaggerUi.serve,
-  swaggerUi.setup(swaggerAdminSpec, swaggerUiOptions)
-)
 
 /* =====================================================
    ==================== ROUTES =========================
@@ -186,6 +194,8 @@ app.use("/api", RecentViewRoutes);
 app.use("/api", userProfileRoutes);
 app.use("/api", UploadFileRoutes);
 app.use("/api", ChatRoutes);
+app.use("/auth", SubAdmin);
+app.use("/api", authenticateUser, SuggestionRoutes);
 app.use('/auth', SubAdmin)
 app.use("/api", walletRoutes);
 app.use("/api", pricingRoutes);
@@ -347,7 +357,11 @@ io.on("connection", (socket: CustomSocket) => {
    ===================================================== */
 const port = process.env.PORT || 5000;
 
-// ✅ اتصال به PostgreSQL از طریق Prisma
+cron.schedule("0 3 * * *", async () => {
+  console.log("⏰ اجرای کرون جاب پاکسازی آگهی‌های منقضی...");
+  await cleanExpiredAds();
+});
+
 async function startServer() {
   try {
     await prisma.$connect();
@@ -368,10 +382,8 @@ async function startServer() {
     server.listen(port, () => {
       console.log(`🚀 Server is running on http://localhost:${port}`);
       console.log(`📄 Swagger docs: http://localhost:${port}/api-docs`);
-      console.log(`📄 Swagger Admin docs: http://localhost:${port}/admin-api-docs`);
     });
   } catch (err: unknown) {
-    // ✅ رفع خطای `err` از نوع unknown
     console.error(
       "❌ Failed to connect to PostgreSQL:",
       err instanceof Error ? err.message : String(err),
@@ -382,7 +394,6 @@ async function startServer() {
 
 startServer();
 
-// مدیریت graceful shutdown
 process.on("SIGINT", async () => {
   await prisma.$disconnect();
   console.log("🛑 Server shut down gracefully.");
