@@ -40,7 +40,11 @@ import ResumeRoutes from "./routes/ResumeRoutes";
 import converterRoutes from "./routes/converterRoutes";
 import AdminExtensionsRoutes from "./routes/AdminExtensionsRoutes";
 import UserExtensionsRoutes from "./routes/UserExtensionsRoutes";
-import SubAdmin from "./routes/admin/authentication/sub-admin";
+import SubAdminRoutes from "./routes/admin/auth/sub-admin";
+import SuperAdminRoutes from "./routes/admin/auth/super-admin";
+import PublicAdCategoriesRoutes from "./routes/admin/public/ad-categories";
+import AdminLoginRoutes from "./routes/admin/auth/login";
+
 
 import SuggestionRoutes from "./routes/SuggestionRoutes";
 
@@ -192,7 +196,6 @@ app.use("/api", RecentViewRoutes);
 app.use("/api", userProfileRoutes);
 app.use("/api", UploadFileRoutes);
 app.use("/api", ChatRoutes);
-app.use("/auth", SubAdmin);
 app.use("/api", authenticateUser, SuggestionRoutes);
 
 // Protected routes
@@ -203,8 +206,13 @@ app.use("/api/admin", authenticateAdmin, AdminExtensionsRoutes);
 app.use("/api/user", authenticateUser, UserExtensionsRoutes);
 
 // admin route
-app.use('/auth', SubAdmin);
-// app.use('/public/ad-categories', );
+app.use('/auth', SubAdminRoutes);
+app.use('/auth', SuperAdminRoutes);
+app.use('/', AdminLoginRoutes);
+app.use('/public/ad-categories', PublicAdCategoriesRoutes);
+// app.use('/articles', ArticlesRoutes);
+
+
 
 
 /* =====================================================

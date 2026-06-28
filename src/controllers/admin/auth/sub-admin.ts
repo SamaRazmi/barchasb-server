@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import * as jwt from 'jsonwebtoken';
-import prisma from "../../config/prisma";
 import { hash } from 'bcrypt'
+import prisma from "../../../config/prisma";
 
 type RegisterSubAdminInput = {
   firstName: string;       // Min length 2, Max length 30
@@ -73,7 +73,11 @@ export async function AdminPending(req: Request, res: Response) {
 
 
   const pendingAdmin = await prisma.admin.findMany()
-  return res.status(200).json(pendingAdmin)
+
+  // removes passsword from pendingAdmin variable
+  const sanitizedAdmins = pendingAdmin.map(({ password, ...rest }) => rest);
+
+  return res.status(200).json(sanitizedAdmins)
 }
 
 // only super admin can see the pending admins
@@ -88,6 +92,15 @@ export async function AdminActivate(req: Request, res: Response) {
     },
     data: {
       verified: true
+    },
+    select: {
+      id: true,
+      role: true,
+      firstname: true,
+      lastname: true,
+      phone: true,
+      verified: true,
+      createdAt: true
     }
   })
 
@@ -104,11 +117,40 @@ export async function AdminReject(req: Request, res: Response) {
     where: {
       id: admin_parameter
     },
+    select: {
+      id: true,
+      role: true,
+      firstname: true,
+      lastname: true,
+      phone: true,
+      verified: true,
+      createdAt: true
+    }
   })
 
   return res.status(200).json(activated_admin)
 }
 
+export async function ActiveAdmins(req: Request, res: Response) {
+  if (!verifySuperAdmin(req, res)) return;
+
+  const activeAdmin = await prisma.admin.findMany({
+    where: {
+      verified: true
+    },
+    select: {
+      id: true,
+      role: true,
+      firstname: true,
+      lastname: true,
+      phone: true,
+      verified: true,
+      createdAt: true
+    }
+  })
+
+  return res.status(200).json(activeAdmin)
+}
 
 function verifySuperAdmin(req: Request, res: Response): boolean {
   const token = req.cookies?.accessToken || req.headers.authorization?.split(" ")[1];
