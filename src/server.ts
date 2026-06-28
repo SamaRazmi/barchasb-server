@@ -40,15 +40,22 @@ import ResumeRoutes from "./routes/ResumeRoutes";
 import converterRoutes from "./routes/converterRoutes";
 import AdminExtensionsRoutes from "./routes/AdminExtensionsRoutes";
 import UserExtensionsRoutes from "./routes/UserExtensionsRoutes";
-import SubAdmin from "./routes/admin/authentication/sub-admin";
+// import SubAdmin from "./routes/admin/authentication/sub-admin";
 import walletRoutes from "./routes/WalletRoutes";
 import pricingRoutes from "./routes/PricingRoutes";
+import SubAdminRoutes from "./routes/admin/auth/sub-admin";
+import SuperAdminRoutes from "./routes/admin/auth/super-admin";
+import PublicAdCategoriesRoutes from "./routes/admin/public/ad-categories";
+import AdminLoginRoutes from "./routes/admin/auth/login";
+
 
 import SuggestionRoutes from "./routes/SuggestionRoutes";
 
 import cron from "node-cron";
 import { cleanExpiredAds } from "./jobs/cleanExpiredAds";
 import loadData from "./utils/dataLoader";
+import fs from "fs";
+import { join } from "path";
 
 interface CustomSocket extends Socket {
   userId?: string;
@@ -146,6 +153,8 @@ const swaggerOptions = {
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
+    fs.writeFileSync(join(__dirname, '../openapi.json'), JSON.stringify(swaggerSpec, null , 2))
+
 
 const swaggerUiOptions = {
   swaggerOptions: {
@@ -194,9 +203,8 @@ app.use("/api", RecentViewRoutes);
 app.use("/api", userProfileRoutes);
 app.use("/api", UploadFileRoutes);
 app.use("/api", ChatRoutes);
-app.use("/auth", SubAdmin);
 app.use("/api", authenticateUser, SuggestionRoutes);
-app.use('/auth', SubAdmin)
+// app.use('/auth', SubAdmin)
 app.use("/api", walletRoutes);
 app.use("/api", pricingRoutes);
 
@@ -206,6 +214,16 @@ app.use("/api/resume", authenticateUser, ResumeRoutes);
 app.use("/api/converter", authenticateUser, converterRoutes);
 app.use("/api/admin", authenticateAdmin, AdminExtensionsRoutes);
 app.use("/api/user", authenticateUser, UserExtensionsRoutes);
+
+// admin route
+app.use('/auth', SubAdminRoutes);
+app.use('/auth', SuperAdminRoutes);
+app.use('/', AdminLoginRoutes);
+app.use('/public/ad-categories', PublicAdCategoriesRoutes);
+// app.use('/articles', ArticlesRoutes);
+
+
+
 
 /* =====================================================
    =============== GLOBAL ERROR HANDLING ===============
