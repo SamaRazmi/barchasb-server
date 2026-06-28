@@ -47,7 +47,7 @@ import SubAdminRoutes from "./routes/admin/auth/sub-admin";
 import SuperAdminRoutes from "./routes/admin/auth/super-admin";
 import PublicAdCategoriesRoutes from "./routes/admin/public/ad-categories";
 import AdminLoginRoutes from "./routes/admin/auth/login";
-
+import checkoutRoutes from "./routes/CheckoutRoutes";
 
 import SuggestionRoutes from "./routes/SuggestionRoutes";
 
@@ -207,6 +207,7 @@ app.use("/api", authenticateUser, SuggestionRoutes);
 // app.use('/auth', SubAdmin)
 app.use("/api", walletRoutes);
 app.use("/api", pricingRoutes);
+app.use("/api", checkoutRoutes);
 
 // Protected routes
 app.use("/api/tests", authenticateUser, TestRoutes);

@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import prisma from "../config/prisma";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
+import * as WalletService from "../services/WalletService";
 
 // =================== دریافت همه کاربران ===================
 export const getAllUsers = async (req: Request, res: Response) => {
@@ -51,6 +52,17 @@ export const createUser = async (req: Request, res: Response) => {
         }),
       },
     });
+
+    try {
+      const existingWallet = await prisma.wallet.findUnique({
+        where: { userId: newUser.id },
+      });
+      if (!existingWallet) {
+        await WalletService.createWalletForUser(newUser.id);
+      }
+    } catch (walletError) {
+      console.error("Failed to create wallet for user during login:", walletError);
+    }
     res.status(201).json({ msg: "کاربر ایجاد شد", data: newUser });
   } catch (e) {
     console.log(e);
