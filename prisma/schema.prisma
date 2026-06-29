@@ -157,8 +157,6 @@ model User {
   employerAds       EmployerAd[]
   jobSeekerAds      JobSeekerAd[]
   sellerAds         SellerAd[]
-  notifications     Notification[] @relation("NotificationUser")
-  sentNotifications Notification[] @relation("NotificationFromUser")
   reports           Report[]       @relation("Reporter")
   reportReasons     ReportReason[] @relation("ReasonCreator")
   resumes           Resume[]
@@ -405,20 +403,6 @@ model JobSeekerAd {
   ownerRelation User @relation(fields: [owner], references: [id])
 }
 
-model Notification {
-  id         String   @id @default(uuid())
-  userId     String
-  fromUserId String
-  message    String
-  adId       String
-  adType     AdType
-  isRead     Boolean  @default(false)
-  createdAt  DateTime @default(now())
-
-  user     User @relation("NotificationUser", fields: [userId], references: [id])
-  fromUser User @relation("NotificationFromUser", fields: [fromUserId], references: [id])
-}
-
 model Otp {
   id        String   @id @default(uuid())
   phone     String
@@ -554,7 +538,6 @@ model Session {
   id           String   @id @default(uuid())
   user         String
   deviceInfo   Json // {userAgent, ip, deviceType, browser, os}
-  refreshToken String
   isActive     Boolean  @default(true)
   lastActiveAt DateTime @default(now())
   isRead       Boolean  @default(false)

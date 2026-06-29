@@ -9,16 +9,16 @@ import crypto from "crypto";
 
 // ===== S3 client (فقط برای آپلود) =====
 const s3 = new S3Client({
-  endpoint: process.env.LIARA_ENDPOINT, // https://storage.c2.liara.site
+  endpoint: process.env.LIARA_ENDPOINT!,
   region: "default",
   credentials: {
-    accessKeyId: process.env.LIARA_ACCESS_KEY,
-    secretAccessKey: process.env.LIARA_SECRET_KEY,
+    accessKeyId: process.env.LIARA_ACCESS_KEY!,
+    secretAccessKey: process.env.LIARA_SECRET_KEY!,
   },
 });
 
 // ===== helper =====
-const generateFileName = (originalname) => {
+const generateFileName = (originalname: string) => {
   const ext = path.extname(originalname);
   const name = crypto.randomBytes(16).toString("hex");
   return `${name}${ext}`;
@@ -28,7 +28,7 @@ const generateFileName = (originalname) => {
 export const imagesUpload = multer({
   storage: multerS3({
     s3,
-    bucket: process.env.LIARA_BUCKET_NAME,
+    bucket: process.env.LIARA_BUCKET_NAME!,
     acl: "public-read",
     contentType: multerS3.AUTO_CONTENT_TYPE,
     key: (req, file, cb) => {
@@ -42,7 +42,7 @@ export const imagesUpload = multer({
 export const fileUpload = multer({
   storage: multerS3({
     s3,
-    bucket: process.env.LIARA_BUCKET_NAME,
+    bucket: process.env.LIARA_BUCKET_NAME!,
     acl: "public-read",
     contentType: multerS3.AUTO_CONTENT_TYPE,
     key: (req, file, cb) => {
@@ -74,7 +74,7 @@ export const fileUpload = multer({
  * @param {string} originalUrl - آدرس اصلی S3 (مثلاً https://storage.c2.liara.site/...)
  * @returns {string} - آدرس با دامنه barchasb-admin-server.ir
  */
-export function transformS3Url(originalUrl) {
+export function transformS3Url(originalUrl: string) {
   if (!originalUrl) return originalUrl;
   // جایگزینی دامنه ذخیره‌سازی ابری با دامنه نهایی برای دیتابیس
   return originalUrl.replace(
@@ -88,7 +88,7 @@ export function transformS3Url(originalUrl) {
  * @param {object|object[]} files - خروجی req.files یا req.file
  * @returns {object|object[]} - همان فایل‌ها با location اصلاح شده (مناسب برای ذخیره در دیتابیس)
  */
-export function transformFileUrls(files) {
+export function transformFileUrls(files: any) {
   if (!files) return files;
   if (Array.isArray(files)) {
     return files.map((file) => ({
