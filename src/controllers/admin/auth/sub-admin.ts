@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import * as jwt from 'jsonwebtoken';
-import prisma from "../../config/prisma";
 import { hash } from 'bcrypt'
+import prisma from "../../../config/prisma";
 
 type RegisterSubAdminInput = {
   firstName: string;       // Min length 2, Max length 30
@@ -22,7 +22,11 @@ export async function AdminRegister(req: Request, res: Response) {
   }
 
   if (body.password !== body.passwordConfirm) return res.status(400).json({
-
+    message: [
+      "Passwords do not match"
+    ],
+    error: "Bad Request",
+    statusCode: 400
   })
 
   const AdminExist = await prisma.admin.findUnique({
@@ -32,7 +36,15 @@ export async function AdminRegister(req: Request, res: Response) {
     select: { id: true }
   })
 
-  if (AdminExist) return res.status(400)
+  if (AdminExist) {
+    return res.status(400).json(
+      {
+        message: "Phone already exists",
+        error: "Bad Request",
+        statusCode: 400
+      }
+    )
+  }
 
   const hashedPassword = await hash(body.password, 12);
 
@@ -50,7 +62,7 @@ export async function AdminRegister(req: Request, res: Response) {
   })
 
   return res.status(201).json({
-    message: 'Super Admin registered',
+    message: 'Admin registered',
     superAdminId: createdAdmin.id,
   })
 }
@@ -60,7 +72,12 @@ export async function AdminPending(req: Request, res: Response) {
   if (!verifySuperAdmin(req, res)) return;
 
 
-  return await prisma.admin.findMany()
+  const pendingAdmin = await prisma.admin.findMany()
+
+  // removes passsword from pendingAdmin variable
+  const sanitizedAdmins = pendingAdmin.map(({ password, ...rest }) => rest);
+
+  return res.status(200).json(sanitizedAdmins)
 }
 
 // only super admin can see the pending admins
@@ -75,6 +92,15 @@ export async function AdminActivate(req: Request, res: Response) {
     },
     data: {
       verified: true
+    },
+    select: {
+      id: true,
+      role: true,
+      firstname: true,
+      lastname: true,
+      phone: true,
+      verified: true,
+      createdAt: true
     }
   })
 
@@ -91,11 +117,40 @@ export async function AdminReject(req: Request, res: Response) {
     where: {
       id: admin_parameter
     },
+    select: {
+      id: true,
+      role: true,
+      firstname: true,
+      lastname: true,
+      phone: true,
+      verified: true,
+      createdAt: true
+    }
   })
 
   return res.status(200).json(activated_admin)
 }
 
+export async function ActiveAdmins(req: Request, res: Response) {
+  if (!verifySuperAdmin(req, res)) return;
+
+  const activeAdmin = await prisma.admin.findMany({
+    where: {
+      verified: true
+    },
+    select: {
+      id: true,
+      role: true,
+      firstname: true,
+      lastname: true,
+      phone: true,
+      verified: true,
+      createdAt: true
+    }
+  })
+
+  return res.status(200).json(activeAdmin)
+}
 
 function verifySuperAdmin(req: Request, res: Response): boolean {
   const token = req.cookies?.accessToken || req.headers.authorization?.split(" ")[1];
@@ -110,7 +165,8 @@ function verifySuperAdmin(req: Request, res: Response): boolean {
   try {
     jwt.verify(token, process.env.JWT_SECRET_SUPER_ADMIN!);
     return true;
-  } catch (err) {
+  } catch (err: any) {
+    console.error('error while verifing jwt for super admin:', err.message)
     res.status(403).json({
       message: "Only Super Admin can perform this action",
       error: "Forbidden",

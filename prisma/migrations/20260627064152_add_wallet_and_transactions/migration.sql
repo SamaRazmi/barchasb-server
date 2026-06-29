@@ -40,6 +40,15 @@ CREATE TYPE "ScoringMethod" AS ENUM ('weighted_level', 'trait_accumulation', 'fo
 -- CreateEnum
 CREATE TYPE "TimeUnit" AS ENUM ('minute', 'hour', 'day', 'month', 'year');
 
+-- CreateEnum
+CREATE TYPE "AdminRole" AS ENUM ('admin', 'super_admin');
+
+-- CreateEnum
+CREATE TYPE "TransactionType" AS ENUM ('DEPOSIT', 'WITHDRAWAL', 'HOLD', 'REFUND');
+
+-- CreateEnum
+CREATE TYPE "TransactionStatus" AS ENUM ('PENDING', 'COMPLETED', 'FAILED', 'CANCELED');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
@@ -88,6 +97,7 @@ CREATE TABLE "UserProfile" (
     "documents" JSONB[],
     "completed" BOOLEAN NOT NULL DEFAULT false,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "walletId" TEXT,
 
     CONSTRAINT "UserProfile_pkey" PRIMARY KEY ("id")
 );
@@ -541,6 +551,76 @@ CREATE TABLE "ToolUsageLog" (
     CONSTRAINT "ToolUsageLog_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "Admin" (
+    "id" TEXT NOT NULL,
+    "role" "AdminRole" NOT NULL,
+    "firstname" TEXT,
+    "lastname" TEXT,
+    "phone" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "verified" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Admin_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Pricing" (
+    "id" TEXT NOT NULL,
+    "key" TEXT NOT NULL,
+    "value" INTEGER NOT NULL,
+    "description" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Pricing_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "AdEnhancement" (
+    "id" TEXT NOT NULL,
+    "adId" TEXT NOT NULL,
+    "adType" "AdType" NOT NULL,
+    "isSpecial" BOOLEAN NOT NULL DEFAULT false,
+    "specialStartDate" TIMESTAMP(3),
+    "specialEndDate" TIMESTAMP(3),
+    "isStepped" BOOLEAN NOT NULL DEFAULT false,
+    "stepScheduledAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "AdEnhancement_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Wallet" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "balance" INTEGER NOT NULL DEFAULT 1000000,
+    "heldBalance" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Wallet_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Transaction" (
+    "id" TEXT NOT NULL,
+    "walletId" TEXT NOT NULL,
+    "amount" INTEGER NOT NULL,
+    "type" "TransactionType" NOT NULL,
+    "status" "TransactionStatus" NOT NULL DEFAULT 'PENDING',
+    "description" TEXT NOT NULL,
+    "referenceId" TEXT,
+    "paymentMethod" "PaymentMethod" NOT NULL,
+    "metadata" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Transaction_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
 
@@ -606,6 +686,18 @@ CREATE INDEX "ToolUsageLog_toolName_status_createdAt_idx" ON "ToolUsageLog"("too
 
 -- CreateIndex
 CREATE INDEX "ToolUsageLog_userId_createdAt_idx" ON "ToolUsageLog"("userId", "createdAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Admin_phone_key" ON "Admin"("phone");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Pricing_key_key" ON "Pricing"("key");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Wallet_userId_key" ON "Wallet"("userId");
+
+-- AddForeignKey
+ALTER TABLE "UserProfile" ADD CONSTRAINT "UserProfile_walletId_fkey" FOREIGN KEY ("walletId") REFERENCES "Wallet"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "UserProfile" ADD CONSTRAINT "UserProfile_user_fkey" FOREIGN KEY ("user") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -690,3 +782,9 @@ ALTER TABLE "TicketReply" ADD CONSTRAINT "TicketReply_userId_fkey" FOREIGN KEY (
 
 -- AddForeignKey
 ALTER TABLE "ToolUsageLog" ADD CONSTRAINT "ToolUsageLog_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Wallet" ADD CONSTRAINT "Wallet_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_walletId_fkey" FOREIGN KEY ("walletId") REFERENCES "Wallet"("id") ON DELETE CASCADE ON UPDATE CASCADE;

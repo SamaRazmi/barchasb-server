@@ -46,3 +46,5 @@ build/
 Thumbs.db
 
 /generated/prisma
+express.code-workspace
+/db-data

@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import prisma from "../config/prisma";
 import { UAParser } from "ua-parser-js";
+import * as WalletService from "../services/WalletService";
 
 export const loginUser = async (req: Request, res: Response) => {
   try {
@@ -15,6 +16,17 @@ export const loginUser = async (req: Request, res: Response) => {
 
     if (!user) {
       return res.status(400).json({ message: "کاربری با این شماره یافت نشد." });
+    }
+
+    try {
+      const existingWallet = await prisma.wallet.findUnique({
+        where: { userId: user.id },
+      });
+      if (!existingWallet) {
+        await WalletService.createWalletForUser(user.id);
+      }
+    } catch (walletError) {
+      console.error("Failed to create wallet for user during login:", walletError);
     }
 
     // 🔐 بررسی رمز عبور

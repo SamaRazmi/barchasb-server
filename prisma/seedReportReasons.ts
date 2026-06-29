@@ -231,7 +231,7 @@ const reasonsData = [
 ];
 
 // ===================== تابع اصلی Seed =====================
-async function seedReportReasons() {
+export async function seedReportReasons() {
   try {
     console.log("🌱 شروع seed دلایل گزارش...");
 
@@ -298,14 +298,15 @@ async function seedReportReasons() {
   }
 }
 
-seedReportReasons()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (e) => {
-    console.error(e);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
+if (require.main === module) {
+  seedReportReasons()
+    .catch((e) => {
+      console.error("❌ خطا در Seed دلایل گزارش:", e);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}
 
 export default seedReportReasons;
