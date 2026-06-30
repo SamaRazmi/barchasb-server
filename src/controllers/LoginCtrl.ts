@@ -9,7 +9,7 @@ export const loginUser = async (req: Request, res: Response) => {
   try {
     const { phone, password } = req.body;
 
-    // 🔍 پیدا کردن کاربر
+    // 1️⃣ پیدا کردن کاربر
     const user = await prisma.user.findUnique({
       where: { phone },
     });
@@ -18,6 +18,13 @@ export const loginUser = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "کاربری با این شماره یافت نشد." });
     }
 
+    // 2️⃣ بررسی رمز عبور
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "رمز عبور اشتباه است." });
+    }
+
+    // 3️⃣ ایجاد کیف پول در صورت نبود (خطا را نادیده می‌گیریم)
     try {
       const existingWallet = await prisma.wallet.findUnique({
         where: { userId: user.id },
@@ -26,16 +33,10 @@ export const loginUser = async (req: Request, res: Response) => {
         await WalletService.createWalletForUser(user.id);
       }
     } catch (walletError) {
-      console.error("Failed to create wallet for user during login:", walletError);
+      console.error("❌ Wallet error (ignored):", walletError);
     }
 
-    // 🔐 بررسی رمز عبور
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "رمز عبور اشتباه است." });
-    }
-
-    // 📦 JWT payload
+    // 4️⃣ ساخت JWT
     const payload = {
       id: user.id,
       name: user.name,
@@ -44,68 +45,61 @@ export const loginUser = async (req: Request, res: Response) => {
       role: user.role,
     };
 
-    // 🔑 ساخت توکن
     const token = jwt.sign(payload, process.env.JWT_SECRET as string, {
       expiresIn: "7d",
     });
 
-    // 📱 User-Agent
+    // 5️⃣ اطلاعات دستگاه
     const userAgent = req.headers["user-agent"] || "";
     const parser = new UAParser(userAgent);
     const result = parser.getResult();
 
-    // 🌍 IP واقعی‌تر
     const ip =
       ((req.headers["x-forwarded-for"] as string) || "").split(",")[0].trim() ||
       req.socket?.remoteAddress ||
       req.ip ||
       "";
 
-    // 📱 DEVICE TYPE
     let deviceType = "desktop";
     const deviceRaw = (result.device?.type || "").toLowerCase();
     if (deviceRaw.includes("mobile")) deviceType = "mobile";
     else if (deviceRaw.includes("tablet")) deviceType = "tablet";
 
-    // 🌐 BROWSER (فارسی)
     let browserRaw = (result.browser.name || "").toLowerCase();
-    let browser = "unknown";
-    if (browserRaw.includes("chrome")) {
-      browser = "کروم";
-    } else if (browserRaw.includes("firefox")) {
-      browser = "فایرفاکس";
-    } else if (
-      browserRaw.includes("safari") &&
-      !browserRaw.includes("chrome")
-    ) {
+    let browser = "";
+    if (browserRaw.includes("chrome")) browser = "کروم";
+    else if (browserRaw.includes("firefox")) browser = "فایرفاکس";
+    else if (browserRaw.includes("safari") && !browserRaw.includes("chrome"))
       browser = "سافاری";
-    } else if (browserRaw.includes("edge")) {
-      browser = "مایکروسافت اج";
-    } else if (browserRaw.includes("opera")) {
-      browser = "اپرا";
+    else if (browserRaw.includes("edge")) browser = "مایکروسافت اج";
+    else if (browserRaw.includes("opera")) browser = "اپرا";
+
+    const os = result.os?.name || "";
+
+    // 6️⃣ ساخت deviceInfo (حداقل یک کلید داشته باشد)
+    const deviceInfo: any = {};
+    if (userAgent) deviceInfo.userAgent = userAgent;
+    if (ip) deviceInfo.ip = ip;
+    if (deviceType) deviceInfo.deviceType = deviceType;
+    if (browser) deviceInfo.browser = browser;
+    if (os) deviceInfo.os = os;
+
+    // اگر آبجکت خالی بود، یک کلید پیش‌فرض اضافه کن
+    if (Object.keys(deviceInfo).length === 0) {
+      deviceInfo._empty = true;
     }
 
-    // 💻 OS
-    const os = result.os?.name || "unknown";
-
-    // 📦 ساخت Session با Prisma
+    // 7️⃣ ساخت Session (بدون refreshToken)
     const session = await prisma.session.create({
       data: {
         user: user.id,
-        deviceInfo: {
-          userAgent,
-          ip,
-          deviceType,
-          browser,
-          os,
-        },
-        refreshToken: token,
+        deviceInfo: deviceInfo,
         isActive: true,
         lastActiveAt: new Date(),
       },
     });
 
-    // 🔗 اتصال session به user (با اضافه کردن به آرایه sessions)
+    // 8️⃣ اتصال session به user
     await prisma.user.update({
       where: { id: user.id },
       data: {
@@ -115,7 +109,7 @@ export const loginUser = async (req: Request, res: Response) => {
       },
     });
 
-    // 🍪 cookie
+    // 9️⃣ تنظیم کوکی
     res.cookie("accessToken", token, {
       httpOnly: true,
       secure: true,
@@ -124,7 +118,6 @@ export const loginUser = async (req: Request, res: Response) => {
       path: "/",
     });
 
-    // 🧠 LOG
     console.log("================================");
     console.log("🔥 LOGIN SUCCESS");
     console.log("👤 User:", user.id);
@@ -142,7 +135,7 @@ export const loginUser = async (req: Request, res: Response) => {
       token: `Bearer ${token}`,
     });
   } catch (error: any) {
-    console.error("Login error:", error);
+    console.error("❌ Login error:", error);
     return res.status(500).json({
       message: "خطا در ورود کاربر",
       error: error.message,
@@ -150,7 +143,6 @@ export const loginUser = async (req: Request, res: Response) => {
   }
 };
 
-// =================== export default ===================
 const LoginCtrl = {
   loginUser,
 };

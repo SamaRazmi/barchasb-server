@@ -50,9 +50,12 @@ export const deleteSession = async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
+    // تبدیل به string برای رفع خطای TypeScript
+    const sessionId = req.params.id as string;
+
     const session = await prisma.session.updateMany({
       where: {
-        id: req.params.id,
+        id: sessionId,
         user: userId,
       },
       data: { isActive: false },
@@ -93,9 +96,11 @@ export const markSessionAsRead = async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
+    const sessionId = req.params.id as string;
+
     const session = await prisma.session.updateMany({
       where: {
-        id: req.params.id,
+        id: sessionId,
         user: userId,
         isActive: true,
       },
@@ -108,9 +113,8 @@ export const markSessionAsRead = async (req: Request, res: Response) => {
         .json({ error: "session not found or already inactive" });
     }
 
-    // برای برگرداندن سند به‌روز شده، دوباره findUnique می‌کنیم
     const updatedSession = await prisma.session.findUnique({
-      where: { id: req.params.id },
+      where: { id: sessionId },
       select: { isRead: true },
     });
 
