@@ -1,61 +1,123 @@
-import { Request, Response, NextFunction } from 'express';
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import { Request, Response, NextFunction } from "express";
+import jwt, { JwtPayload, VerifyErrors } from "jsonwebtoken";
 
-// ۱. تعریف ساختار اطلاعاتی که درون توکن وجود دارد (Payload)
+// ===== ۱. تعریف ساختار Payload توکن =====
 interface AdminJwtPayload extends JwtPayload {
+  sub?: string; // شناسه کاربر (مطابق با لاگین شما)
   id?: string;
-  role?: string;
   phone?: string;
+  role?: string; // نقش: 'ADMIN' یا 'SUPER_ADMIN'
 }
 
-// ۲. توسعه دادن اینترفیس Request اکسترس برای پذیریش کاربری که احراز هویت شده
+// ===== ۲. گسترش Request برای دسترسی به user =====
 export interface AuthenticatedRequest extends Request {
   user?: AdminJwtPayload;
 }
 
 /**
- * میدلور isAdmin:
- * - توکن را از هدر Authorization استخراج می‌کند (فرمت: Bearer <token>)
- * - با استفاده از JWT_SECRET_ADMIN صحت توکن را بررسی می‌کند
- * - نقش (role) کاربر را چک می‌کند که حتماً "admin" باشد
- * - در صورت موفقیت، اطلاعات کاربر (payload) را در req.user قرار می‌دهد
- * - در غیر این صورت خطای 401 یا 403 برمی‌گرداند
+ * ===== ۳. Middleware authAdmin =====
+ * - توکن را از کوکی (accessToken) یا هدر Authorization استخراج میکند.
+ * - ابتدا با JWT_SECRET_ADMIN و در صورت خطا با JWT_SECRET_SUPER_ADMIN اعتبارسنجی میکند.
+ * - در صورت موفقیت، نقش کاربر را بررسی میکند که حتماً 'ADMIN' یا 'SUPER_ADMIN' باشد.
+ * - اطلاعات کاربر را در req.user قرار داده و next() را صدا میزند.
+ * - در غیر این صورت پاسخ ۴۰۱ یا ۴۰۳ برمیگرداند.
  */
-export const isAdmin = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
-  // استخراج توکن از هدر Authorization
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1]; // Bearer TOKEN
+export const authAdmin = (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction,
+): void => {
+  // ۱. استخراج توکن از کوکی یا هدر Authorization
+  const token =
+    req.cookies?.accessToken || req.headers.authorization?.split(" ")[1];
 
   if (!token) {
-    res.status(401).json({ error: "توکن ارائه نشده است" });
+    res.status(401).json({
+      message: "توکن احراز هویت ارائه نشده است",
+      error: "Unauthorized",
+      statusCode: 401,
+    });
     return;
   }
 
-  const secret = process.env.JWT_SECRET_ADMIN;
-  if (!secret) {
-    console.error("❌ JWT_SECRET_ADMIN در متغیرهای محیطی (.env) تعریف نشده است.");
-    res.status(500).json({ error: "خطای داخلی سرور در تنظیمات احراز هویت" });
+  // ۲. دریافت سکرتها از متغیرهای محیطی
+  const adminSecret = process.env.JWT_SECRET_ADMIN;
+  const superSecret = process.env.JWT_SECRET_SUPER_ADMIN;
+
+  if (!adminSecret || !superSecret) {
+    console.error(
+      "❌ JWT_SECRET_ADMIN یا JWT_SECRET_SUPER_ADMIN در .env تعریف نشده است.",
+    );
+    res.status(500).json({
+      message: "خطای داخلی سرور در تنظیمات احراز هویت",
+      error: "Internal Server Error",
+      statusCode: 500,
+    });
     return;
   }
 
-  // اعتبارسنجی توکن با کلید مخفی JWT_SECRET_ADMIN
-  jwt.verify(token, secret, (err, decoded) => {
-    if (err || !decoded) {
-      res.status(403).json({ error: "توکن نامعتبر یا منقضی شده است" });
+  // ۳. ابتدا با سکرت ادمین عادی امتحان کن
+  jwt.verify(token, adminSecret, (err: VerifyErrors | null, decoded: any) => {
+    if (err) {
+      // اگر خطا خورد، با سکرت سوپرادمین امتحان کن
+      jwt.verify(
+        token,
+        superSecret,
+        (err2: VerifyErrors | null, decoded2: any) => {
+          if (err2 || !decoded2) {
+            res.status(403).json({
+              message: "توکن نامعتبر یا منقضی شده است",
+              error: "Forbidden",
+              statusCode: 403,
+            });
+            return;
+          }
+
+          const user = decoded2 as AdminJwtPayload;
+          // نقش باید SUPER_ADMIN باشد (حروف بزرگ)
+          if (user.role !== "SUPER_ADMIN") {
+            res.status(403).json({
+              message:
+                "دسترسی غیرمجاز. فقط ادمینها میتوانند به این بخش دسترسی داشته باشند.",
+              error: "Forbidden",
+              statusCode: 403,
+            });
+            return;
+          }
+
+          req.user = user;
+          next();
+        },
+      );
       return;
     }
 
-    // کست کردن نتیجه دی‌کد شده به تایپ اختصاصی‌مان
+    // اعتبارسنجی با سکرت ادمین عادی موفق بود
+    if (!decoded) {
+      res.status(403).json({
+        message: "توکن نامعتبر",
+        error: "Forbidden",
+        statusCode: 403,
+      });
+      return;
+    }
+
     const user = decoded as AdminJwtPayload;
-
-    // بررسی نقش ادمین
-    if (user.role !== "admin") {
-      res.status(403).json({ error: "دسترسی غیرمجاز. فقط ادمین می‌تواند به این بخش دسترسی داشته باشد." });
+    // نقش باید ADMIN باشد (حروف بزرگ)
+    if (user.role !== "ADMIN") {
+      res.status(403).json({
+        message:
+          "دسترسی غیرمجاز. فقط ادمینها میتوانند به این بخش دسترسی داشته باشند.",
+        error: "Forbidden",
+        statusCode: 403,
+      });
       return;
     }
 
-    // ذخیره اطلاعات کاربر در req برای استفاده در کنترلرها
     req.user = user;
     next();
   });
 };
+
+// همچنین برای سازگاری با نام‌های قدیمی، میتوانید یک alias صادر کنید:
+export const isAdmin = authAdmin;

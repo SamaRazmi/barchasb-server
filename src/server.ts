@@ -48,8 +48,10 @@ import SuperAdminRoutes from "./routes/admin/auth/super-admin";
 import PublicAdCategoriesRoutes from "./routes/admin/public/ad-categories";
 import AdminLoginRoutes from "./routes/admin/auth/login";
 
-
 import SuggestionRoutes from "./routes/SuggestionRoutes";
+
+// ===== اضافه شده: مسیرهای مدیریت گزارش توسط ادمین =====
+import adminReportRoutes from "./routes/adminReportRoutes";
 
 import cron from "node-cron";
 import { cleanExpiredAds } from "./jobs/cleanExpiredAds";
@@ -153,8 +155,10 @@ const swaggerOptions = {
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
-    fs.writeFileSync(join(__dirname, '../openapi.json'), JSON.stringify(swaggerSpec, null , 2))
-
+fs.writeFileSync(
+  join(__dirname, "../openapi.json"),
+  JSON.stringify(swaggerSpec, null, 2),
+);
 
 const swaggerUiOptions = {
   swaggerOptions: {
@@ -216,14 +220,14 @@ app.use("/api/admin", authenticateAdmin, AdminExtensionsRoutes);
 app.use("/api/user", authenticateUser, UserExtensionsRoutes);
 
 // admin route
-app.use('/auth', SubAdminRoutes);
-app.use('/auth', SuperAdminRoutes);
-app.use('/', AdminLoginRoutes);
-app.use('/public/ad-categories', PublicAdCategoriesRoutes);
+app.use("/auth", SubAdminRoutes);
+app.use("/auth", SuperAdminRoutes);
+app.use("/", AdminLoginRoutes);
+app.use("/public/ad-categories", PublicAdCategoriesRoutes);
 // app.use('/articles', ArticlesRoutes);
 
-
-
+// ===== اضافه شده: مسیرهای مدیریت گزارش توسط ادمین =====
+app.use("/api/admin", adminReportRoutes);
 
 /* =====================================================
    =============== GLOBAL ERROR HANDLING ===============
