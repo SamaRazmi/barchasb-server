@@ -4,6 +4,57 @@ import { transformFileUrls } from "../middleware/upload";
 import { promises as fs } from "fs";
 import path from "path";
 
+// ==========================================
+// 📋 لیست فیلدهای مجاز در مدل EmployerAd
+// ==========================================
+const ALLOWED_FIELDS = [
+  "owner",
+  "name",
+  "title",
+  "categories",
+  "state",
+  "city",
+  "cooperationType",
+  "gender",
+  "militaryStatus",
+  "experience",
+  "paymentMethod",
+  "isRemote",
+  "thursdayUntilNoon",
+  "startTime",
+  "endTime",
+  "minSalary",
+  "maxSalary",
+  "companyName",
+  "companyType",
+  "benefits",
+  "insurance",
+  "education",
+  "companyDescription",
+  "jobDetails",
+  "rating",
+  "person",
+  "isVerified",
+  "enableChat",
+  "enablePhone",
+  "adPaymentMethod",
+  "adStatus",
+  "images",
+] as const;
+
+// ==========================================
+// 🧹 فیلترکننده (فقط فیلدهای مجاز)
+// ==========================================
+function filterAdData(data: any): any {
+  const filtered: any = {};
+  for (const key of ALLOWED_FIELDS) {
+    if (data[key] !== undefined) {
+      filtered[key] = data[key];
+    }
+  }
+  return filtered;
+}
+
 // تابع کمکی برای تبدیل params به string
 const toStr = (value: string | string[] | undefined): string => {
   if (typeof value === "string") return value;
@@ -11,35 +62,34 @@ const toStr = (value: string | string[] | undefined): string => {
   return "";
 };
 
+// ==========================================
 // 📌 ایجاد آگهی کارفرما
+// ==========================================
 export const createEmployerAd = async (req: Request, res: Response) => {
+  console.log("\n🚀 createEmployerAd START");
+  console.log("Body received:", req.body);
+  console.log("Files received:", (req as any).files);
+
   try {
-    // تبدیل آدرس تصاویر به دامنه سفارشی
-    let uploadedFiles: any[] = (req as any).files || [];
-    if (uploadedFiles.length > 0) {
-      uploadedFiles = transformFileUrls(uploadedFiles);
+    const updateData: any = { ...req.body };
+
+    // ─── بررسی فیلد اجباری name ───
+    if (!updateData.name) {
+      return res.status(400).json({ error: "فیلد name اجباری است" });
     }
 
-    const images = uploadedFiles.map((file: any, i: number) => ({
-      url: file.location,
+    // ─── پردازش images (همیشه آرایه) ───
+    let uploadedImages = (req as any).files?.images || [];
+    if (uploadedImages.length > 0) {
+      uploadedImages = transformFileUrls(uploadedImages);
+    }
+    const images = uploadedImages.map((file: any, i: number) => ({
+      url: file.location || file.path || "",
       isMain: i === 0,
     }));
+    updateData.images = images;
 
-    let jobDetails = req.body.jobDetails;
-    if (typeof jobDetails === "string") {
-      try {
-        jobDetails = JSON.parse(jobDetails.trim());
-      } catch (err) {
-        console.error("❌ Invalid jobDetails JSON:", err);
-        jobDetails = [];
-      }
-    }
-    if (!Array.isArray(jobDetails)) jobDetails = [];
-    jobDetails = jobDetails.map((item: any) =>
-      typeof item === "object" && item !== null ? item : {},
-    );
-
-    // ✅ پردازش categories (از رشته JSON به آرایه)
+    // ─── پردازش categories ───
     let categories = req.body.categories;
     if (typeof categories === "string") {
       try {
@@ -52,33 +102,87 @@ export const createEmployerAd = async (req: Request, res: Response) => {
     } else if (!Array.isArray(categories)) {
       categories = [];
     }
-    // حذف categories از req.body تا با مقدار پردازش شده تداخل نکند
-    delete req.body.categories;
+    updateData.categories = categories;
 
+    // ─── پردازش jobDetails ───
+    let jobDetails = req.body.jobDetails;
+    if (typeof jobDetails === "string") {
+      try {
+        jobDetails = JSON.parse(jobDetails);
+        if (!Array.isArray(jobDetails)) jobDetails = [];
+      } catch (err) {
+        console.error("❌ Invalid jobDetails JSON:", err);
+        jobDetails = [];
+      }
+    } else if (!Array.isArray(jobDetails)) {
+      jobDetails = [];
+    }
+    updateData.jobDetails = jobDetails;
+
+    // ─── تبدیل فیلدهای بولی ───
+    const BOOLEAN_FIELDS = [
+      "isRemote",
+      "thursdayUntilNoon",
+      "enableChat",
+      "enablePhone",
+      "isVerified",
+    ];
     const toBool = (v: any) => v === "true" || v === true;
-    const isRemote = toBool(req.body.isRemote);
-    const thursdayUntilNoon = toBool(req.body.thursdayUntilNoon);
-    const enableChat = toBool(req.body.enableChat);
-    const enablePhone = toBool(req.body.enablePhone);
+    BOOLEAN_FIELDS.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        updateData[field] = toBool(req.body[field]);
+        delete req.body[field];
+      }
+    });
 
-    ["isRemote", "thursdayUntilNoon", "enableChat", "enablePhone"].forEach(
-      (f) => delete req.body[f],
-    );
+    // ─── اعتبارسنجی و تصحیح فیلدهای Enum ───
+    // person: فقط "self" یا "other" – پیش‌فرض "self"
+    const validPerson = ["self", "other"];
+    if (updateData.person) {
+      if (!validPerson.includes(updateData.person)) {
+        updateData.person = "self";
+        console.warn(`⚠️ person مقدار نامعتبر داشت، به "self" تغییر یافت`);
+      }
+    } else {
+      updateData.person = "self";
+    }
 
+    // adPaymentMethod: فقط "Subscription", "Wallet", "Bank_card" – پیش‌فرض "Subscription"
+    const validPayment = ["Subscription", "Wallet", "Bank_card"];
+    if (updateData.adPaymentMethod) {
+      if (!validPayment.includes(updateData.adPaymentMethod)) {
+        updateData.adPaymentMethod = "Subscription";
+        console.warn(
+          `⚠️ adPaymentMethod مقدار نامعتبر داشت، به "Subscription" تغییر یافت`,
+        );
+      }
+    } else {
+      updateData.adPaymentMethod = "Subscription";
+    }
+
+    // adStatus: فقط "pending", "approved", "rejected", "expired" – پیش‌فرض "pending"
+    const validStatus = ["pending", "approved", "rejected", "expired"];
+    if (updateData.adStatus) {
+      if (!validStatus.includes(updateData.adStatus)) {
+        updateData.adStatus = "pending";
+        console.warn(`⚠️ adStatus مقدار نامعتبر داشت، به "pending" تغییر یافت`);
+      }
+    } else {
+      updateData.adStatus = "pending";
+    }
+
+    // ─── فیلتر کردن داده‌ها ───
+    const filteredData = filterAdData(updateData);
+
+    // ─── ساخت آگهی با owner ───
     const ad = await prisma.employerAd.create({
       data: {
-        ...req.body,
         owner: (req as any).user?.id || req.body.owner,
-        images,
-        jobDetails,
-        isRemote,
-        thursdayUntilNoon,
-        enableChat,
-        enablePhone,
-        categories,
+        ...filteredData,
       },
     });
 
+    console.log("✅ EmployerAd created successfully");
     res.status(201).json(ad);
   } catch (err: any) {
     console.error("❌ ERROR CREATING EMPLOYER AD:", err);
@@ -86,7 +190,9 @@ export const createEmployerAd = async (req: Request, res: Response) => {
   }
 };
 
+// ==========================================
 // 📌 دریافت همه آگهی‌ها
+// ==========================================
 export const getAllEmployerAds = async (req: Request, res: Response) => {
   try {
     const ads = await prisma.employerAd.findMany({
@@ -101,7 +207,6 @@ export const getAllEmployerAds = async (req: Request, res: Response) => {
       },
     });
 
-    // تبدیل به فرمت قبلی که populate("owner", "fullName") داشت
     const formattedAds = (ads as any[]).map((ad) => ({
       ...ad,
       owner: ad.ownerRelation
@@ -122,13 +227,13 @@ export const getAllEmployerAds = async (req: Request, res: Response) => {
   }
 };
 
+// ==========================================
 // 📌 دریافت یک آگهی با ID
+// ==========================================
 export const getEmployerAdById = async (req: Request, res: Response) => {
   try {
     const id = toStr(req.params.id);
-    if (!id) {
-      return res.status(400).json({ message: "شناسه نامعتبر است" });
-    }
+    if (!id) return res.status(400).json({ message: "شناسه نامعتبر است" });
 
     const ad = await prisma.employerAd.findUnique({
       where: { id },
@@ -165,7 +270,9 @@ export const getEmployerAdById = async (req: Request, res: Response) => {
   }
 };
 
-// گرفتن آگهی‌های یک کاربر خاص
+// ==========================================
+// 📌 گرفتن آگهی‌های یک کاربر خاص
+// ==========================================
 export const getAdsByOwner = async (req: Request, res: Response) => {
   try {
     const ownerId = toStr(req.params.ownerId);
@@ -206,7 +313,9 @@ export const getAdsByOwner = async (req: Request, res: Response) => {
   }
 };
 
-// گرفتن یک آگهی مشخص از یک کاربر مشخص
+// ==========================================
+// 📌 گرفتن یک آگهی مشخص از یک کاربر مشخص
+// ==========================================
 export const getEmployerAdByOwnerAndId = async (
   req: Request,
   res: Response,
@@ -257,7 +366,9 @@ export const getEmployerAdByOwnerAndId = async (
   }
 };
 
-// ویرایش آگهی یک کاربر مشخص – نسخه اصلاح شده با پشتیبانی از imagesFromApi و categories
+// ==========================================
+// 📌 ویرایش آگهی (با اعتبارسنجی و پیش‌فرض)
+// ==========================================
 export const updateEmployerAd = async (req: Request, res: Response) => {
   try {
     const ownerId = toStr(req.params.ownerId);
@@ -267,33 +378,40 @@ export const updateEmployerAd = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "شناسه نامعتبر است" });
     }
 
-    // تصاویر جدید (در صورت وجود) با تبدیل آدرس
+    // ─── پردازش images ───
     let newUploadedFiles: any[] = (req as any).files || [];
     let newImages: any[] = [];
     if (newUploadedFiles.length > 0) {
       const transformed = transformFileUrls(newUploadedFiles);
       newImages = transformed.map((file: any) => ({
-        url: file.location,
+        url: file.location || file.path,
         isMain: false,
       }));
     }
 
-    // پردازش jobDetails
-    let jobDetails = req.body.jobDetails;
-    if (typeof jobDetails === "string") {
+    // تصاویر قدیمی از فرانت (imagesFromApi)
+    let imagesFromApi: any[] = [];
+    if (req.body.imagesFromApi) {
       try {
-        jobDetails = JSON.parse(jobDetails.trim());
+        imagesFromApi = JSON.parse(req.body.imagesFromApi);
       } catch (err) {
-        console.error("❌ Invalid jobDetails JSON:", err);
-        jobDetails = [];
+        console.error("❌ Invalid imagesFromApi JSON:", err);
+        imagesFromApi = [];
       }
     }
-    if (!Array.isArray(jobDetails)) jobDetails = [];
-    jobDetails = jobDetails.map((item: any) =>
-      typeof item === "object" && item !== null ? item : {},
-    );
 
-    // ✅ پردازش categories (برای ویرایش)
+    const finalImages = [
+      ...imagesFromApi.map((img) => ({
+        url: img.url,
+        isMain: img.isMain || false,
+      })),
+      ...newImages,
+    ];
+    if (!finalImages.some((img) => img.isMain) && finalImages.length > 0) {
+      finalImages[0].isMain = true;
+    }
+
+    // ─── پردازش categories ───
     let categories = req.body.categories;
     if (typeof categories === "string") {
       try {
@@ -306,64 +424,90 @@ export const updateEmployerAd = async (req: Request, res: Response) => {
     } else if (!Array.isArray(categories)) {
       categories = [];
     }
-    delete req.body.categories;
 
+    // ─── پردازش jobDetails ───
+    let jobDetails = req.body.jobDetails;
+    if (typeof jobDetails === "string") {
+      try {
+        jobDetails = JSON.parse(jobDetails);
+        if (!Array.isArray(jobDetails)) jobDetails = [];
+      } catch (err) {
+        console.error("❌ Invalid jobDetails JSON:", err);
+        jobDetails = [];
+      }
+    } else if (!Array.isArray(jobDetails)) {
+      jobDetails = [];
+    }
+
+    // ─── پردازش فیلدهای بولی ───
     const toBool = (v: any) => v === "true" || v === true;
     const isRemote = toBool(req.body.isRemote);
     const thursdayUntilNoon = toBool(req.body.thursdayUntilNoon);
     const enableChat = toBool(req.body.enableChat);
     const enablePhone = toBool(req.body.enablePhone);
 
-    ["isRemote", "thursdayUntilNoon", "enableChat", "enablePhone"].forEach(
-      (f) => delete req.body[f],
-    );
-
-    let imagesFromApi: any[] = [];
-    if (req.body.imagesFromApi) {
-      try {
-        imagesFromApi = JSON.parse(req.body.imagesFromApi);
-      } catch (err) {
-        console.error("❌ Invalid imagesFromApi JSON:", err);
-        imagesFromApi = [];
-      }
-    }
-
-    // ابتدا آگهی را پیدا کن تا مالکیت بررسی شود
-    const existingAd = await prisma.employerAd.findFirst({
-      where: { id: adId, owner: ownerId },
-    });
-
-    if (!existingAd) return res.status(404).json({ message: "آگهی یافت نشد" });
-
-    const finalImages = [
-      ...imagesFromApi.map((img) => ({
-        url: img.url,
-        isMain: img.isMain || false,
-      })),
-      ...newImages,
-    ];
-
-    if (!finalImages.some((img) => img.isMain) && finalImages.length > 0) {
-      finalImages[0].isMain = true;
-    }
-
+    // ─── ساخت updateData ───
     const updateData: any = {
       ...req.body,
       images: finalImages,
+      categories,
       jobDetails,
       isRemote,
       thursdayUntilNoon,
       enableChat,
       enablePhone,
-      categories,
     };
+
+    // ─── اعتبارسنجی و تصحیح فیلدهای Enum ───
+    // person: فقط "self" یا "other" – پیش‌فرض "self"
+    const validPerson = ["self", "other"];
+    if (updateData.person) {
+      if (!validPerson.includes(updateData.person)) {
+        updateData.person = "self";
+        console.warn(`⚠️ person مقدار نامعتبر داشت، به "self" تغییر یافت`);
+      }
+    } else {
+      updateData.person = "self";
+    }
+
+    // adPaymentMethod: فقط "Subscription", "Wallet", "Bank_card" – پیش‌فرض "Subscription"
+    const validPayment = ["Subscription", "Wallet", "Bank_card"];
+    if (updateData.adPaymentMethod) {
+      if (!validPayment.includes(updateData.adPaymentMethod)) {
+        updateData.adPaymentMethod = "Subscription";
+        console.warn(
+          `⚠️ adPaymentMethod مقدار نامعتبر داشت، به "Subscription" تغییر یافت`,
+        );
+      }
+    } else {
+      updateData.adPaymentMethod = "Subscription";
+    }
+
+    // adStatus: فقط "pending", "approved", "rejected", "expired" – پیش‌فرض "pending"
+    const validStatus = ["pending", "approved", "rejected", "expired"];
+    if (updateData.adStatus) {
+      if (!validStatus.includes(updateData.adStatus)) {
+        updateData.adStatus = "pending";
+        console.warn(`⚠️ adStatus مقدار نامعتبر داشت، به "pending" تغییر یافت`);
+      }
+    } else {
+      updateData.adStatus = "pending";
+    }
 
     // حذف فیلدهای اضافی
     delete updateData.imagesFromApi;
+    delete updateData.isRemote;
+    delete updateData.thursdayUntilNoon;
+    delete updateData.enableChat;
+    delete updateData.enablePhone;
 
+    // ─── فیلتر کردن ───
+    const filteredData = filterAdData(updateData);
+
+    // ─── به‌روزرسانی ───
     const updatedAd = await prisma.employerAd.update({
       where: { id: adId },
-      data: updateData,
+      data: filteredData,
     });
 
     res.status(200).json({ status: "success", updatedAd });
@@ -373,10 +517,9 @@ export const updateEmployerAd = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * حذف آگهی کارفرما (فقط مالک)
- * @route DELETE /api/ads/employer/:adId
- */
+// ==========================================
+// 📌 حذف آگهی
+// ==========================================
 export const deleteEmployerAd = async (req: Request, res: Response) => {
   try {
     const adId = toStr(req.params.adId);
@@ -385,7 +528,6 @@ export const deleteEmployerAd = async (req: Request, res: Response) => {
     if (!userId) {
       return res.status(401).json({ message: "احراز هویت لازم است" });
     }
-
     if (!adId) {
       return res.status(400).json({ message: "شناسه آگهی نامعتبر است" });
     }
@@ -400,7 +542,7 @@ export const deleteEmployerAd = async (req: Request, res: Response) => {
         .json({ message: "آگهی یافت نشد یا دسترسی ندارید." });
     }
 
-    // حذف فایل‌های فیزیکی تصاویر (در صورت ذخیره محلی)
+    // حذف فایل‌های فیزیکی (در صورت ذخیره محلی)
     const images = ad.images as any[];
     if (images && images.length > 0) {
       for (const img of images) {
