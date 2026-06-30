@@ -1,6 +1,6 @@
 import { Router } from "express";
 import reportReasonCtrl from "../controllers/reportReasonCtrl";
-import { isAdmin } from "../middleware/authAdmin";
+import { authorizeAdmin } from "../middleware/authAdmin";
 
 const router = Router();
 
@@ -79,7 +79,7 @@ router.get("/report-reasons", reportReasonCtrl.getReportReasons);
  */
 router.post(
   "/admin/report-reasons",
-  isAdmin,
+  authorizeAdmin(),
   reportReasonCtrl.createReportReason,
 );
 
@@ -128,7 +128,7 @@ router.post(
  */
 router.put(
   "/admin/report-reasons/:id",
-  isAdmin,
+  authorizeAdmin(),
   reportReasonCtrl.updateReportReason,
 );
 
@@ -158,7 +158,7 @@ router.put(
  */
 router.delete(
   "/admin/report-reasons/:id",
-  isAdmin,
+  authorizeAdmin(),
   reportReasonCtrl.deleteReportReason,
 );
 

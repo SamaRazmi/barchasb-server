@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { AdminPending, AdminRegister, AdminActivate, AdminReject, ActiveAdmins } from "../../../controllers/admin/auth/sub-admin";
+import { authorizeAdmin } from "../../../middleware/authAdmin";
 
 const router = Router();
 
@@ -130,7 +131,7 @@ router.post('/sub-admin/register', AdminRegister);
  *                 error: { type: string, example: "Forbidden" }
  *                 statusCode: { type: integer, example: 403 }
  */
-router.get('/sub-admin/pending', AdminPending);
+router.get('/sub-admin/pending', authorizeAdmin('SUPER_ADMIN'), AdminPending);
 
 /**
  * @swagger
@@ -182,7 +183,7 @@ router.get('/sub-admin/pending', AdminPending);
  *                 error: { type: string, example: "Forbidden" }
  *                 statusCode: { type: integer, example: 403 }
  */
-router.post('/sub-admin/approve/:id', AdminActivate);
+router.post('/sub-admin/approve/:id', authorizeAdmin('SUPER_ADMIN'), AdminActivate);
 
 /**
  * @swagger
@@ -192,7 +193,7 @@ router.post('/sub-admin/approve/:id', AdminActivate);
  *     description: Rejects and deletes a pending sub-admin from the database. Only accessible by Super Admin.
  *     tags: [Yasrebi Backend]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -234,7 +235,7 @@ router.post('/sub-admin/approve/:id', AdminActivate);
  *                 error: { type: string, example: "Forbidden" }
  *                 statusCode: { type: integer, example: 403 }
  */
-router.get('/sub-admin/reject/:id', AdminReject);
+router.get('/sub-admin/reject/:id', authorizeAdmin('SUPER_ADMIN'), AdminReject);
 
 /**
  * @swagger
@@ -281,6 +282,6 @@ router.get('/sub-admin/reject/:id', AdminReject);
  *                 error: { type: string, example: "Forbidden" }
  *                 statusCode: { type: integer, example: 403 }
  */
-router.get('/sub-admins/active', ActiveAdmins);
+router.get('/sub-admins/active', authorizeAdmin('SUPER_ADMIN'), ActiveAdmins);
 
 export default router;

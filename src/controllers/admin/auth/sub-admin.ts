@@ -69,8 +69,6 @@ export async function AdminRegister(req: Request, res: Response) {
 
 // only super admin can see the pending admins 
 export async function AdminPending(req: Request, res: Response) {
-  if (!verifySuperAdmin(req, res)) return;
-
 
   const pendingAdmin = await prisma.admin.findMany()
 
@@ -82,8 +80,6 @@ export async function AdminPending(req: Request, res: Response) {
 
 // only super admin can see the pending admins
 export async function AdminActivate(req: Request, res: Response) {
-  if (!verifySuperAdmin(req, res)) return;
-
 
   const admin_parameter = req.params.id as string
   const activated_admin = await prisma.admin.update({
@@ -109,8 +105,6 @@ export async function AdminActivate(req: Request, res: Response) {
 
 
 export async function AdminReject(req: Request, res: Response) {
-  if (!verifySuperAdmin(req, res)) return;
-
 
   const admin_parameter = req.params.id as string
   const activated_admin = await prisma.admin.delete({
@@ -132,7 +126,6 @@ export async function AdminReject(req: Request, res: Response) {
 }
 
 export async function ActiveAdmins(req: Request, res: Response) {
-  if (!verifySuperAdmin(req, res)) return;
 
   const activeAdmin = await prisma.admin.findMany({
     where: {
@@ -150,28 +143,4 @@ export async function ActiveAdmins(req: Request, res: Response) {
   })
 
   return res.status(200).json(activeAdmin)
-}
-
-function verifySuperAdmin(req: Request, res: Response): boolean {
-  const token = req.cookies?.accessToken || req.headers.authorization?.split(" ")[1];
-
-  if (!token) {
-    res.status(401).json({
-      message: "دسترسی غیرمجاز: توکن ارسال نشده است.",
-    });
-    return false;
-  }
-
-  try {
-    jwt.verify(token, process.env.JWT_SECRET_SUPER_ADMIN!);
-    return true;
-  } catch (err: any) {
-    console.error('error while verifing jwt for super admin:', err.message)
-    res.status(403).json({
-      message: "Only Super Admin can perform this action",
-      error: "Forbidden",
-      statusCode: 403
-    });
-    return false;
-  }
 }

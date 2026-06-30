@@ -35,7 +35,7 @@ enum AdStatus {
   pending
   approved
   rejected
-  expired   // اضافه شده برای مدیریت آگهی‌های منقضی شده
+  expired // اضافه شده برای مدیریت آگهی‌های منقضی شده
 }
 
 enum PaymentMethod {
@@ -170,10 +170,10 @@ model User {
   testSessions      TestSession[]
 
   // ===== روابط جدید برای سیستم پیشنهادات ویژه =====
-  suggestionViews        SuggestionView[]          // هر کاربر چندین نمایش پیشنهاد دارد
-  suggestionPreference   UserSuggestionPreference? // هر کاربر یک تنظیمات پیشنهاد (One-to-One)
-  suggestionDailyLimits  SuggestionDailyLimit[]    // هر کاربر چندین محدودیت روزانه دارد
-  cachedSuggestions      CachedUserSuggestions?    // هر کاربر یک کش از پیشنهادات خود دارد (One-to-One)
+  suggestionViews       SuggestionView[] // هر کاربر چندین نمایش پیشنهاد دارد
+  suggestionPreference  UserSuggestionPreference? // هر کاربر یک تنظیمات پیشنهاد (One-to-One)
+  suggestionDailyLimits SuggestionDailyLimit[] // هر کاربر چندین محدودیت روزانه دارد
+  cachedSuggestions     CachedUserSuggestions? // هر کاربر یک کش از پیشنهادات خود دارد (One-to-One)
 }
 
 model UserProfile {
@@ -298,8 +298,8 @@ model DigitalAd {
   createdAt           DateTime      @default(now())
 
   // فیلدهای جدید برای مدیریت انقضای آگهی تایید شده
-  approvedAt          DateTime?     // زمان تایید آگهی
-  expiresAt           DateTime?     // یک ماه بعد از approvedAt
+  approvedAt DateTime? // زمان تایید آگهی
+  expiresAt  DateTime? // یک ماه بعد از approvedAt
 
   ownerRelation User @relation(fields: [owner], references: [id])
 }
@@ -350,8 +350,8 @@ model EmployerAd {
   createdAt          DateTime      @default(now())
 
   // فیلدهای جدید برای مدیریت انقضای آگهی تایید شده
-  approvedAt          DateTime?     // زمان تایید آگهی
-  expiresAt           DateTime?     // یک ماه بعد از approvedAt
+  approvedAt DateTime? // زمان تایید آگهی
+  expiresAt  DateTime? // یک ماه بعد از approvedAt
 
   ownerRelation User @relation(fields: [owner], references: [id])
 }
@@ -399,8 +399,8 @@ model JobSeekerAd {
   createdAt          DateTime      @default(now())
 
   // فیلدهای جدید برای مدیریت انقضای آگهی تایید شده
-  approvedAt          DateTime?     // زمان تایید آگهی
-  expiresAt           DateTime?     // یک ماه بعد از approvedAt
+  approvedAt DateTime? // زمان تایید آگهی
+  expiresAt  DateTime? // یک ماه بعد از approvedAt
 
   ownerRelation User @relation(fields: [owner], references: [id])
 }
@@ -544,8 +544,8 @@ model SellerAd {
   owner         String
 
   // فیلدهای جدید برای مدیریت انقضای آگهی تایید شده
-  approvedAt          DateTime?     // زمان تایید آگهی
-  expiresAt           DateTime?     // یک ماه بعد از approvedAt
+  approvedAt DateTime? // زمان تایید آگهی
+  expiresAt  DateTime? // یک ماه بعد از approvedAt
 
   ownerRelation User @relation(fields: [owner], references: [id])
 }
@@ -680,19 +680,19 @@ model Admin {
 // کاربرد: شمارش تعداد دفعات استفاده از پیشنهادات توسط هر کاربر
 // ------------------------------------------------------------
 model SuggestionView {
-  id        String   @id @default(uuid())
-  userId    String
-  adId      String   // شناسه آگهی (بدون توجه به نوع)
-  adType    AdType   // نوع آگهی (EmployerAd, JobSeekerAd, SellerAd, DigitalAd)
-  viewedAt  DateTime @default(now())
+  id       String   @id @default(uuid())
+  userId   String
+  adId     String // شناسه آگهی (بدون توجه به نوع)
+  adType   AdType // نوع آگهی (EmployerAd, JobSeekerAd, SellerAd, DigitalAd)
+  viewedAt DateTime @default(now())
 
   // ارتباط با کاربر
-  user      User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   // ایندکس‌ها برای جستجوی سریع
-  @@unique([userId, adId, adType])        // جلوگیری از ثبت تکراری در یک نمایش (اختیاری)
-  @@index([userId, viewedAt])             // برای شمارش تعداد نمایش‌های یک کاربر
-  @@index([adId, adType])                 // برای تحلیل عملکرد آگهی‌ها
+  @@unique([userId, adId, adType]) // جلوگیری از ثبت تکراری در یک نمایش (اختیاری)
+  @@index([userId, viewedAt]) // برای شمارش تعداد نمایش‌های یک کاربر
+  @@index([adId, adType]) // برای تحلیل عملکرد آگهی‌ها
 }
 
 // ------------------------------------------------------------
@@ -701,17 +701,17 @@ model SuggestionView {
 // کاربرد: مدیریت سقف استفاده و شخصی‌سازی پیشنهادات
 // ------------------------------------------------------------
 model UserSuggestionPreference {
-  id                 String   @id @default(uuid())
-  userId             String   @unique
-  totalAllowed       Int      @default(100)       // تعداد کل پیشنهادات مجاز برای این کاربر
-  resetPeriod        String   @default("monthly") // "daily" | "weekly" | "monthly" | "never"
-  lastResetDate      DateTime @default(now())     // تاریخ آخرین بازنشانی
-  preferredAdTypes   AdType[] @default([])        // اولویت‌های کاربر برای نوع آگهی (مثلاً فقط DigitalAd و SellerAd)
-  preferredCategories String[] @default([])       // دسته‌بندی‌های مورد علاقه
-  filterWeights      Json     @default("{}")      // وزن‌دهی به فیلترها مانند { "location": 0.3, "skills": 0.5, "category": 0.2 }
-  isActive           Boolean  @default(true)
+  id                  String   @id @default(uuid())
+  userId              String   @unique
+  totalAllowed        Int      @default(100) // تعداد کل پیشنهادات مجاز برای این کاربر
+  resetPeriod         String   @default("monthly") // "daily" | "weekly" | "monthly" | "never"
+  lastResetDate       DateTime @default(now()) // تاریخ آخرین بازنشانی
+  preferredAdTypes    AdType[] @default([]) // اولویت‌های کاربر برای نوع آگهی (مثلاً فقط DigitalAd و SellerAd)
+  preferredCategories String[] @default([]) // دسته‌بندی‌های مورد علاقه
+  filterWeights       Json     @default("{}") // وزن‌دهی به فیلترها مانند { "location": 0.3, "skills": 0.5, "category": 0.2 }
+  isActive            Boolean  @default(true)
 
-  user               User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }
 
 // ------------------------------------------------------------
@@ -720,13 +720,13 @@ model UserSuggestionPreference {
 // کاربرد: مدیریت مصرف روزانه بدون نیاز به محاسبه از SuggestionView
 // ------------------------------------------------------------
 model SuggestionDailyLimit {
-  id            String   @id @default(uuid())
-  userId        String
-  date          DateTime @default(now())   // تاریخ روز (بدون ساعت)
-  countUsed     Int      @default(0)
-  dailyLimit    Int      @default(20)      // سقف روزانه (می‌تواند از Preference خوانده شود)
+  id         String   @id @default(uuid())
+  userId     String
+  date       DateTime @default(now()) // تاریخ روز (بدون ساعت)
+  countUsed  Int      @default(0)
+  dailyLimit Int      @default(20) // سقف روزانه (می‌تواند از Preference خوانده شود)
 
-  user          User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@unique([userId, date])
   @@index([userId, date])
@@ -738,13 +738,13 @@ model SuggestionDailyLimit {
 // کاربرد: کاهش محاسبات تکراری در زمان تولید پیشنهادات
 // ------------------------------------------------------------
 model AdSimilarityScore {
-  id              String   @id @default(uuid())
+  id              String    @id @default(uuid())
   adId1           String
   adType1         AdType
   adId2           String
   adType2         AdType
-  similarityScore Float    // امتیاز بین ۰ تا ۱ (یا ۰ تا ۱۰۰)
-  calculatedAt    DateTime @default(now())
+  similarityScore Float // امتیاز بین ۰ تا ۱ (یا ۰ تا ۱۰۰)
+  calculatedAt    DateTime  @default(now())
   expiresAt       DateTime? // در صورت نیاز به انقضا
 
   @@unique([adId1, adType1, adId2, adType2])
@@ -758,13 +758,13 @@ model AdSimilarityScore {
 // کاربرد: پاسخگویی سریع‌تر به درخواست‌های مکرر
 // ------------------------------------------------------------
 model CachedUserSuggestions {
-  id              String   @id @default(uuid())
-  userId          String   @unique
-  suggestionIds   Json     // آرایه‌ای از شناسه‌های آگهی به همراه نوع: [{adId: "uuid", adType: "EmployerAd"}]
-  generatedAt     DateTime @default(now())
-  expiresAt       DateTime // مثلاً + ۵ دقیقه یا ۱ ساعت
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  suggestionIds Json // آرایه‌ای از شناسه‌های آگهی به همراه نوع: [{adId: "uuid", adType: "EmployerAd"}]
+  generatedAt   DateTime @default(now())
+  expiresAt     DateTime // مثلاً + ۵ دقیقه یا ۱ ساعت
 
-  user            User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@index([expiresAt])
 }
