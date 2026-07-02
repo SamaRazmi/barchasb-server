@@ -31,6 +31,7 @@ enum PersonType {
 }
 
 enum AdStatus {
+  pending_payment
   pending
   approved
   rejected
@@ -171,6 +172,7 @@ model User {
   suggestionDailyLimits  SuggestionDailyLimit[]    // هر کاربر چندین محدودیت روزانه دارد
   cachedSuggestions      CachedUserSuggestions?    // هر کاربر یک کش از پیشنهادات خود دارد (One-to-One)
   wallet            Wallet?
+  payments          Payment[]
 }
 
 model UserProfile {
@@ -300,7 +302,7 @@ model DigitalAd {
   // فیلدهای جدید برای مدیریت انقضای آگهی تایید شده
   approvedAt          DateTime?     // زمان تایید آگهی
   expiresAt           DateTime?     // یک ماه بعد از approvedAt
-
+  isPaid              Boolean       @default(true)
   ownerRelation User @relation(fields: [owner], references: [id])
 }
 
@@ -352,7 +354,7 @@ model EmployerAd {
   // فیلدهای جدید برای مدیریت انقضای آگهی تایید شده
   approvedAt          DateTime?     // زمان تایید آگهی
   expiresAt           DateTime?     // یک ماه بعد از approvedAt
-
+  isPaid              Boolean     @default(true)
   ownerRelation User @relation(fields: [owner], references: [id])
 }
 
@@ -401,6 +403,7 @@ model JobSeekerAd {
   // فیلدهای جدید برای مدیریت انقضای آگهی تایید شده
   approvedAt          DateTime?     // زمان تایید آگهی
   expiresAt           DateTime?     // یک ماه بعد از approvedAt
+  isPaid              Boolean      @default(false)
 
   ownerRelation User @relation(fields: [owner], references: [id])
 }
@@ -532,7 +535,7 @@ model SellerAd {
   // فیلدهای جدید برای مدیریت انقضای آگهی تایید شده
   approvedAt          DateTime?     // زمان تایید آگهی
   expiresAt           DateTime?     // یک ماه بعد از approvedAt
-
+  isPaid        Boolean       @default(false)
   ownerRelation User @relation(fields: [owner], references: [id])
 }
 
@@ -777,6 +780,20 @@ model Pricing {
   updatedAt   DateTime @updatedAt
 }
 
+model AdLadder {
+  id                 String   @id @default(uuid())
+  adEnhancementId    String   
+  adEnhancement      AdEnhancement @relation(fields: [adEnhancementId], references: [id], onDelete: Cascade)
+  
+  option             String?  // "24h" | "72h" | "7d" | null
+  scheduledAt        DateTime?
+  executedAt         DateTime? 
+  isExecuted         Boolean  @default(false) 
+  
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
 model AdEnhancement {
   id     String @id @default(uuid())
   adId   String
@@ -788,8 +805,7 @@ model AdEnhancement {
   specialEndDate   DateTime?
 
   // پله
-  isStepped       Boolean   @default(false)
-  stepScheduledAt DateTime?
+  ladders            AdLadder[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -824,4 +840,29 @@ model Transaction {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Payment {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount          Int       // IRT
+  authority       String?   // کد ارجاع درگاه (Authority)
+  refId           String?   // کد پیگیری درگاه (Reference ID)
+  status          PaymentStatus @default(PENDING)
+  paymentMethod   PaymentMethod
+  description     String?   
+  referenceId     String?   // شناسه آگهی یا افزونه‌ای که برای آن پرداخت شده
+  referenceType   String?   // "AD" یا "ENHANCEMENT"
+  metadata        Json?     // اطلاعات اضافی
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+enum PaymentStatus {
+  PENDING        // منتظر پرداخت
+  PAID           // پرداخت موفق
+  FAILED         // پرداخت ناموفق
+  CANCELED       // لغو شده توسط کاربر
+  VERIFYING      // در حال تایید
 }

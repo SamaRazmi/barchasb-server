@@ -159,6 +159,8 @@ export const createSellerAd = async (req: Request, res: Response) => {
       data: {
         owner: (req as any).user?.id || req.body.owner,
         ...filteredData,
+        adStatus: "pending_payment",
+        paymentMethod: req.body.paymentMethod || "Bank_card",
       },
     });
 
