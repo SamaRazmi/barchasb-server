@@ -35,6 +35,7 @@ enum AdStatus {
   approved
   rejected
   expired   // اضافه شده برای مدیریت آگهی‌های منقضی شده
+  updated   // اضافه شده برای آگهی‌های ویرایش شده که منتظر تأیید مجدد هستند
 }
 
 enum PaymentMethod {
@@ -301,6 +302,13 @@ model DigitalAd {
   approvedAt          DateTime?     // زمان تایید آگهی
   expiresAt           DateTime?     // یک ماه بعد از approvedAt
 
+  // فیلدهای اضافه شده برای موقعیت مکانی
+  province            String?
+  city                String?
+
+  // شماره تماس در صورت شخص دیگر
+  phoneOther          String?
+
   ownerRelation User @relation(fields: [owner], references: [id])
 }
 
@@ -353,6 +361,9 @@ model EmployerAd {
   approvedAt          DateTime?     // زمان تایید آگهی
   expiresAt           DateTime?     // یک ماه بعد از approvedAt
 
+  // شماره تماس در صورت شخص دیگر
+  phoneOther          String?
+
   ownerRelation User @relation(fields: [owner], references: [id])
 }
 
@@ -401,6 +412,9 @@ model JobSeekerAd {
   // فیلدهای جدید برای مدیریت انقضای آگهی تایید شده
   approvedAt          DateTime?     // زمان تایید آگهی
   expiresAt           DateTime?     // یک ماه بعد از approvedAt
+
+  // شماره تماس در صورت شخص دیگر
+  phoneOther          String?
 
   ownerRelation User @relation(fields: [owner], references: [id])
 }
@@ -532,6 +546,9 @@ model SellerAd {
   // فیلدهای جدید برای مدیریت انقضای آگهی تایید شده
   approvedAt          DateTime?     // زمان تایید آگهی
   expiresAt           DateTime?     // یک ماه بعد از approvedAt
+
+  // شماره تماس در صورت شخص دیگر
+  phoneOther          String?
 
   ownerRelation User @relation(fields: [owner], references: [id])
 }
