@@ -47,6 +47,9 @@ import SubAdminRoutes from "./routes/admin/auth/sub-admin";
 import SuperAdminRoutes from "./routes/admin/auth/super-admin";
 import PublicAdCategoriesRoutes from "./routes/admin/public/ad-categories";
 import AdminLoginRoutes from "./routes/admin/auth/login";
+import checkoutRoutes from "./routes/CheckoutRoutes";
+import purchaseRoutes from "./routes/PurchaseRoutes";
+import paymentRoutes from "./routes/PaymentRoutes";
 
 import SuggestionRoutes from "./routes/SuggestionRoutes";
 
@@ -55,6 +58,7 @@ import adminReportRoutes from "./routes/adminReportRoutes";
 
 import cron from "node-cron";
 import { cleanExpiredAds } from "./jobs/cleanExpiredAds";
+import { cleanPendingPaymentAds } from "./jobs/cleanPendingPaymentAds";
 import loadData from "./utils/dataLoader";
 import fs from "fs";
 import { join } from "path";
@@ -211,7 +215,9 @@ app.use("/api", authenticateUser, SuggestionRoutes);
 // app.use('/auth', SubAdmin)
 app.use("/api", walletRoutes);
 app.use("/api", pricingRoutes);
-
+app.use("/api", checkoutRoutes);
+app.use("/api", purchaseRoutes);
+app.use("/api", paymentRoutes);
 // Protected routes
 app.use("/api/tests", authenticateUser, TestRoutes);
 app.use("/api/resume", authenticateUser, ResumeRoutes);
@@ -382,6 +388,10 @@ const port = process.env.PORT || 5000;
 cron.schedule("0 3 * * *", async () => {
   console.log("⏰ اجرای کرون جاب پاکسازی آگهی‌های منقضی...");
   await cleanExpiredAds();
+});
+cron.schedule("*/5 * * * *", async () => {
+  console.log("⏰ اجرای کرون جاب پاکسازی آگهی‌های pending_payment...");
+  await cleanPendingPaymentAds();
 });
 
 async function startServer() {

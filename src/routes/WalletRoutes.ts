@@ -56,7 +56,7 @@ router.get("/wallet/balance", authenticateUser , WalletCtrl.getBalance);
  * @swagger
  * /api/wallet/deposit:
  *   post:
- *     summary: شارژ کیف پول (ماک درگاه)
+ *     summary: شارژ کیف پول (از طریق درگاه بانکی)
  *     tags: [Wallet]
  *     security:
  *       - bearerAuth: []
@@ -66,13 +66,12 @@ router.get("/wallet/balance", authenticateUser , WalletCtrl.getBalance);
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - amount
  *             properties:
  *               amount:
  *                 type: number
  *                 example: 50000
- *               metadata:
- *                 type: object
- *                 example: { gateway: "mock", trackingCode: "12345" }
  *     responses:
  *       200:
  *         description: موفق
@@ -89,10 +88,12 @@ router.get("/wallet/balance", authenticateUser , WalletCtrl.getBalance);
  *                 data:
  *                   type: object
  *                   properties:
- *                     newBalance:
- *                       type: number
- *                     transaction:
- *                       type: object
+ *                     paymentId:
+ *                       type: string
+ *                     paymentUrl:
+ *                       type: string
+ *                     authority:
+ *                       type: string
  *       400:
  *         description: مبلغ نامعتبر
  *       401:
@@ -100,7 +101,7 @@ router.get("/wallet/balance", authenticateUser , WalletCtrl.getBalance);
  *       500:
  *         description: خطای سرور
  */
-router.post("/wallet/deposit", authenticateUser , WalletCtrl.deposit);
+router.post("/wallet/deposit", authenticateUser, WalletCtrl.deposit);
 
 // /**
 //  * @swagger

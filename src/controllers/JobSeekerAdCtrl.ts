@@ -140,6 +140,7 @@ export const createJobSeekerAd = async (req: Request, res: Response) => {
       data: {
         owner: (req as any).user?.id || req.body.owner,
         ...filteredData,
+        adStatus: "pending_payment",
       },
     });
 
