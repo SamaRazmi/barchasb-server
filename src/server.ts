@@ -151,10 +151,8 @@ const swaggerOptions = {
     security: [{ BearerAuth: [] }],
   },
   apis: [
-    "./src/routes/*.ts",
-    "./src/routes/*.js",
-    "./src/routes/admin/**/*.ts",
-    "./src/routes/admin/**/*.js",
+    "./src/routes/**/*.ts",
+    "./src/routes/**/*.js",
   ],
 };
 
@@ -226,10 +224,11 @@ app.use("/api/admin", authenticateAdmin, AdminExtensionsRoutes);
 app.use("/api/user", authenticateUser, UserExtensionsRoutes);
 
 // admin route
-app.use("/auth", SubAdminRoutes);
-app.use("/auth", SuperAdminRoutes);
-app.use("/", AdminLoginRoutes);
-app.use("/public/ad-categories", PublicAdCategoriesRoutes);
+app.use('/auth', SubAdminRoutes);
+app.use('/auth', SuperAdminRoutes);
+app.use('/', AdminLoginRoutes);
+app.use('/public/ad-categories', PublicAdCategoriesRoutes);
+app.use('/ads', AdsRoutes);
 // app.use('/articles', ArticlesRoutes);
 
 // ===== اضافه شده: مسیرهای مدیریت گزارش توسط ادمین =====
