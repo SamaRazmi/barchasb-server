@@ -10,7 +10,7 @@ const router = Router();
  *   post:
  *     summary: Register a new sub-admin
  *     description: Registers a new sub-admin. Validates password match, checks for existing phone numbers, and hashes the password.
- *     tags: [Yasrebi Backend]
+ *     tags: [Admin backend]
  *     security: []
  *     requestBody:
  *       required: true
@@ -92,7 +92,7 @@ router.post('/sub-admin/register', AdminRegister);
  *   get:
  *     summary: Get pending admins
  *     description: Retrieves a list of admins. Only accessible by Super Admin.
- *     tags: [Yasrebi Backend]
+ *     tags: [Admin backend]
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -139,7 +139,7 @@ router.get('/sub-admin/pending', authorizeAdmin('SUPER_ADMIN'), AdminPending);
  *   post:
  *     summary: Approve a sub-admin
  *     description: Activates/verifies a pending sub-admin. Only accessible by Super Admin.
- *     tags: [Yasrebi Backend]
+ *     tags: [Admin backend]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -191,7 +191,7 @@ router.post('/sub-admin/approve/:id', authorizeAdmin('SUPER_ADMIN'), AdminActiva
  *   get:
  *     summary: Reject a sub-admin
  *     description: Rejects and deletes a pending sub-admin from the database. Only accessible by Super Admin.
- *     tags: [Yasrebi Backend]
+ *     tags: [Admin backend]
  *     security:
  *       - BearerAuth: []
  *     parameters:
@@ -243,7 +243,7 @@ router.get('/sub-admin/reject/:id', authorizeAdmin('SUPER_ADMIN'), AdminReject);
  *   get:
  *     summary: Get active sub-admins
  *     description: Retrieves a list of all verified/active sub-admins. Only accessible by Super Admin.
- *     tags: [Yasrebi Backend]
+ *     tags: [Admin backend]
  *     security:
  *       - bearerAuth: []
  *     responses:

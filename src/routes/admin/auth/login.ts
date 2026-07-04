@@ -9,7 +9,7 @@ const router = Router()
  *   post:
  *     summary: Admin Login
  *     description: Authenticates an admin user using phone and password, and returns a JWT access token.
- *     tags: [Yasrebi Backend]
+ *     tags: [Admin backend]
  *     security: []
  *     requestBody:
  *       required: true

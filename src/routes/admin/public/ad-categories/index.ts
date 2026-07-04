@@ -9,7 +9,7 @@ const router = Router()
  *   get:
  *     summary: Get all ad categories
  *     description: Retrieves a list of all ad categories. Maps the database 'id' to '_id' and initializes an empty 'children' array for each item.
- *     tags: [Yasrebi Backend]
+ *     tags: [Admin backend]
  *     security: []
  *     responses:
  *       200:
@@ -43,7 +43,7 @@ router.get('/tree', AdCategoriesTree)
  *   get:
  *     summary: Get a specific ad category by ID
  *     description: Retrieves the details of a specific ad category using its unique ID.
- *     tags: [Yasrebi Backend]
+ *     tags: [Admin backend]
  *     security: []
  *     parameters:
  *       - in: path

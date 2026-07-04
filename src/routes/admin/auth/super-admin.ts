@@ -9,7 +9,7 @@ const router = Router();
  *   post:
  *     summary: Register a new super admin
  *     description: Registers a new super admin. Validates password match, checks for existing phone numbers, and hashes the password.
- *     tags: [Yasrebi Backend]
+ *     tags: [Admin backend]
  *     security: []
  *     requestBody:
  *       required: true
