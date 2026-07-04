@@ -12,7 +12,7 @@ const router = Router();
  *   description: مدیریت آگهی‌های کارفرما
  */
 
-/* ===================== CREATE (AUTH) ===================== */
+/* ===================== CREATE ===================== */
 /**
  * @swagger
  * /api/ads/employer:
@@ -27,21 +27,111 @@ const router = Router();
  *         multipart/form-data:
  *           schema:
  *             type: object
+ *             required:
+ *               - name
+ *               - title
  *             properties:
  *               images:
  *                 type: array
  *                 items:
  *                   type: string
  *                   format: binary
+ *                 description: تصاویر آگهی (حداکثر ۹ عدد)
+ *               name:
+ *                 type: string
+ *                 description: نام شرکت یا نام آگهی‌دهنده (اجباری)
  *               title:
  *                 type: string
- *               category:
+ *                 description: عنوان آگهی (اجباری)
+ *               categories:
  *                 type: string
+ *                 description: JSON آرایه از دسته‌بندی‌ها (مثلاً [{"name":"فناوری","subCategories":["برنامه‌نویسی"]}])
+ *               state:
+ *                 type: string
+ *                 description: استان
  *               city:
  *                 type: string
+ *                 description: شهر
+ *               cooperationType:
+ *                 type: string
+ *                 description: نوع همکاری
+ *               gender:
+ *                 type: string
+ *                 description: جنسیت
+ *               militaryStatus:
+ *                 type: string
+ *                 description: وضعیت نظام وظیفه
+ *               experience:
+ *                 type: string
+ *                 description: سابقه کار
+ *               paymentMethod:
+ *                 type: string
+ *                 description: روش پرداخت حقوق
+ *               isRemote:
+ *                 type: boolean
+ *                 description: دورکاری
+ *               thursdayUntilNoon:
+ *                 type: boolean
+ *                 description: پنج‌شنبه‌ها تا ظهر
+ *               startTime:
+ *                 type: string
+ *                 description: ساعت شروع کار
+ *               endTime:
+ *                 type: string
+ *                 description: ساعت پایان کار
+ *               minSalary:
+ *                 type: string
+ *                 description: حداقل حقوق
+ *               maxSalary:
+ *                 type: string
+ *                 description: حداکثر حقوق
+ *               companyName:
+ *                 type: string
+ *                 description: نام شرکت
+ *               companyType:
+ *                 type: string
+ *                 description: نوع شرکت
+ *               benefits:
+ *                 type: string
+ *                 description: مزایا
+ *               insurance:
+ *                 type: string
+ *                 description: بیمه
+ *               education:
+ *                 type: string
+ *                 description: تحصیلات
+ *               companyDescription:
+ *                 type: string
+ *                 description: توضیحات شرکت
+ *               jobDetails:
+ *                 type: string
+ *                 description: JSON آرایه از جزئیات شغلی (مثلاً [{"title":"برنامه‌نویس","description":"مسئولیت‌ها"}])
+ *               person:
+ *                 type: string
+ *                 enum: [self, other]
+ *                 description: خودم / دیگری
+ *               isVerified:
+ *                 type: boolean
+ *                 description: تأیید شده
+ *               enableChat:
+ *                 type: boolean
+ *                 description: فعال‌سازی چت
+ *               enablePhone:
+ *                 type: boolean
+ *                 description: نمایش تلفن
+ *               adPaymentMethod:
+ *                 type: string
+ *                 enum: [Subscription, Wallet, Bank_card]
+ *                 description: روش پرداخت آگهی
+ *               adStatus:
+ *                 type: string
+ *                 enum: [pending, approved, rejected, expired]
+ *                 description: وضعیت آگهی
  *     responses:
  *       201:
  *         description: آگهی ایجاد شد
+ *       400:
+ *         description: خطای اعتبارسنجی (مثلاً name缺失)
  *       401:
  *         description: عدم احراز هویت
  */
@@ -52,12 +142,25 @@ router.post(
   EmployerAdCtrl.createEmployerAd,
 );
 
+/* ===================== GET ALL ===================== */
+/**
+ * @swagger
+ * /api/ads/employer:
+ *   get:
+ *     summary: دریافت همه آگهی‌های کارفرما (عمومی)
+ *     tags: [EmployerAds]
+ *     responses:
+ *       200:
+ *         description: موفق
+ */
+router.get("/ads/employer", EmployerAdCtrl.getAllEmployerAds);
+
 /* ===================== GET BY OWNER ===================== */
 /**
  * @swagger
  * /api/ads/employer/owner/{ownerId}:
  *   get:
- *     summary: دریافت همه آگهی‌های یک کاربر
+ *     summary: دریافت آگهی‌های یک کاربر خاص
  *     tags: [EmployerAds]
  *     parameters:
  *       - name: ownerId
@@ -68,8 +171,31 @@ router.post(
  *     responses:
  *       200:
  *         description: موفق
+ *       400:
+ *         description: شناسه نامعتبر
  */
 router.get("/ads/employer/owner/:ownerId", EmployerAdCtrl.getAdsByOwner);
+
+/* ===================== GET SINGLE ===================== */
+/**
+ * @swagger
+ * /api/ads/employer/{id}:
+ *   get:
+ *     summary: دریافت آگهی با ID
+ *     tags: [EmployerAds]
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: موفق
+ *       404:
+ *         description: یافت نشد
+ */
+router.get("/ads/employer/:id", EmployerAdCtrl.getEmployerAdById);
 
 /* ===================== GET & UPDATE BY OWNER + AD ===================== */
 /**
@@ -82,16 +208,20 @@ router.get("/ads/employer/owner/:ownerId", EmployerAdCtrl.getAdsByOwner);
  *       - name: ownerId
  *         in: path
  *         required: true
+ *         schema:
+ *           type: string
  *       - name: adId
  *         in: path
  *         required: true
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: موفق
  *       404:
  *         description: آگهی یافت نشد
  *   put:
- *     summary: ویرایش آگهی
+ *     summary: ویرایش آگهی کارفرما (فقط مالک)
  *     tags: [EmployerAds]
  *     security:
  *       - BearerAuth: []
@@ -114,15 +244,24 @@ router.get("/ads/employer/owner/:ownerId", EmployerAdCtrl.getAdsByOwner);
  *                 items:
  *                   type: string
  *                   format: binary
+ *                 description: تصاویر جدید
+ *               imagesFromApi:
+ *                 type: string
+ *                 description: JSON آرایه از تصاویر موجود برای نگهداری
+ *               name:
+ *                 type: string
  *               title:
  *                 type: string
- *               category:
+ *               categories:
  *                 type: string
+ *               # ... سایر فیلدها مشابه ایجاد
  *     responses:
  *       200:
  *         description: ویرایش موفق
  *       401:
  *         description: عدم احراز هویت
+ *       404:
+ *         description: آگهی یافت نشد
  */
 router
   .route("/ads/employer/:ownerId/:adId")
@@ -133,41 +272,7 @@ router
     EmployerAdCtrl.updateEmployerAd,
   );
 
-/* ===================== GET ALL ===================== */
-/**
- * @swagger
- * /api/ads/employer:
- *   get:
- *     summary: دریافت همه آگهی‌ها (عمومی)
- *     tags: [EmployerAds]
- *     responses:
- *       200:
- *         description: موفق
- */
-router.get("/ads/employer", EmployerAdCtrl.getAllEmployerAds);
-
-/* ===================== GET SINGLE ===================== */
-/**
- * @swagger
- * /api/ads/employer/{id}:
- *   get:
- *     summary: دریافت آگهی با ID
- *     tags: [EmployerAds]
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *     responses:
- *       200:
- *         description: موفق
- *       404:
- *         description: یافت نشد
- */
-router.get("/ads/employer/:id", EmployerAdCtrl.getEmployerAdById);
-
-/* =======================
-   DELETE
-======================= */
+/* ===================== DELETE ===================== */
 /**
  * @swagger
  * /api/ads/employer/{adId}:
@@ -186,9 +291,9 @@ router.get("/ads/employer/:id", EmployerAdCtrl.getEmployerAdById);
  *       200:
  *         description: آگهی با موفقیت حذف شد
  *       401:
- *         description: توکن معتبر نیست
+ *         description: عدم احراز هویت
  *       404:
- *         description: آگهی یافت نشد
+ *         description: آگهی یافت نشد یا دسترسی ندارید
  *       500:
  *         description: خطای سرور
  */

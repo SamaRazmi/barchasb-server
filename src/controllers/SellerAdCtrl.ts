@@ -1,9 +1,51 @@
-// src/controllers/SellerAdCtrl.ts
 import { Request, Response } from "express";
 import prisma from "../config/prisma";
 import { transformFileUrls } from "../middleware/upload";
 import { promises as fs } from "fs";
 import path from "path";
+
+// ==========================================
+// 📋 لیست فیلدهای مجاز در مدل SellerAd
+// ==========================================
+const ALLOWED_FIELDS = [
+  "owner",
+  "title",
+  "description",
+  "category",
+  "state",
+  "city",
+  "application",
+  "status",
+  "images",
+  "priceIRT",
+  "isFixedPrice",
+  "isNegotiable",
+  "hasWarranty",
+  "isShippable",
+  "extraFeatures",
+  "rating",
+  "person",
+  "isVerified",
+  "enableChat",
+  "enablePhone",
+  "paymentMethod",
+  "adStatus",
+  "approvedAt",
+  "expiresAt",
+] as const;
+
+// ==========================================
+// 🧹 فیلترکننده (فقط فیلدهای مجاز)
+// ==========================================
+function filterAdData(data: any): any {
+  const filtered: any = {};
+  for (const key of ALLOWED_FIELDS) {
+    if (data[key] !== undefined) {
+      filtered[key] = data[key];
+    }
+  }
+  return filtered;
+}
 
 // تابع کمکی برای تبدیل params به string
 const toStr = (value: string | string[] | undefined): string => {
@@ -12,70 +54,129 @@ const toStr = (value: string | string[] | undefined): string => {
   return "";
 };
 
-// ایجاد آگهی فروشنده
+// ==========================================
+// 📌 ایجاد آگهی فروشنده
+// ==========================================
 export const createSellerAd = async (req: Request, res: Response) => {
+  console.log("\n🚀 createSellerAd START");
+  console.log("Body received:", req.body);
+  console.log("Files received:", (req as any).files);
+
   try {
-    // 🔹 تبدیل آدرس تصاویر به دامنه سفارشی
+    const updateData: any = { ...req.body };
+
+    // ─── پردازش images (همیشه آرایه) ───
     let uploadedFiles = (req as any).files || [];
     if (uploadedFiles.length > 0) {
       uploadedFiles = transformFileUrls(uploadedFiles);
     }
-
-    // 🔹 آرایه تصاویر از req.files (تبدیل شده)
+    const mainIndex = Number(req.body.mainImageIndex || 0);
     const images = uploadedFiles.map((file: any, i: number) => ({
-      url: file.location || file.path,
-      isMain: i === Number(req.body.mainImageIndex || 0),
+      url: file.location || file.path || "",
+      isMain: i === mainIndex,
     }));
+    updateData.images = images;
 
-    // 🔹 تبدیل Boolean ها
-    const isFixedPrice = req.body.isFixedPrice === "true";
-    const isNegotiable = req.body.isNegotiable === "true";
-    const hasWarranty = req.body.hasWarranty === "true";
-    const isShippable = req.body.isShippable === "true";
-
-    // 🔹 تبدیل قیمت به Number (حذف ویرگول)
-    const priceIRT = Number((req.body.priceIRT || "0").replace(/,/g, "")) || 0;
-
-    // 🔹 extraFeatures از JSON string
+    // ─── پردازش extraFeatures ───
     let extraFeatures = {};
     if (req.body.extraFeatures) {
       try {
-        extraFeatures = JSON.parse(req.body.extraFeatures);
+        extraFeatures =
+          typeof req.body.extraFeatures === "string"
+            ? JSON.parse(req.body.extraFeatures)
+            : req.body.extraFeatures;
       } catch (err) {
         console.warn("Invalid JSON in extraFeatures:", err);
+        extraFeatures = {};
       }
     }
+    updateData.extraFeatures = extraFeatures;
 
+    // ─── تبدیل فیلدهای بولی ───
+    const toBool = (v: any) => v === "true" || v === true;
+    const BOOLEAN_FIELDS = [
+      "isFixedPrice",
+      "isNegotiable",
+      "hasWarranty",
+      "isShippable",
+      "isVerified",
+      "enableChat",
+      "enablePhone",
+    ];
+    BOOLEAN_FIELDS.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        updateData[field] = toBool(req.body[field]);
+      }
+    });
+
+    // ─── پردازش priceIRT ───
+    if (req.body.priceIRT !== undefined) {
+      const priceStr = String(req.body.priceIRT).replace(/,/g, "");
+      updateData.priceIRT = parseInt(priceStr) || 0;
+    }
+
+    // ─── اعتبارسنجی و تصحیح فیلدهای Enum ───
+    // person: فقط "self" یا "other"
+    const validPerson = ["self", "other"];
+    if (updateData.person) {
+      if (!validPerson.includes(updateData.person)) {
+        updateData.person = "self";
+        console.warn(`⚠️ person مقدار نامعتبر داشت، به "self" تغییر یافت`);
+      }
+    } else {
+      updateData.person = "self";
+    }
+
+    // paymentMethod: فقط "Subscription", "Wallet", "Bank_card" — مقدار پیش‌فرض Subscription
+    const validPayment = ["Subscription", "Wallet", "Bank_card"];
+    if (updateData.paymentMethod) {
+      if (!validPayment.includes(updateData.paymentMethod)) {
+        updateData.paymentMethod = "Subscription";
+        console.warn(
+          `⚠️ paymentMethod مقدار نامعتبر داشت، به "Subscription" تغییر یافت`,
+        );
+      }
+    } else {
+      updateData.paymentMethod = "Subscription";
+    }
+
+    // adStatus: فقط "pending", "approved", "rejected", "expired"
+    const validStatus = ["pending", "approved", "rejected", "expired"];
+    if (updateData.adStatus) {
+      if (!validStatus.includes(updateData.adStatus)) {
+        updateData.adStatus = "pending";
+        console.warn(`⚠️ adStatus مقدار نامعتبر داشت، به "pending" تغییر یافت`);
+      }
+    } else {
+      updateData.adStatus = "pending";
+    }
+
+    // ─── فیلتر کردن داده‌ها ───
+    const filteredData = filterAdData(updateData);
+
+    // ─── ساخت آگهی با owner ───
     const ad = await prisma.sellerAd.create({
       data: {
-        title: req.body.title,
-        category: req.body.category,
-        state: req.body.state,
-        city: req.body.city,
-        person: req.body.person || "self",
-        priceIRT,
-        isFixedPrice,
-        isNegotiable,
-        hasWarranty,
-        isShippable,
-        extraFeatures,
-        images,
         owner: (req as any).user?.id || req.body.owner,
-        adStatus: "pending",
+        ...filteredData,
+        adStatus: "pending_payment",
         paymentMethod: req.body.paymentMethod || "Bank_card",
       },
     });
 
+    console.log("✅ SellerAd created successfully");
     res.status(201).json({ message: "Seller ad saved successfully", ad });
   } catch (err: any) {
-    console.error(err);
+    console.error("❌ ERROR CREATING SELLER AD:", err);
     res
       .status(400)
       .json({ message: "Seller ad save failed", error: err.message });
   }
 };
 
-// دریافت همه آگهی‌ها
+// ==========================================
+// 📌 دریافت همه آگهی‌ها
+// ==========================================
 export const getAllSellerAds = async (req: Request, res: Response) => {
   try {
     const ads = await prisma.sellerAd.findMany({
@@ -90,7 +191,6 @@ export const getAllSellerAds = async (req: Request, res: Response) => {
       },
     });
 
-    // تبدیل به فرمت قبلی که populate("owner", "fullName phoneNumber") داشت
     const formattedAds = (ads as any[]).map((ad) => ({
       ...ad,
       owner: ad.ownerRelation
@@ -106,11 +206,14 @@ export const getAllSellerAds = async (req: Request, res: Response) => {
 
     res.json(formattedAds);
   } catch (err: any) {
+    console.error("❌ ERROR GETTING ALL SELLER ADS:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
-// دریافت یک آگهی فروشنده
+// ==========================================
+// 📌 دریافت یک آگهی فروشنده
+// ==========================================
 export const getSellerAdById = async (req: Request, res: Response) => {
   try {
     const adId = toStr(req.params.id);
@@ -150,12 +253,14 @@ export const getSellerAdById = async (req: Request, res: Response) => {
 
     res.json(formattedAd);
   } catch (err: any) {
-    console.error("خطا در دریافت آگهی:", err);
+    console.error("❌ ERROR GETTING SELLER AD BY ID:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
-// گرفتن آگهی‌های یک کاربر خاص
+// ==========================================
+// 📌 گرفتن آگهی‌های یک کاربر خاص
+// ==========================================
 export const getAdsByOwner = async (req: Request, res: Response) => {
   try {
     const ownerId = toStr(req.params.ownerId);
@@ -196,7 +301,9 @@ export const getAdsByOwner = async (req: Request, res: Response) => {
   }
 };
 
-// 🔹 گرفتن یک آگهی مشخص از یک کاربر مشخص
+// ==========================================
+// 📌 گرفتن یک آگهی مشخص از یک کاربر مشخص
+// ==========================================
 export const getSellerAdByOwnerAndId = async (req: Request, res: Response) => {
   try {
     const ownerId = toStr(req.params.ownerId);
@@ -244,7 +351,9 @@ export const getSellerAdByOwnerAndId = async (req: Request, res: Response) => {
   }
 };
 
-// 🔹 ویرایش آگهی یک کاربر مشخص
+// ==========================================
+// 📌 ویرایش آگهی
+// ==========================================
 export const updateSellerAd = async (req: Request, res: Response) => {
   try {
     const ownerId = toStr(req.params.ownerId);
@@ -254,7 +363,9 @@ export const updateSellerAd = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "شناسه نامعتبر است" });
     }
 
-    // تصاویر جدید (در صورت وجود) با تبدیل آدرس
+    const updateData: any = { ...req.body };
+
+    // ─── پردازش images ───
     let newUploadedFiles = (req as any).files || [];
     let newImages: any[] = [];
     if (newUploadedFiles.length > 0) {
@@ -265,7 +376,6 @@ export const updateSellerAd = async (req: Request, res: Response) => {
       }));
     }
 
-    // تصاویر قدیمی از فرانت (imagesFromApi)
     let imagesFromApi: any[] = [];
     if (req.body.imagesFromApi) {
       try {
@@ -276,7 +386,6 @@ export const updateSellerAd = async (req: Request, res: Response) => {
       }
     }
 
-    // ترکیب تصاویر
     const finalImages = [
       ...imagesFromApi.map((img) => ({
         url: img.url,
@@ -285,38 +394,85 @@ export const updateSellerAd = async (req: Request, res: Response) => {
       ...newImages,
     ];
 
-    // تعیین تصویر اصلی (بر اساس mainImageIndex اگر موجود باشد)
     const mainIndex = Number(req.body.mainImageIndex || 0);
     if (finalImages.length > 0) {
       finalImages.forEach((img, i) => (img.isMain = i === mainIndex));
       if (!finalImages.some((img) => img.isMain)) finalImages[0].isMain = true;
     }
 
-    // extraFeatures از JSON string
+    if (finalImages.length > 0 || req.body.imagesFromApi) {
+      updateData.images = finalImages;
+    }
+
+    // ─── پردازش extraFeatures ───
     let extraFeatures = {};
     if (req.body.extraFeatures) {
       try {
-        extraFeatures = JSON.parse(req.body.extraFeatures);
+        extraFeatures =
+          typeof req.body.extraFeatures === "string"
+            ? JSON.parse(req.body.extraFeatures)
+            : req.body.extraFeatures;
       } catch (err) {
         console.warn("Invalid JSON in extraFeatures:", err);
+        extraFeatures = {};
       }
     }
+    updateData.extraFeatures = extraFeatures;
 
-    const updateData: any = {
-      ...req.body,
-      extraFeatures,
-    };
+    // ─── تبدیل فیلدهای بولی ───
+    const toBool = (v: any) => v === "true" || v === true;
+    const BOOLEAN_FIELDS = [
+      "isFixedPrice",
+      "isNegotiable",
+      "hasWarranty",
+      "isShippable",
+      "isVerified",
+      "enableChat",
+      "enablePhone",
+    ];
+    BOOLEAN_FIELDS.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        updateData[field] = toBool(req.body[field]);
+      }
+    });
 
-    if (finalImages.length > 0) {
-      updateData.images = finalImages;
+    // ─── پردازش priceIRT ───
+    if (req.body.priceIRT !== undefined) {
+      const priceStr = String(req.body.priceIRT).replace(/,/g, "");
+      updateData.priceIRT = parseInt(priceStr) || 0;
+    }
+
+    // ─── اعتبارسنجی Enum ───
+    const validPerson = ["self", "other"];
+    if (updateData.person && !validPerson.includes(updateData.person)) {
+      updateData.person = "self";
+    }
+
+    const validPayment = ["Subscription", "Wallet", "Bank_card"];
+    if (
+      updateData.paymentMethod &&
+      !validPayment.includes(updateData.paymentMethod)
+    ) {
+      updateData.paymentMethod = "Subscription";
+    } else if (!updateData.paymentMethod) {
+      updateData.paymentMethod = "Subscription";
+    }
+
+    const validStatus = ["pending", "approved", "rejected", "expired"];
+    if (updateData.adStatus && !validStatus.includes(updateData.adStatus)) {
+      updateData.adStatus = "pending";
     }
 
     // حذف فیلدهای اضافی
     delete updateData.imagesFromApi;
+    delete updateData.mainImageIndex;
+
+    // ─── فیلتر کردن ───
+    const filteredData = filterAdData(updateData);
 
     const updatedAd = await prisma.sellerAd.update({
       where: { id: adId },
-      data: updateData,
+      data: filteredData,
     });
 
     if (!updatedAd) return res.status(404).json({ message: "آگهی یافت نشد" });
@@ -328,10 +484,9 @@ export const updateSellerAd = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * حذف آگهی فروشنده (فقط مالک)
- * @route DELETE /api/ads/seller/:adId
- */
+// ==========================================
+// 📌 حذف آگهی
+// ==========================================
 export const deleteSellerAd = async (req: Request, res: Response) => {
   try {
     const adId = toStr(req.params.adId);
@@ -345,7 +500,6 @@ export const deleteSellerAd = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "شناسه آگهی نامعتبر است" });
     }
 
-    // یافتن آگهی و اطمینان از تعلق به کاربر جاری
     const ad = await prisma.sellerAd.findFirst({
       where: { id: adId, owner: userId },
     });
@@ -356,7 +510,6 @@ export const deleteSellerAd = async (req: Request, res: Response) => {
         .json({ message: "آگهی یافت نشد یا شما دسترسی حذف ندارید." });
     }
 
-    // حذف فایل‌های فیزیکی تصاویر (در صورت ذخیره محلی)
     const images = ad.images as any[];
     if (images && images.length > 0) {
       for (const img of images) {
@@ -371,7 +524,6 @@ export const deleteSellerAd = async (req: Request, res: Response) => {
       }
     }
 
-    // حذف سند آگهی از دیتابیس
     await prisma.sellerAd.delete({
       where: { id: adId },
     });

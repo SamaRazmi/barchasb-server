@@ -9,7 +9,7 @@ import crypto from "crypto";
 
 // ===== S3 client (فقط برای آپلود) =====
 const s3 = new S3Client({
-  endpoint: process.env.LIARA_ENDPOINT!, // https://storage.c2.liara.site
+  endpoint: process.env.LIARA_ENDPOINT!,
   region: "default",
   credentials: {
     accessKeyId: process.env.LIARA_ACCESS_KEY!,
@@ -18,7 +18,7 @@ const s3 = new S3Client({
 });
 
 // ===== helper =====
-const generateFileName = (originalname: any) => {
+const generateFileName = (originalname: string) => {
   const ext = path.extname(originalname);
   const name = crypto.randomBytes(16).toString("hex");
   return `${name}${ext}`;
@@ -74,7 +74,7 @@ export const fileUpload = multer({
  * @param {string} originalUrl - آدرس اصلی S3 (مثلاً https://storage.c2.liara.site/...)
  * @returns {string} - آدرس با دامنه barchasb-admin-server.ir
  */
-export function transformS3Url(originalUrl: any) {
+export function transformS3Url(originalUrl: string) {
   if (!originalUrl) return originalUrl;
   // جایگزینی دامنه ذخیره‌سازی ابری با دامنه نهایی برای دیتابیس
   return originalUrl.replace(

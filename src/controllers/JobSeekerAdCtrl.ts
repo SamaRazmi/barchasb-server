@@ -1,9 +1,56 @@
-// src/controllers/JobSeekerAdCtrl.ts
 import { Request, Response } from "express";
 import prisma from "../config/prisma";
 import { transformFileUrls, transformS3Url } from "../middleware/upload";
 import fs from "fs/promises";
 import path from "path";
+
+// ==========================================
+// 📋 لیست فیلدهای مجاز در مدل JobSeekerAd
+// ==========================================
+const ALLOWED_FIELDS = [
+  "owner",
+  "name",
+  "age",
+  "gender",
+  "maritalStatus",
+  "militaryStatus",
+  "phoneNumber",
+  "state",
+  "city",
+  "category",
+  "resumeFile",
+  "workSampleFile",
+  "education",
+  "skills",
+  "suggestedSalaryIRT",
+  "aboutMe",
+  "instagram",
+  "linkedIn",
+  "gitHub",
+  "careerHistory",
+  "rating",
+  "person",
+  "isVerified",
+  "enableChat",
+  "enablePhone",
+  "paymentMethod",
+  "adStatus",
+  "userDesc",
+  "images",
+] as const;
+
+// ==========================================
+// 🧹 تابع فیلتر کننده (فقط فیلدهای مجاز)
+// ==========================================
+function filterAdData(data: any): any {
+  const filtered: any = {};
+  for (const key of ALLOWED_FIELDS) {
+    if (data[key] !== undefined) {
+      filtered[key] = data[key];
+    }
+  }
+  return filtered;
+}
 
 // تابع کمکی برای تبدیل params به string
 const toStr = (value: string | string[] | undefined): string => {
@@ -12,66 +59,88 @@ const toStr = (value: string | string[] | undefined): string => {
   return "";
 };
 
-//
-// 📌 ایجاد آگهی جوینده کار (عکس‌ها + دیتا)
-//
+// ==========================================
+// 📌 ایجاد آگهی جوینده کار
+// ==========================================
 export const createJobSeekerAd = async (req: Request, res: Response) => {
   console.log("\n🚀 createJobSeekerAd START");
-  console.log("Headers:", req.headers);
   console.log("Body received:", req.body);
   console.log("Files received:", (req as any).files);
 
   try {
     const updateData: any = { ...req.body };
 
-    // ✅ پردازش عکس‌ها با تبدیل آدرس به دامنه سفارشی
+    // ─── پردازش عکس‌ها (همیشه آرایه) ───
     let uploadedImages = (req as any).files?.images || [];
     if (uploadedImages.length > 0) {
       uploadedImages = transformFileUrls(uploadedImages);
     }
-
     const images = uploadedImages.map((file: any, i: number) => ({
       url: file.location || file.path || "",
       isMain: i === 0,
     }));
-
-    if (images.length > 0) {
-      updateData.images = images;
-    }
+    updateData.images = images;
 
     console.log("Processed images:", images);
 
-    // ✅ پردازش skills
+    // ─── پردازش skills ───
     let skills = req.body.skills || [];
-
     if (typeof skills === "string") {
       skills = skills
         .split(",")
         .map((s: string) => s.trim())
         .filter(Boolean);
     }
-
     if (!Array.isArray(skills)) skills = [];
     updateData.skills = skills;
 
     console.log("Final skills:", skills);
 
-    // ✅ تبدیل Boolean ها
-    const toBool = (v: any) => v === "true" || v === true;
+    // ─── اعتبارسنجی و تصحیح فیلدهای Enum ───
+    // person: فقط "self" یا "other" – پیش‌فرض "self"
+    const validPerson = ["self", "other"];
+    if (updateData.person) {
+      if (!validPerson.includes(updateData.person)) {
+        updateData.person = "self";
+        console.warn(`⚠️ person مقدار نامعتبر داشت، به "self" تغییر یافت`);
+      }
+    } else {
+      updateData.person = "self";
+    }
 
-    const isLookingForRemote = toBool(req.body.isLookingForRemote);
-    const openToChat = toBool(req.body.openToChat);
+    // paymentMethod: فقط "Subscription", "Wallet", "Bank_card" – پیش‌فرض "Subscription"
+    const validPayment = ["Subscription", "Wallet", "Bank_card"];
+    if (updateData.paymentMethod) {
+      if (!validPayment.includes(updateData.paymentMethod)) {
+        updateData.paymentMethod = "Subscription";
+        console.warn(
+          `⚠️ paymentMethod مقدار نامعتبر داشت، به "Subscription" تغییر یافت`,
+        );
+      }
+    } else {
+      updateData.paymentMethod = "Subscription";
+    }
 
-    delete updateData.isLookingForRemote;
-    delete updateData.openToChat;
+    // adStatus: فقط "pending", "approved", "rejected", "expired" – پیش‌فرض "pending"
+    const validStatus = ["pending", "approved", "rejected", "expired"];
+    if (updateData.adStatus) {
+      if (!validStatus.includes(updateData.adStatus)) {
+        updateData.adStatus = "pending";
+        console.warn(`⚠️ adStatus مقدار نامعتبر داشت، به "pending" تغییر یافت`);
+      }
+    } else {
+      updateData.adStatus = "pending";
+    }
 
-    // 📌 ساخت آگهی
+    // ─── فیلتر کردن داده‌ها (فقط فیلدهای مجاز) ───
+    const filteredData = filterAdData(updateData);
+
+    // ─── ساخت آگهی با owner ───
     const ad = await prisma.jobSeekerAd.create({
       data: {
         owner: (req as any).user?.id || req.body.owner,
-        isLookingForRemote,
-        openToChat,
-        ...updateData,
+        ...filteredData,
+        adStatus: "pending_payment",
       },
     });
 
@@ -88,9 +157,9 @@ export const createJobSeekerAd = async (req: Request, res: Response) => {
   }
 };
 
-//
+// ==========================================
 // 📌 آپلود رزومه (API جدا)
-//
+// ==========================================
 export const uploadResume = async (req: Request, res: Response) => {
   try {
     const id = toStr(req.params.id);
@@ -103,7 +172,6 @@ export const uploadResume = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "فایل رزومه ارسال نشده است" });
     }
 
-    // تبدیل آدرس رزومه به دامنه سفارشی
     const resumePath = (req.file as any).location
       ? transformS3Url((req.file as any).location)
       : (req.file as any).path || "";
@@ -124,9 +192,9 @@ export const uploadResume = async (req: Request, res: Response) => {
   }
 };
 
-//
+// ==========================================
 // 📌 آپلود نمونه‌کار (API جدا)
-//
+// ==========================================
 export const uploadWorkSample = async (req: Request, res: Response) => {
   try {
     const id = toStr(req.params.id);
@@ -139,7 +207,6 @@ export const uploadWorkSample = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "فایل نمونه‌کار ارسال نشده است" });
     }
 
-    // تبدیل آدرس نمونه کار به دامنه سفارشی
     const workSamplePath = (req.file as any).location
       ? transformS3Url((req.file as any).location)
       : (req.file as any).path || "";
@@ -163,9 +230,9 @@ export const uploadWorkSample = async (req: Request, res: Response) => {
   }
 };
 
-//
+// ==========================================
 // 📌 دریافت همه آگهی‌های جوینده کار
-//
+// ==========================================
 export const getAllJobSeekerAds = async (req: Request, res: Response) => {
   try {
     const ads = await prisma.jobSeekerAd.findMany({
@@ -180,7 +247,6 @@ export const getAllJobSeekerAds = async (req: Request, res: Response) => {
       },
     });
 
-    // تبدیل به فرمت قبلی که populate("owner", "fullName") داشت
     const formattedAds = (ads as any[]).map((ad) => ({
       ...ad,
       owner: ad.ownerRelation
@@ -201,9 +267,9 @@ export const getAllJobSeekerAds = async (req: Request, res: Response) => {
   }
 };
 
-//
+// ==========================================
 // 📌 دریافت آگهی تکی
-//
+// ==========================================
 export const getJobSeekerAdById = async (req: Request, res: Response) => {
   try {
     const id = toStr(req.params.id);
@@ -249,7 +315,9 @@ export const getJobSeekerAdById = async (req: Request, res: Response) => {
   }
 };
 
+// ==========================================
 // 📌 گرفتن آگهی‌های یک کاربر خاص
+// ==========================================
 export const getAdsByOwner = async (req: Request, res: Response) => {
   try {
     const ownerId = toStr(req.params.ownerId);
@@ -291,7 +359,9 @@ export const getAdsByOwner = async (req: Request, res: Response) => {
   }
 };
 
-// گرفتن یک آگهی مشخص از یک کاربر مشخص
+// ==========================================
+// 📌 گرفتن یک آگهی مشخص از یک کاربر مشخص
+// ==========================================
 export const getJobSeekerAdByOwnerAndId = async (
   req: Request,
   res: Response,
@@ -342,7 +412,9 @@ export const getJobSeekerAdByOwnerAndId = async (
   }
 };
 
-// ویرایش آگهی یک کاربر مشخص
+// ==========================================
+// 📌 ویرایش آگهی (با اعتبارسنجی و پیش‌فرض)
+// ==========================================
 export const updateJobSeekerAd = async (req: Request, res: Response) => {
   try {
     const ownerId = toStr(req.params.ownerId);
@@ -352,7 +424,7 @@ export const updateJobSeekerAd = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "شناسه نامعتبر است" });
     }
 
-    // تصاویر جدید (در صورت وجود) با تبدیل آدرس
+    // ─── تصاویر جدید ───
     let newUploadedFiles = (req as any).files || [];
     let newImages: any[] = [];
     if (newUploadedFiles.length > 0) {
@@ -363,7 +435,7 @@ export const updateJobSeekerAd = async (req: Request, res: Response) => {
       }));
     }
 
-    // تصاویر قدیمی از فرانت (imagesFromApi)
+    // ─── تصاویر قدیمی از فرانت ───
     let imagesFromApi: any[] = [];
     if (req.body.imagesFromApi) {
       try {
@@ -374,7 +446,6 @@ export const updateJobSeekerAd = async (req: Request, res: Response) => {
       }
     }
 
-    // ترکیب تصاویر
     const finalImages = [
       ...imagesFromApi.map((img) => ({
         url: img.url,
@@ -383,12 +454,11 @@ export const updateJobSeekerAd = async (req: Request, res: Response) => {
       ...newImages,
     ];
 
-    // اطمینان از اینکه حداقل یک تصویر اصلی وجود داشته باشد
     if (!finalImages.some((img) => img.isMain) && finalImages.length > 0) {
       finalImages[0].isMain = true;
     }
 
-    // پردازش skills
+    // ─── پردازش skills ───
     let skills = req.body.skills || [];
     if (typeof skills === "string") {
       skills = skills
@@ -398,28 +468,53 @@ export const updateJobSeekerAd = async (req: Request, res: Response) => {
     }
     if (!Array.isArray(skills)) skills = [];
 
-    // تبدیل Boolean ها
-    const toBool = (v: any) => v === "true" || v === true;
-    const isLookingForRemote = toBool(req.body.isLookingForRemote);
-    const openToChat = toBool(req.body.openToChat);
-
     const updateData: any = {
       ...req.body,
       skills,
-      isLookingForRemote,
-      openToChat,
+      images: finalImages,
     };
 
-    if (finalImages.length > 0) {
-      updateData.images = finalImages;
+    // ─── اعتبارسنجی Enum ───
+    const validPerson = ["self", "other"];
+    if (updateData.person) {
+      if (!validPerson.includes(updateData.person)) {
+        updateData.person = "self";
+        console.warn(`⚠️ person مقدار نامعتبر داشت، به "self" تغییر یافت`);
+      }
+    } else {
+      updateData.person = "self";
     }
 
-    // حذف فیلدهای اضافی که نباید به Prisma بروند
+    const validPayment = ["Subscription", "Wallet", "Bank_card"];
+    if (updateData.paymentMethod) {
+      if (!validPayment.includes(updateData.paymentMethod)) {
+        updateData.paymentMethod = "Subscription";
+        console.warn(
+          `⚠️ paymentMethod مقدار نامعتبر داشت، به "Subscription" تغییر یافت`,
+        );
+      }
+    } else {
+      updateData.paymentMethod = "Subscription";
+    }
+
+    const validStatus = ["pending", "approved", "rejected", "expired"];
+    if (updateData.adStatus) {
+      if (!validStatus.includes(updateData.adStatus)) {
+        updateData.adStatus = "pending";
+        console.warn(`⚠️ adStatus مقدار نامعتبر داشت، به "pending" تغییر یافت`);
+      }
+    } else {
+      updateData.adStatus = "pending";
+    }
+
     delete updateData.imagesFromApi;
+
+    // ─── فیلتر کردن ───
+    const filteredData = filterAdData(updateData);
 
     const updatedAd = await prisma.jobSeekerAd.update({
       where: { id: adId },
-      data: updateData,
+      data: filteredData,
     });
 
     if (!updatedAd) return res.status(404).json({ message: "آگهی یافت نشد" });
@@ -431,10 +526,9 @@ export const updateJobSeekerAd = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * حذف آگهی جوینده کار (فقط مالک)
- * @route DELETE /api/ads/jobseeker/:adId
- */
+// ==========================================
+// 📌 حذف آگهی (فقط مالک)
+// ==========================================
 export const deleteJobSeekerAd = async (req: Request, res: Response) => {
   try {
     const adId = toStr(req.params.adId);
@@ -448,7 +542,6 @@ export const deleteJobSeekerAd = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "شناسه آگهی نامعتبر است" });
     }
 
-    // ابتدا آگهی را پیدا کن تا مالکیت و فایل‌ها را بررسی کنی
     const ad = await prisma.jobSeekerAd.findFirst({
       where: { id: adId, owner: userId },
     });
@@ -459,8 +552,7 @@ export const deleteJobSeekerAd = async (req: Request, res: Response) => {
         .json({ message: "آگهی یافت نشد یا دسترسی ندارید." });
     }
 
-    // حذف فایل‌های فیزیکی تصاویر (اگر آدرس محلی باشند)
-    // در Prisma images از نوع Json[] است، باید cast کنیم
+    // حذف فایل‌های فیزیکی تصاویر (در صورت ذخیره محلی)
     const images = ad.images as any[];
     if (images && images.length > 0) {
       for (const img of images) {
@@ -475,7 +567,6 @@ export const deleteJobSeekerAd = async (req: Request, res: Response) => {
       }
     }
 
-    // همچنین فایل رزومه و نمونه‌کار (اگر آدرس محلی دارند) حذف شوند
     if (ad.resumeFile && !ad.resumeFile.startsWith("http")) {
       const resumePath = path.join(__dirname, "..", ad.resumeFile);
       try {
@@ -493,7 +584,6 @@ export const deleteJobSeekerAd = async (req: Request, res: Response) => {
       }
     }
 
-    // حذف آگهی از دیتابیس
     await prisma.jobSeekerAd.delete({
       where: { id: adId },
     });
@@ -507,7 +597,9 @@ export const deleteJobSeekerAd = async (req: Request, res: Response) => {
   }
 };
 
-// =================== export default ===================
+// ==========================================
+// export default
+// ==========================================
 const JobSeekerAdCtrl = {
   createJobSeekerAd,
   uploadResume,

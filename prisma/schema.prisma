@@ -1,4 +1,3 @@
-// prisma/schema.prisma
 generator client {
   provider   = "prisma-client-js"
   engineType = "client"
@@ -32,10 +31,12 @@ enum PersonType {
 }
 
 enum AdStatus {
+  pending_payment
   pending
   approved
   rejected
-  expired // اضافه شده برای مدیریت آگهی‌های منقضی شده
+  expired   // اضافه شده برای مدیریت آگهی‌های منقضی شده
+  updated   // اضافه شده برای آگهی‌های ویرایش شده که منتظر تأیید مجدد هستند
 }
 
 enum PaymentMethod {
@@ -157,8 +158,6 @@ model User {
   employerAds       EmployerAd[]
   jobSeekerAds      JobSeekerAd[]
   sellerAds         SellerAd[]
-  notifications     Notification[] @relation("NotificationUser")
-  sentNotifications Notification[] @relation("NotificationFromUser")
   reports           Report[]       @relation("Reporter")
   reportReasons     ReportReason[] @relation("ReasonCreator")
   resumes           Resume[]
@@ -168,12 +167,13 @@ model User {
   userProfiles      UserProfile[]
   recentViews       RecentView[]
   testSessions      TestSession[]
-
   // ===== روابط جدید برای سیستم پیشنهادات ویژه =====
-  suggestionViews       SuggestionView[] // هر کاربر چندین نمایش پیشنهاد دارد
-  suggestionPreference  UserSuggestionPreference? // هر کاربر یک تنظیمات پیشنهاد (One-to-One)
-  suggestionDailyLimits SuggestionDailyLimit[] // هر کاربر چندین محدودیت روزانه دارد
-  cachedSuggestions     CachedUserSuggestions? // هر کاربر یک کش از پیشنهادات خود دارد (One-to-One)
+  suggestionViews        SuggestionView[]          // هر کاربر چندین نمایش پیشنهاد دارد
+  suggestionPreference   UserSuggestionPreference? // هر کاربر یک تنظیمات پیشنهاد (One-to-One)
+  suggestionDailyLimits  SuggestionDailyLimit[]    // هر کاربر چندین محدودیت روزانه دارد
+  cachedSuggestions      CachedUserSuggestions?    // هر کاربر یک کش از پیشنهادات خود دارد (One-to-One)
+  wallet            Wallet?
+  payments          Payment[]
 }
 
 model UserProfile {
@@ -190,8 +190,10 @@ model UserProfile {
   documents      Json[] // [{title: String, file: String}]
   completed      Boolean  @default(false)
   updatedAt      DateTime @default(now())
+  wallet         Wallet?  @relation(fields: [walletId], references: [id])
 
-  userRelation User @relation(fields: [user], references: [id])
+  userRelation User    @relation(fields: [user], references: [id])
+  walletId     String?
 }
 
 model Province {
@@ -270,6 +272,7 @@ model Conversation {
   adType       String
   lastMessage  String?
   updatedAt    DateTime @default(now())
+  isBlocked    Boolean  @default(false)  // <--  بلاک کردن مکالمه
 
   chats Chat[]
 }
@@ -298,8 +301,16 @@ model DigitalAd {
   createdAt           DateTime      @default(now())
 
   // فیلدهای جدید برای مدیریت انقضای آگهی تایید شده
-  approvedAt DateTime? // زمان تایید آگهی
-  expiresAt  DateTime? // یک ماه بعد از approvedAt
+  approvedAt          DateTime?     // زمان تایید آگهی
+  expiresAt           DateTime?     // یک ماه بعد از approvedAt
+  isPaid              Boolean       @default(true)
+
+  // فیلدهای اضافه شده برای موقعیت مکانی
+  province            String?
+  city                String?
+
+  // شماره تماس در صورت شخص دیگر
+  phoneOther          String?
 
   ownerRelation User @relation(fields: [owner], references: [id])
 }
@@ -350,8 +361,12 @@ model EmployerAd {
   createdAt          DateTime      @default(now())
 
   // فیلدهای جدید برای مدیریت انقضای آگهی تایید شده
-  approvedAt DateTime? // زمان تایید آگهی
-  expiresAt  DateTime? // یک ماه بعد از approvedAt
+  approvedAt          DateTime?     // زمان تایید آگهی
+  expiresAt           DateTime?     // یک ماه بعد از approvedAt
+  isPaid              Boolean     @default(true)
+
+  // شماره تماس در صورت شخص دیگر
+  phoneOther          String?
 
   ownerRelation User @relation(fields: [owner], references: [id])
 }
@@ -399,24 +414,14 @@ model JobSeekerAd {
   createdAt          DateTime      @default(now())
 
   // فیلدهای جدید برای مدیریت انقضای آگهی تایید شده
-  approvedAt DateTime? // زمان تایید آگهی
-  expiresAt  DateTime? // یک ماه بعد از approvedAt
+  approvedAt          DateTime?     // زمان تایید آگهی
+  expiresAt           DateTime?     // یک ماه بعد از approvedAt
+  isPaid              Boolean      @default(false)
+
+  // شماره تماس در صورت شخص دیگر
+  phoneOther          String?
 
   ownerRelation User @relation(fields: [owner], references: [id])
-}
-
-model Notification {
-  id         String   @id @default(uuid())
-  userId     String
-  fromUserId String
-  message    String
-  adId       String
-  adType     AdType
-  isRead     Boolean  @default(false)
-  createdAt  DateTime @default(now())
-
-  user     User @relation("NotificationUser", fields: [userId], references: [id])
-  fromUser User @relation("NotificationFromUser", fields: [fromUserId], references: [id])
 }
 
 model Otp {
@@ -544,8 +549,12 @@ model SellerAd {
   owner         String
 
   // فیلدهای جدید برای مدیریت انقضای آگهی تایید شده
-  approvedAt DateTime? // زمان تایید آگهی
-  expiresAt  DateTime? // یک ماه بعد از approvedAt
+  approvedAt          DateTime?     // زمان تایید آگهی
+  expiresAt           DateTime?     // یک ماه بعد از approvedAt
+  isPaid        Boolean       @default(false)
+
+  // شماره تماس در صورت شخص دیگر
+  phoneOther          String?
 
   ownerRelation User @relation(fields: [owner], references: [id])
 }
@@ -554,7 +563,6 @@ model Session {
   id           String   @id @default(uuid())
   user         String
   deviceInfo   Json // {userAgent, ip, deviceType, browser, os}
-  refreshToken String
   isActive     Boolean  @default(true)
   lastActiveAt DateTime @default(now())
   isRead       Boolean  @default(false)
@@ -767,4 +775,114 @@ model CachedUserSuggestions {
   user User @relation(fields: [userId], references: [id])
 
   @@index([expiresAt])
+}
+
+// ========================
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  HOLD
+  REFUND
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELED
+}
+
+model Pricing {
+  id          String   @id @default(uuid())
+  key         String   @unique //  "base_ad_price", "special_price", "ladder_price", "renewal_price"
+  value       Int // IRT
+  description String?
+  updatedAt   DateTime @updatedAt
+}
+
+model AdLadder {
+  id                 String   @id @default(uuid())
+  adEnhancementId    String   
+  adEnhancement      AdEnhancement @relation(fields: [adEnhancementId], references: [id], onDelete: Cascade)
+  
+  option             String?  // "24h" | "72h" | "7d" | null
+  scheduledAt        DateTime?
+  executedAt         DateTime? 
+  isExecuted         Boolean  @default(false) 
+  
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model AdEnhancement {
+  id     String @id @default(uuid())
+  adId   String
+  adType AdType
+
+  // ویژه
+  isSpecial        Boolean   @default(false)
+  specialStartDate DateTime?
+  specialEndDate   DateTime?
+
+  // پله
+  ladders            AdLadder[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Wallet {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  balance     Int @default(1000000)
+  heldBalance Int @default(0)
+
+  transactions Transaction[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  userProfiles UserProfile[]
+}
+
+model Transaction {
+  id       String @id @default(uuid())
+  walletId String
+  wallet   Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  amount        Int
+  type          TransactionType
+  status        TransactionStatus @default(PENDING)
+  description   String
+  referenceId   String?
+  paymentMethod PaymentMethod
+  metadata      Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Payment {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount          Int       // IRT
+  authority       String?   // کد ارجاع درگاه (Authority)
+  refId           String?   // کد پیگیری درگاه (Reference ID)
+  status          PaymentStatus @default(PENDING)
+  paymentMethod   PaymentMethod
+  description     String?   
+  referenceId     String?   // شناسه آگهی یا افزونه‌ای که برای آن پرداخت شده
+  referenceType   String?   // "AD" یا "ENHANCEMENT"
+  metadata        Json?     // اطلاعات اضافی
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+enum PaymentStatus {
+  PENDING        // منتظر پرداخت
+  PAID           // پرداخت موفق
+  FAILED         // پرداخت ناموفق
+  CANCELED       // لغو شده توسط کاربر
+  VERIFYING      // در حال تایید
 }

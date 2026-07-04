@@ -2,7 +2,7 @@
 import prisma from "../src/config/prisma";
 import jobCategoriesData from "../src/data/jobCategoriesData.js";
 
-async function seedJobCategories() {
+export async function seedJobCategories() {
   console.log("🌱 شروع seed دسته‌بندی مشاغل...");
 
   // === حذف تمام دسته‌های قبلی ===
@@ -65,14 +65,15 @@ async function seedJobCategories() {
   console.log("🎉 Seed دسته‌بندی مشاغل با موفقیت انجام شد!");
 }
 
-seedJobCategories()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (e) => {
-    console.error("❌ خطا در Seed:", e);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
+if (require.main === module) {
+  seedJobCategories()
+    .catch((e) => {
+      console.error("❌ خطا در Seed دسته‌بندی شغلی:", e);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}
 
 export default seedJobCategories;
