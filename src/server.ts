@@ -53,8 +53,7 @@ import paymentRoutes from "./routes/PaymentRoutes";
 
 import SuggestionRoutes from "./routes/SuggestionRoutes";
 
-// ===== اضافه شده: مسیرهای مدیریت گزارش توسط ادمین =====
-import adminReportRoutes from "./routes/adminReportRoutes";
+import adminReportRoutes from "./routes/admin/adminReportRoutes";
 
 import cron from "node-cron";
 import { cleanExpiredAds } from "./jobs/cleanExpiredAds";
@@ -150,10 +149,7 @@ const swaggerOptions = {
     },
     security: [{ BearerAuth: [] }],
   },
-  apis: [
-    "./src/routes/**/*.ts",
-    "./src/routes/**/*.js",
-  ],
+  apis: ["./src/routes/**/*.ts", "./src/routes/**/*.js"],
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
@@ -224,11 +220,11 @@ app.use("/api/admin", authenticateAdmin, AdminExtensionsRoutes);
 app.use("/api/user", authenticateUser, UserExtensionsRoutes);
 
 // admin route
-app.use('/auth', SubAdminRoutes);
-app.use('/auth', SuperAdminRoutes);
-app.use('/', AdminLoginRoutes);
-app.use('/public/ad-categories', PublicAdCategoriesRoutes);
-app.use('/ads', AdsRoutes);
+app.use("/auth", SubAdminRoutes);
+app.use("/auth", SuperAdminRoutes);
+app.use("/", AdminLoginRoutes);
+app.use("/public/ad-categories", PublicAdCategoriesRoutes);
+//app.use('/ads', AdsRoutes);
 // app.use('/articles', ArticlesRoutes);
 
 // ===== اضافه شده: مسیرهای مدیریت گزارش توسط ادمین =====

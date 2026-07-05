@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import * as jwt from "jsonwebtoken";
-import 'dotenv/config'
+import "dotenv/config";
+
 // ====== اضافه کردن تایپ به Express ======
 declare global {
   namespace Express {
@@ -45,7 +46,8 @@ export const authenticateToken = (
   }
 
   try {
-    const userPayload = jwt.verify(token, JWT_SECRET);
+    // استفاده از as any برای دسترسی به فیلدها
+    const userPayload = jwt.verify(token, JWT_SECRET) as any;
 
     console.log("✅ توکن معتبر، کاربر:", userPayload);
 
@@ -89,10 +91,8 @@ export const authenticateUser = (
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
     req.user = decoded;
-
     next();
   } catch (err) {
     return res.status(401).json({
@@ -119,7 +119,7 @@ export const authenticateAdmin = (
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_ADMIN_SECRET);
+    const decoded = jwt.verify(token, JWT_ADMIN_SECRET) as any;
 
     req.admin = {
       id: decoded.id,
@@ -134,13 +134,4 @@ export const authenticateAdmin = (
       message: "توکن نامعتبر یا منقضی شده است.",
     });
   }
-};
-
-/* =========================
-   EXPORT (SAME STYLE AS OLD)
-========================= */
-module.exports = {
-  authenticateToken,
-  authenticateUser,
-  authenticateAdmin,
 };
