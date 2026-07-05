@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import prisma from "../config/prisma";
+import prisma from "../../config/prisma";
 import { ReportStatus, ReportType } from "@prisma/client";
 
 // ===== تابع کمکی برای تبدیل پارامترها به string =====

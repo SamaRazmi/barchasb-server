@@ -54,7 +54,7 @@ import paymentRoutes from "./routes/PaymentRoutes";
 import SuggestionRoutes from "./routes/SuggestionRoutes";
 
 // ===== اضافه شده: مسیرهای مدیریت گزارش توسط ادمین =====
-import adminReportRoutes from "./routes/adminReportRoutes";
+import adminReportRoutes from "./routes/admin/adminReportRoutes";
 
 import cron from "node-cron";
 import { cleanExpiredAds } from "./jobs/cleanExpiredAds";
