@@ -7,6 +7,7 @@ import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 import "dotenv/config";
 import prisma from "./config/prisma";
+import vipRoutes from "./routes/VipRoutes";
 
 // Middlewares
 import {
@@ -218,6 +219,8 @@ app.use("/api", pricingRoutes);
 app.use("/api", checkoutRoutes);
 app.use("/api", purchaseRoutes);
 app.use("/api", paymentRoutes);
+app.use("/api", vipRoutes);
+
 // Protected routes
 app.use("/api/tests", authenticateUser, TestRoutes);
 app.use("/api/resume", authenticateUser, ResumeRoutes);
