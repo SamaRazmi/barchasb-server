@@ -6,8 +6,8 @@ import {
   deleteReport,
   deleteAdByReport,
   blockChatByReport,
-} from "../controllers/admin/adminReportController";
-import { authAdmin } from "../middleware/authAdmin";
+} from "../../controllers/admin/adminReportController";
+import { authAdmin } from "../../middleware/authAdmin";
 
 const router = Router();
 

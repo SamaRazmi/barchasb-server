@@ -92,10 +92,6 @@
       "description": "مدیریت چت و پیام‌رسانی"
     },
     {
-      "name": "Admin Reports",
-      "description": "مدیریت گزارش‌ها توسط ادمین (فقط ادمین‌ها)"
-    },
-    {
       "name": "AdCategory",
       "description": "مدیریت دسته‌بندی‌های آگهی"
     },
@@ -104,12 +100,20 @@
       "description": "مدیریت ویژگی‌های دسته‌بندی آگهی‌ها (داده‌های استاتیک)"
     },
     {
+      "name": "Admin Reports",
+      "description": "مدیریت گزارش‌ها توسط ادمین (فقط ادمین‌ها)"
+    },
+    {
       "name": "Profile",
       "description": "مدیریت پروفایل کاربر"
     },
     {
       "name": "JobCategories",
       "description": "مدیریت دسته‌های شغلی (مشترک بین کارفرما و کارجو) - شامل دسته‌های اصلی و مهارت‌ها"
+    },
+    {
+      "name": "Admin Reports",
+      "description": "مدیریت گزارش‌ها توسط ادمین (فقط ادمین‌ها)"
     }
   ],
   "components": {
@@ -6568,535 +6572,6 @@
         }
       }
     },
-    "/api/admin/reports": {
-      "get": {
-        "summary": "دریافت لیست گزارش‌ها با فیلتر و صفحه‌بندی",
-        "description": "این API برای دریافت لیست تمام گزارش‌ها با قابلیت فیلتر بر اساس وضعیت و نوع گزارش و صفحه‌بندی استفاده می‌شود.\nفقط ادمین‌ها (ADMIN و SUPER_ADMIN) دسترسی دارند.\n",
-        "tags": [
-          "Admin Reports"
-        ],
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "in": "query",
-            "name": "status",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "pending",
-                "reviewed",
-                "rejected"
-              ]
-            },
-            "description": "فیلتر بر اساس وضعیت گزارش (در انتظار، بررسی شده، رد شده)",
-            "required": false
-          },
-          {
-            "in": "query",
-            "name": "reportType",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "employerAd",
-                "jobSeekerAd",
-                "sellerAd",
-                "DigitalAd",
-                "chat"
-              ]
-            },
-            "description": "فیلتر بر اساس نوع گزارش (آگهی کارفرما، جوینده کار، فروشنده، دیجیتال، چت)",
-            "required": false
-          },
-          {
-            "in": "query",
-            "name": "page",
-            "schema": {
-              "type": "integer",
-              "default": 1,
-              "minimum": 1
-            },
-            "description": "شماره صفحه برای صفحه‌بندی",
-            "required": false
-          },
-          {
-            "in": "query",
-            "name": "limit",
-            "schema": {
-              "type": "integer",
-              "default": 20,
-              "minimum": 1,
-              "maximum": 100
-            },
-            "description": "تعداد آیتم‌ها در هر صفحه (حداکثر ۱۰۰)",
-            "required": false
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "لیست گزارش‌ها به همراه اطلاعات صفحه‌بندی",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/Report"
-                      }
-                    },
-                    "pagination": {
-                      "type": "object",
-                      "properties": {
-                        "page": {
-                          "type": "integer"
-                        },
-                        "limit": {
-                          "type": "integer"
-                        },
-                        "total": {
-                          "type": "integer"
-                        },
-                        "totalPages": {
-                          "type": "integer"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "احراز هویت نشده (توکن ارائه نشده یا نامعتبر)"
-          },
-          "403": {
-            "description": "دسترسی غیرمجاز (فقط ادمین‌ها)"
-          },
-          "500": {
-            "description": "خطای داخلی سرور"
-          }
-        }
-      }
-    },
-    "/api/admin/reports/{id}": {
-      "get": {
-        "summary": "دریافت جزئیات کامل یک گزارش",
-        "description": "این API برای دریافت اطلاعات کامل یک گزارش به همراه جزئیات هدف (آگهی یا چت) و اطلاعات کاربر گزارش‌دهنده استفاده می‌شود.\n- برای آگهی‌ها: تمام اطلاعات آگهی به همراه اطلاعات صاحب آگهی برگردانده می‌شود.\n- برای چت: اطلاعات چت، طرفین چت و تمام پیام‌های مکالمه به ترتیب زمان برگردانده می‌شود.\n",
-        "tags": [
-          "Admin Reports"
-        ],
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "شناسه گزارش"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "جزئیات کامل گزارش",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "report": {
-                      "$ref": "#/components/schemas/Report"
-                    },
-                    "target": {
-                      "oneOf": [
-                        {
-                          "$ref": "#/components/schemas/EmployerAd"
-                        },
-                        {
-                          "$ref": "#/components/schemas/JobSeekerAd"
-                        },
-                        {
-                          "$ref": "#/components/schemas/SellerAd"
-                        },
-                        {
-                          "$ref": "#/components/schemas/DigitalAd"
-                        },
-                        {
-                          "$ref": "#/components/schemas/ChatWithConversation"
-                        }
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "شناسه گزارش معتبر نیست"
-          },
-          "401": {
-            "description": "احراز هویت نشده"
-          },
-          "403": {
-            "description": "دسترسی غیرمجاز"
-          },
-          "404": {
-            "description": "گزارش یافت نشد"
-          },
-          "500": {
-            "description": "خطای داخلی سرور"
-          }
-        }
-      },
-      "delete": {
-        "summary": "حذف گزارش (اختیاری)",
-        "description": "این API برای حذف کامل یک گزارش از دیتابیس استفاده می‌شود.\nتوجه: این عملیات فقط خود گزارش را حذف می‌کند و تأثیری بر روی هدف (آگهی یا چت) ندارد.\n",
-        "tags": [
-          "Admin Reports"
-        ],
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "شناسه گزارش"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "گزارش با موفقیت حذف شد",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "گزارش با موفقیت حذف شد"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "شناسه گزارش معتبر نیست"
-          },
-          "401": {
-            "description": "احراز هویت نشده"
-          },
-          "403": {
-            "description": "دسترسی غیرمجاز"
-          },
-          "404": {
-            "description": "گزارش یافت نشد"
-          },
-          "500": {
-            "description": "خطای داخلی سرور"
-          }
-        }
-      }
-    },
-    "/api/admin/reports/{id}/status": {
-      "put": {
-        "summary": "تغییر وضعیت گزارش",
-        "description": "این API برای تغییر وضعیت یک گزارش استفاده می‌شود.\nوضعیت‌های مجاز: pending (در انتظار)، reviewed (بررسی شده)، rejected (رد شده)\n",
-        "tags": [
-          "Admin Reports"
-        ],
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "شناسه گزارش"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "status"
-                ],
-                "properties": {
-                  "status": {
-                    "type": "string",
-                    "enum": [
-                      "pending",
-                      "reviewed",
-                      "rejected"
-                    ],
-                    "description": "وضعیت جدید گزارش"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "وضعیت گزارش با موفقیت به‌روز شد",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "وضعیت گزارش به‌روز شد"
-                    },
-                    "report": {
-                      "$ref": "#/components/schemas/Report"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "درخواست نامعتبر (وضعیت نامعتبر یا缺失)"
-          },
-          "401": {
-            "description": "احراز هویت نشده"
-          },
-          "403": {
-            "description": "دسترسی غیرمجاز"
-          },
-          "404": {
-            "description": "گزارش یافت نشد"
-          },
-          "500": {
-            "description": "خطای داخلی سرور"
-          }
-        }
-      }
-    },
-    "/api/admin/reports/{id}/delete-ad": {
-      "delete": {
-        "summary": "حذف آگهی بر اساس گزارش",
-        "description": "این API برای حذف کامل آگهی مربوط به یک گزارش استفاده می‌شود.\n- فقط برای انواع آگهی (employerAd, jobSeekerAd, sellerAd, DigitalAd) قابل استفاده است.\n- پس از حذف آگهی، وضعیت گزارش به reviewed تغییر می‌کند.\n- برای چت‌ها از API بلاک چت استفاده کنید.\n",
-        "tags": [
-          "Admin Reports"
-        ],
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "شناسه گزارش"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "آگهی با موفقیت حذف شد و گزارش بررسی شد",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "آگهی با موفقیت حذف شد و گزارش بررسی شد"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "خطاهای احتمالی:\n- شناسه گزارش معتبر نیست\n- نوع آگهی برای حذف پشتیبانی نمی‌شود (مثلاً اگر نوع chat باشد)\n"
-          },
-          "401": {
-            "description": "احراز هویت نشده"
-          },
-          "403": {
-            "description": "دسترسی غیرمجاز"
-          },
-          "404": {
-            "description": "خطاهای احتمالی:\n- گزارش یافت نشد\n- آگهی مورد نظر یافت نشد\n"
-          },
-          "500": {
-            "description": "خطای داخلی سرور"
-          }
-        }
-      }
-    },
-    "/api/admin/reports/{id}/block-chat": {
-      "put": {
-        "summary": "بلاک کردن چت بر اساس گزارش",
-        "description": "این API برای بلاک کردن مکالمه چت مربوط به یک گزارش استفاده می‌شود.\n- فقط برای نوع chat قابل استفاده است.\n- پس از بلاک، طرفین نمی‌توانند پیام جدیدی ارسال کنند.\n- وضعیت گزارش به reviewed تغییر می‌کند.\n- اطلاعات کامل چت، طرفین و تمام پیام‌های مکالمه برگردانده می‌شود.\n",
-        "tags": [
-          "Admin Reports"
-        ],
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "شناسه گزارش"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "مکالمه با موفقیت بلاک شد و گزارش بررسی شد",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "مکالمه با موفقیت بلاک شد و گزارش بررسی شد"
-                    },
-                    "conversation": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "string"
-                        },
-                        "isBlocked": {
-                          "type": "boolean",
-                          "example": true
-                        },
-                        "participants": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "id": {
-                                "type": "string"
-                              },
-                              "name": {
-                                "type": "string"
-                              },
-                              "phone": {
-                                "type": "string"
-                              },
-                              "email": {
-                                "type": "string"
-                              },
-                              "role": {
-                                "type": "string"
-                              }
-                            }
-                          }
-                        },
-                        "messages": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "id": {
-                                "type": "string"
-                              },
-                              "content": {
-                                "type": "string"
-                              },
-                              "createdAt": {
-                                "type": "string",
-                                "format": "date-time"
-                              },
-                              "fromUser": {
-                                "type": "object",
-                                "properties": {
-                                  "id": {
-                                    "type": "string"
-                                  },
-                                  "name": {
-                                    "type": "string"
-                                  },
-                                  "phone": {
-                                    "type": "string"
-                                  }
-                                }
-                              },
-                              "toUser": {
-                                "type": "object",
-                                "properties": {
-                                  "id": {
-                                    "type": "string"
-                                  },
-                                  "name": {
-                                    "type": "string"
-                                  },
-                                  "phone": {
-                                    "type": "string"
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "خطاهای احتمالی:\n- شناسه گزارش معتبر نیست\n- این گزارش مربوط به چت نیست (نوع گزارش chat نیست)\n"
-          },
-          "401": {
-            "description": "احراز هویت نشده"
-          },
-          "403": {
-            "description": "دسترسی غیرمجاز"
-          },
-          "404": {
-            "description": "خطاهای احتمالی:\n- گزارش یافت نشد\n- چت یا مکالمه یافت نشد\n"
-          },
-          "500": {
-            "description": "خطای داخلی سرور"
-          }
-        }
-      }
-    },
     "/api/admin/tests/summaryResult/{userId}": {
       "get": {
         "summary": "Get a summary list of all completed tests for a specific user",
@@ -7832,6 +7307,1603 @@
         }
       }
     },
+    "/api/admin/reports": {
+      "get": {
+        "summary": "دریافت لیست گزارش‌ها با فیلتر و صفحه‌بندی",
+        "description": "این API برای دریافت لیست تمام گزارش‌ها با قابلیت فیلتر بر اساس وضعیت و نوع گزارش و صفحه‌بندی استفاده می‌شود.\nفقط ادمین‌ها (ADMIN و SUPER_ADMIN) دسترسی دارند.\n",
+        "tags": [
+          "Admin Reports"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "reviewed",
+                "rejected"
+              ]
+            },
+            "description": "فیلتر بر اساس وضعیت گزارش (در انتظار، بررسی شده، رد شده)",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "reportType",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "employerAd",
+                "jobSeekerAd",
+                "sellerAd",
+                "DigitalAd",
+                "chat"
+              ]
+            },
+            "description": "فیلتر بر اساس نوع گزارش (آگهی کارفرما، جوینده کار، فروشنده، دیجیتال، چت)",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1,
+              "minimum": 1
+            },
+            "description": "شماره صفحه برای صفحه‌بندی",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 100
+            },
+            "description": "تعداد آیتم‌ها در هر صفحه (حداکثر ۱۰۰)",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "لیست گزارش‌ها به همراه اطلاعات صفحه‌بندی",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Report"
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "page": {
+                          "type": "integer"
+                        },
+                        "limit": {
+                          "type": "integer"
+                        },
+                        "total": {
+                          "type": "integer"
+                        },
+                        "totalPages": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "احراز هویت نشده (توکن ارائه نشده یا نامعتبر)"
+          },
+          "403": {
+            "description": "دسترسی غیرمجاز (فقط ادمین‌ها)"
+          },
+          "500": {
+            "description": "خطای داخلی سرور"
+          }
+        }
+      }
+    },
+    "/api/admin/reports/{id}": {
+      "get": {
+        "summary": "دریافت جزئیات کامل یک گزارش",
+        "description": "این API برای دریافت اطلاعات کامل یک گزارش به همراه جزئیات هدف (آگهی یا چت) و اطلاعات کاربر گزارش‌دهنده استفاده می‌شود.\n- برای آگهی‌ها: تمام اطلاعات آگهی به همراه اطلاعات صاحب آگهی برگردانده می‌شود.\n- برای چت: اطلاعات چت، طرفین چت و تمام پیام‌های مکالمه به ترتیب زمان برگردانده می‌شود.\n",
+        "tags": [
+          "Admin Reports"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "شناسه گزارش"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "جزئیات کامل گزارش",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "report": {
+                      "$ref": "#/components/schemas/Report"
+                    },
+                    "target": {
+                      "oneOf": [
+                        {
+                          "$ref": "#/components/schemas/EmployerAd"
+                        },
+                        {
+                          "$ref": "#/components/schemas/JobSeekerAd"
+                        },
+                        {
+                          "$ref": "#/components/schemas/SellerAd"
+                        },
+                        {
+                          "$ref": "#/components/schemas/DigitalAd"
+                        },
+                        {
+                          "$ref": "#/components/schemas/ChatWithConversation"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "شناسه گزارش معتبر نیست"
+          },
+          "401": {
+            "description": "احراز هویت نشده"
+          },
+          "403": {
+            "description": "دسترسی غیرمجاز"
+          },
+          "404": {
+            "description": "گزارش یافت نشد"
+          },
+          "500": {
+            "description": "خطای داخلی سرور"
+          }
+        }
+      },
+      "delete": {
+        "summary": "حذف گزارش (اختیاری)",
+        "description": "این API برای حذف کامل یک گزارش از دیتابیس استفاده می‌شود.\nتوجه: این عملیات فقط خود گزارش را حذف می‌کند و تأثیری بر روی هدف (آگهی یا چت) ندارد.\n",
+        "tags": [
+          "Admin Reports"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "شناسه گزارش"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "گزارش با موفقیت حذف شد",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "گزارش با موفقیت حذف شد"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "شناسه گزارش معتبر نیست"
+          },
+          "401": {
+            "description": "احراز هویت نشده"
+          },
+          "403": {
+            "description": "دسترسی غیرمجاز"
+          },
+          "404": {
+            "description": "گزارش یافت نشد"
+          },
+          "500": {
+            "description": "خطای داخلی سرور"
+          }
+        }
+      }
+    },
+    "/api/admin/reports/{id}/status": {
+      "put": {
+        "summary": "تغییر وضعیت گزارش",
+        "description": "این API برای تغییر وضعیت یک گزارش استفاده می‌شود.\nوضعیت‌های مجاز: pending (در انتظار)، reviewed (بررسی شده)، rejected (رد شده)\n",
+        "tags": [
+          "Admin Reports"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "شناسه گزارش"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "pending",
+                      "reviewed",
+                      "rejected"
+                    ],
+                    "description": "وضعیت جدید گزارش"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "وضعیت گزارش با موفقیت به‌روز شد",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "وضعیت گزارش به‌روز شد"
+                    },
+                    "report": {
+                      "$ref": "#/components/schemas/Report"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "درخواست نامعتبر (وضعیت نامعتبر یا缺失)"
+          },
+          "401": {
+            "description": "احراز هویت نشده"
+          },
+          "403": {
+            "description": "دسترسی غیرمجاز"
+          },
+          "404": {
+            "description": "گزارش یافت نشد"
+          },
+          "500": {
+            "description": "خطای داخلی سرور"
+          }
+        }
+      }
+    },
+    "/api/admin/reports/{id}/delete-ad": {
+      "delete": {
+        "summary": "حذف آگهی بر اساس گزارش",
+        "description": "این API برای حذف کامل آگهی مربوط به یک گزارش استفاده می‌شود.\n- فقط برای انواع آگهی (employerAd, jobSeekerAd, sellerAd, DigitalAd) قابل استفاده است.\n- پس از حذف آگهی، وضعیت گزارش به reviewed تغییر می‌کند.\n- برای چت‌ها از API بلاک چت استفاده کنید.\n",
+        "tags": [
+          "Admin Reports"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "شناسه گزارش"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "آگهی با موفقیت حذف شد و گزارش بررسی شد",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "آگهی با موفقیت حذف شد و گزارش بررسی شد"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "خطاهای احتمالی:\n- شناسه گزارش معتبر نیست\n- نوع آگهی برای حذف پشتیبانی نمی‌شود (مثلاً اگر نوع chat باشد)\n"
+          },
+          "401": {
+            "description": "احراز هویت نشده"
+          },
+          "403": {
+            "description": "دسترسی غیرمجاز"
+          },
+          "404": {
+            "description": "خطاهای احتمالی:\n- گزارش یافت نشد\n- آگهی مورد نظر یافت نشد\n"
+          },
+          "500": {
+            "description": "خطای داخلی سرور"
+          }
+        }
+      }
+    },
+    "/api/admin/reports/{id}/block-chat": {
+      "put": {
+        "summary": "بلاک کردن چت بر اساس گزارش",
+        "description": "این API برای بلاک کردن مکالمه چت مربوط به یک گزارش استفاده می‌شود.\n- فقط برای نوع chat قابل استفاده است.\n- پس از بلاک، طرفین نمی‌توانند پیام جدیدی ارسال کنند.\n- وضعیت گزارش به reviewed تغییر می‌کند.\n- اطلاعات کامل چت، طرفین و تمام پیام‌های مکالمه برگردانده می‌شود.\n",
+        "tags": [
+          "Admin Reports"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "شناسه گزارش"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "مکالمه با موفقیت بلاک شد و گزارش بررسی شد",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "مکالمه با موفقیت بلاک شد و گزارش بررسی شد"
+                    },
+                    "conversation": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "isBlocked": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "participants": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "phone": {
+                                "type": "string"
+                              },
+                              "email": {
+                                "type": "string"
+                              },
+                              "role": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "messages": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "content": {
+                                "type": "string"
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "fromUser": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "phone": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              "toUser": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "phone": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "خطاهای احتمالی:\n- شناسه گزارش معتبر نیست\n- این گزارش مربوط به چت نیست (نوع گزارش chat نیست)\n"
+          },
+          "401": {
+            "description": "احراز هویت نشده"
+          },
+          "403": {
+            "description": "دسترسی غیرمجاز"
+          },
+          "404": {
+            "description": "خطاهای احتمالی:\n- گزارش یافت نشد\n- چت یا مکالمه یافت نشد\n"
+          },
+          "500": {
+            "description": "خطای داخلی سرور"
+          }
+        }
+      }
+    },
+    "/public/ad-categories/tree": {
+      "get": {
+        "summary": "Get all ad categories",
+        "description": "Retrieves a list of all ad categories. Maps the database 'id' to '_id' and initializes an empty 'children' array for each item.",
+        "tags": [
+          "Admin backend"
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "A list of ad categories retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "_id": {
+                        "type": "string",
+                        "description": "The category ID (mapped from the original 'id')",
+                        "example": "clxyz123456789"
+                      },
+                      "children": {
+                        "type": "array",
+                        "items": {},
+                        "description": "An empty array (intended for frontend tree building)",
+                        "example": []
+                      },
+                      "name": {
+                        "type": "string",
+                        "example": "Vehicles"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/public/ad-categories/descendants/{id}": {
+      "get": {
+        "summary": "Get a specific ad category by ID",
+        "description": "Retrieves the details of a specific ad category using its unique ID.",
+        "tags": [
+          "Admin backend"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The unique identifier of the ad category",
+            "example": "clxyz123456789"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The ad category details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "clxyz123456789"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Vehicles"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - ID parameter is missing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Id are required"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found - Ad category does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "دسته بندی با این مشخصات پیدا نشد"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/super-admin/register": {
+      "post": {
+        "summary": "Register a new super admin",
+        "description": "Registers a new super admin. Validates password match, checks for existing phone numbers, and hashes the password.",
+        "tags": [
+          "Admin backend"
+        ],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "firstName",
+                  "lastName",
+                  "phone",
+                  "password",
+                  "passwordConfirm"
+                ],
+                "properties": {
+                  "firstName": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 30,
+                    "example": "Ali"
+                  },
+                  "lastName": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 30,
+                    "example": "Yasrebi"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "pattern": "^09\\d{9}$",
+                    "description": "Iranian phone number format",
+                    "example": "09123456789"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "format": "password",
+                    "description": "Must contain uppercase, lowercase, and a number",
+                    "example": "SecurePass123"
+                  },
+                  "passwordConfirm": {
+                    "type": "string",
+                    "format": "password",
+                    "description": "Must exactly match the password field",
+                    "example": "SecurePass123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Super Admin registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Super Admin registered"
+                    },
+                    "superAdminId": {
+                      "type": "string",
+                      "example": "clxyz123456789"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (Missing fields, passwords mismatch, or phone already exists)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "string",
+                          "example": "Bad Request"
+                        },
+                        "statusCode": {
+                          "type": "integer",
+                          "example": 400
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "example": [
+                            "Passwords do not match"
+                          ]
+                        },
+                        "error": {
+                          "type": "string",
+                          "example": "Bad Request"
+                        },
+                        "statusCode": {
+                          "type": "integer",
+                          "example": 400
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Phone already exists"
+                        },
+                        "error": {
+                          "type": "string",
+                          "example": "Bad Request"
+                        },
+                        "statusCode": {
+                          "type": "integer",
+                          "example": 400
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/sub-admin/register": {
+      "post": {
+        "summary": "Register a new sub-admin",
+        "description": "Registers a new sub-admin. Validates password match, checks for existing phone numbers, and hashes the password.",
+        "tags": [
+          "Admin backend"
+        ],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "firstName",
+                  "lastName",
+                  "phone",
+                  "password",
+                  "passwordConfirm"
+                ],
+                "properties": {
+                  "firstName": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 30,
+                    "example": "Ali"
+                  },
+                  "lastName": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 30,
+                    "example": "Yasrebi"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "pattern": "^09\\d{9}$",
+                    "description": "Iranian phone number format",
+                    "example": "09123456789"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "description": "Must contain uppercase, lowercase, and a number",
+                    "example": "SecurePass123"
+                  },
+                  "passwordConfirm": {
+                    "type": "string",
+                    "description": "Must exactly match the password field",
+                    "example": "SecurePass123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Admin registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Admin registered"
+                    },
+                    "superAdminId": {
+                      "type": "string",
+                      "example": "clxyz123456789"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (Missing fields, passwords mismatch, or phone already exists)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "error": {
+                          "type": "string",
+                          "example": "Bad Request"
+                        },
+                        "statusCode": {
+                          "type": "integer",
+                          "example": 400
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "example": [
+                            "Passwords do not match"
+                          ]
+                        },
+                        "error": {
+                          "type": "string",
+                          "example": "Bad Request"
+                        },
+                        "statusCode": {
+                          "type": "integer",
+                          "example": 400
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "message": {
+                          "type": "string",
+                          "example": "Phone already exists"
+                        },
+                        "error": {
+                          "type": "string",
+                          "example": "Bad Request"
+                        },
+                        "statusCode": {
+                          "type": "integer",
+                          "example": 400
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/sub-admin/pending": {
+      "get": {
+        "summary": "Get pending admins",
+        "description": "Retrieves a list of admins. Only accessible by Super Admin.",
+        "tags": [
+          "Admin backend"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of admins retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "role": {
+                        "type": "string",
+                        "example": "admin"
+                      },
+                      "firstname": {
+                        "type": "string"
+                      },
+                      "lastname": {
+                        "type": "string"
+                      },
+                      "phone": {
+                        "type": "string"
+                      },
+                      "verified": {
+                        "type": "boolean"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (No token provided)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "دسترسی غیرمجاز: توکن ارسال نشده است."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (Invalid token or not Super Admin)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Only Super Admin can perform this action"
+                    },
+                    "error": {
+                      "type": "string",
+                      "example": "Forbidden"
+                    },
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 403
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/sub-admin/approve/{id}": {
+      "post": {
+        "summary": "Approve a sub-admin",
+        "description": "Activates/verifies a pending sub-admin. Only accessible by Super Admin.",
+        "tags": [
+          "Admin backend"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the admin to approve"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Admin approved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "role": {
+                      "type": "string"
+                    },
+                    "firstname": {
+                      "type": "string"
+                    },
+                    "lastname": {
+                      "type": "string"
+                    },
+                    "phone": {
+                      "type": "string"
+                    },
+                    "verified": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "دسترسی غیرمجاز: توکن ارسال نشده است."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Only Super Admin can perform this action"
+                    },
+                    "error": {
+                      "type": "string",
+                      "example": "Forbidden"
+                    },
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 403
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/sub-admin/reject/{id}": {
+      "get": {
+        "summary": "Reject a sub-admin",
+        "description": "Rejects and deletes a pending sub-admin from the database. Only accessible by Super Admin.",
+        "tags": [
+          "Admin backend"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ID of the admin to reject"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Admin rejected and deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "role": {
+                      "type": "string"
+                    },
+                    "firstname": {
+                      "type": "string"
+                    },
+                    "lastname": {
+                      "type": "string"
+                    },
+                    "phone": {
+                      "type": "string"
+                    },
+                    "verified": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "دسترسی غیرمجاز: توکن ارسال نشده است."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Only Super Admin can perform this action"
+                    },
+                    "error": {
+                      "type": "string",
+                      "example": "Forbidden"
+                    },
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 403
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/sub-admins/active": {
+      "get": {
+        "summary": "Get active sub-admins",
+        "description": "Retrieves a list of all verified/active sub-admins. Only accessible by Super Admin.",
+        "tags": [
+          "Admin backend"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of active admins retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "role": {
+                        "type": "string"
+                      },
+                      "firstname": {
+                        "type": "string"
+                      },
+                      "lastname": {
+                        "type": "string"
+                      },
+                      "phone": {
+                        "type": "string"
+                      },
+                      "verified": {
+                        "type": "boolean"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "دسترسی غیرمجاز: توکن ارسال نشده است."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Only Super Admin can perform this action"
+                    },
+                    "error": {
+                      "type": "string",
+                      "example": "Forbidden"
+                    },
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 403
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "summary": "Admin Login",
+        "description": "Authenticates an admin user using phone and password, and returns a JWT access token.",
+        "tags": [
+          "Admin backend"
+        ],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "phone",
+                  "password"
+                ],
+                "properties": {
+                  "phone": {
+                    "type": "string",
+                    "description": "The admin's phone number",
+                    "example": "09123456789"
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "The admin's password",
+                    "example": "securePassword123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful. Returns a JWT token based on the admin's role (ADMIN or SUPER_ADMIN).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "accessToken": {
+                      "type": "string",
+                      "description": "JWT access token",
+                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Missing phone or password in the request body.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "password or phone is not entered"
+                      ]
+                    },
+                    "error": {
+                      "type": "string",
+                      "example": "Bad Request"
+                    },
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 400
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Admin not found, account not verified, or invalid credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "description": "Error message (Returns Persian text if not found/unverified, English if password is wrong)",
+                      "example": "ادمین با این مشخصات وجود ندارد"
+                    },
+                    "error": {
+                      "type": "string",
+                      "example": "Unauthorized"
+                    },
+                    "statusCode": {
+                      "type": "integer",
+                      "example": 401
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ads/count": {
+      "get": {
+        "summary": "Get Ads Count",
+        "description": "Returns the total count of ads across all categories (digital, seller, employer, jobSeeker), optionally filtered by status.",
+        "tags": [
+          "Admin backend"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "adStatus",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "approved",
+                "rejected",
+                "pending"
+              ]
+            },
+            "required": false,
+            "description": "Filter ads by their status. If omitted, returns the count for all ads."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation. Returns the total count of ads.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "adStatus": {
+                      "type": "string",
+                      "description": "The status filtered, or 'all' if no filter was provided.",
+                      "example": "all"
+                    },
+                    "total": {
+                      "type": "integer",
+                      "description": "Total number of ads.",
+                      "example": 42
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid adStatus parameter provided.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Invalid adStatus parameter"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "The value 'invalid_status' is not a valid ad status."
+                    },
+                    "validOptions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "approved",
+                        "rejected",
+                        "pending"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Admin authorization failed."
+          }
+        }
+      }
+    },
+    "/ads/chart/all": {
+      "get": {
+        "summary": "Get All Ads Chart Data",
+        "description": "Generates chart data for all ads grouped by date. Returns daily counts for digital, employer, seller, and job seeker ads.",
+        "tags": [
+          "Admin backend"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation. Returns an array of daily ad counts sorted by date.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "date": {
+                        "type": "string",
+                        "format": "date",
+                        "description": "The date in YYYY-MM-DD format.",
+                        "example": "2023-10-25"
+                      },
+                      "digital": {
+                        "type": "integer",
+                        "description": "Number of digital ads created on this date.",
+                        "example": 5
+                      },
+                      "employer": {
+                        "type": "integer",
+                        "description": "Number of employer ads created on this date.",
+                        "example": 2
+                      },
+                      "seller": {
+                        "type": "integer",
+                        "description": "Number of seller ads created on this date.",
+                        "example": 1
+                      },
+                      "job_seeker": {
+                        "type": "integer",
+                        "description": "Number of job seeker ads created on this date.",
+                        "example": 3
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Admin authorization failed."
+          },
+          "500": {
+            "description": "Internal Server Error - Failed to generate chart data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Failed to generate chart data"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/profile": {
       "get": {
         "summary": "دریافت پروفایل کاربر",
@@ -8417,6 +9489,535 @@
           },
           "500": {
             "description": "خطای سرور"
+          }
+        }
+      }
+    },
+    "/api/admin/reports": {
+      "get": {
+        "summary": "دریافت لیست گزارش‌ها با فیلتر و صفحه‌بندی",
+        "description": "این API برای دریافت لیست تمام گزارش‌ها با قابلیت فیلتر بر اساس وضعیت و نوع گزارش و صفحه‌بندی استفاده می‌شود.\nفقط ادمین‌ها (ADMIN و SUPER_ADMIN) دسترسی دارند.\n",
+        "tags": [
+          "Admin Reports"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "reviewed",
+                "rejected"
+              ]
+            },
+            "description": "فیلتر بر اساس وضعیت گزارش (در انتظار، بررسی شده، رد شده)",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "reportType",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "employerAd",
+                "jobSeekerAd",
+                "sellerAd",
+                "DigitalAd",
+                "chat"
+              ]
+            },
+            "description": "فیلتر بر اساس نوع گزارش (آگهی کارفرما، جوینده کار، فروشنده، دیجیتال، چت)",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1,
+              "minimum": 1
+            },
+            "description": "شماره صفحه برای صفحه‌بندی",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 100
+            },
+            "description": "تعداد آیتم‌ها در هر صفحه (حداکثر ۱۰۰)",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "لیست گزارش‌ها به همراه اطلاعات صفحه‌بندی",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Report"
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "page": {
+                          "type": "integer"
+                        },
+                        "limit": {
+                          "type": "integer"
+                        },
+                        "total": {
+                          "type": "integer"
+                        },
+                        "totalPages": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "احراز هویت نشده (توکن ارائه نشده یا نامعتبر)"
+          },
+          "403": {
+            "description": "دسترسی غیرمجاز (فقط ادمین‌ها)"
+          },
+          "500": {
+            "description": "خطای داخلی سرور"
+          }
+        }
+      }
+    },
+    "/api/admin/reports/{id}": {
+      "get": {
+        "summary": "دریافت جزئیات کامل یک گزارش",
+        "description": "این API برای دریافت اطلاعات کامل یک گزارش به همراه جزئیات هدف (آگهی یا چت) و اطلاعات کاربر گزارش‌دهنده استفاده می‌شود.\n- برای آگهی‌ها: تمام اطلاعات آگهی به همراه اطلاعات صاحب آگهی برگردانده می‌شود.\n- برای چت: اطلاعات چت، طرفین چت و تمام پیام‌های مکالمه به ترتیب زمان برگردانده می‌شود.\n",
+        "tags": [
+          "Admin Reports"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "شناسه گزارش"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "جزئیات کامل گزارش",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "report": {
+                      "$ref": "#/components/schemas/Report"
+                    },
+                    "target": {
+                      "oneOf": [
+                        {
+                          "$ref": "#/components/schemas/EmployerAd"
+                        },
+                        {
+                          "$ref": "#/components/schemas/JobSeekerAd"
+                        },
+                        {
+                          "$ref": "#/components/schemas/SellerAd"
+                        },
+                        {
+                          "$ref": "#/components/schemas/DigitalAd"
+                        },
+                        {
+                          "$ref": "#/components/schemas/ChatWithConversation"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "شناسه گزارش معتبر نیست"
+          },
+          "401": {
+            "description": "احراز هویت نشده"
+          },
+          "403": {
+            "description": "دسترسی غیرمجاز"
+          },
+          "404": {
+            "description": "گزارش یافت نشد"
+          },
+          "500": {
+            "description": "خطای داخلی سرور"
+          }
+        }
+      },
+      "delete": {
+        "summary": "حذف گزارش (اختیاری)",
+        "description": "این API برای حذف کامل یک گزارش از دیتابیس استفاده می‌شود.\nتوجه: این عملیات فقط خود گزارش را حذف می‌کند و تأثیری بر روی هدف (آگهی یا چت) ندارد.\n",
+        "tags": [
+          "Admin Reports"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "شناسه گزارش"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "گزارش با موفقیت حذف شد",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "گزارش با موفقیت حذف شد"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "شناسه گزارش معتبر نیست"
+          },
+          "401": {
+            "description": "احراز هویت نشده"
+          },
+          "403": {
+            "description": "دسترسی غیرمجاز"
+          },
+          "404": {
+            "description": "گزارش یافت نشد"
+          },
+          "500": {
+            "description": "خطای داخلی سرور"
+          }
+        }
+      }
+    },
+    "/api/admin/reports/{id}/status": {
+      "put": {
+        "summary": "تغییر وضعیت گزارش",
+        "description": "این API برای تغییر وضعیت یک گزارش استفاده می‌شود.\nوضعیت‌های مجاز: pending (در انتظار)، reviewed (بررسی شده)، rejected (رد شده)\n",
+        "tags": [
+          "Admin Reports"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "شناسه گزارش"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "pending",
+                      "reviewed",
+                      "rejected"
+                    ],
+                    "description": "وضعیت جدید گزارش"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "وضعیت گزارش با موفقیت به‌روز شد",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "وضعیت گزارش به‌روز شد"
+                    },
+                    "report": {
+                      "$ref": "#/components/schemas/Report"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "درخواست نامعتبر (وضعیت نامعتبر یا缺失)"
+          },
+          "401": {
+            "description": "احراز هویت نشده"
+          },
+          "403": {
+            "description": "دسترسی غیرمجاز"
+          },
+          "404": {
+            "description": "گزارش یافت نشد"
+          },
+          "500": {
+            "description": "خطای داخلی سرور"
+          }
+        }
+      }
+    },
+    "/api/admin/reports/{id}/delete-ad": {
+      "delete": {
+        "summary": "حذف آگهی بر اساس گزارش",
+        "description": "این API برای حذف کامل آگهی مربوط به یک گزارش استفاده می‌شود.\n- فقط برای انواع آگهی (employerAd, jobSeekerAd, sellerAd, DigitalAd) قابل استفاده است.\n- پس از حذف آگهی، وضعیت گزارش به reviewed تغییر می‌کند.\n- برای چت‌ها از API بلاک چت استفاده کنید.\n",
+        "tags": [
+          "Admin Reports"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "شناسه گزارش"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "آگهی با موفقیت حذف شد و گزارش بررسی شد",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "آگهی با موفقیت حذف شد و گزارش بررسی شد"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "خطاهای احتمالی:\n- شناسه گزارش معتبر نیست\n- نوع آگهی برای حذف پشتیبانی نمی‌شود (مثلاً اگر نوع chat باشد)\n"
+          },
+          "401": {
+            "description": "احراز هویت نشده"
+          },
+          "403": {
+            "description": "دسترسی غیرمجاز"
+          },
+          "404": {
+            "description": "خطاهای احتمالی:\n- گزارش یافت نشد\n- آگهی مورد نظر یافت نشد\n"
+          },
+          "500": {
+            "description": "خطای داخلی سرور"
+          }
+        }
+      }
+    },
+    "/api/admin/reports/{id}/block-chat": {
+      "put": {
+        "summary": "بلاک کردن چت بر اساس گزارش",
+        "description": "این API برای بلاک کردن مکالمه چت مربوط به یک گزارش استفاده می‌شود.\n- فقط برای نوع chat قابل استفاده است.\n- پس از بلاک، طرفین نمی‌توانند پیام جدیدی ارسال کنند.\n- وضعیت گزارش به reviewed تغییر می‌کند.\n- اطلاعات کامل چت، طرفین و تمام پیام‌های مکالمه برگردانده می‌شود.\n",
+        "tags": [
+          "Admin Reports"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "شناسه گزارش"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "مکالمه با موفقیت بلاک شد و گزارش بررسی شد",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "مکالمه با موفقیت بلاک شد و گزارش بررسی شد"
+                    },
+                    "conversation": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "isBlocked": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "participants": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "phone": {
+                                "type": "string"
+                              },
+                              "email": {
+                                "type": "string"
+                              },
+                              "role": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "messages": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "content": {
+                                "type": "string"
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "fromUser": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "phone": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              "toUser": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "phone": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "خطاهای احتمالی:\n- شناسه گزارش معتبر نیست\n- این گزارش مربوط به چت نیست (نوع گزارش chat نیست)\n"
+          },
+          "401": {
+            "description": "احراز هویت نشده"
+          },
+          "403": {
+            "description": "دسترسی غیرمجاز"
+          },
+          "404": {
+            "description": "خطاهای احتمالی:\n- گزارش یافت نشد\n- چت یا مکالمه یافت نشد\n"
+          },
+          "500": {
+            "description": "خطای داخلی سرور"
           }
         }
       }
