@@ -173,6 +173,11 @@ model User {
   cachedSuggestions      CachedUserSuggestions?    // هر کاربر یک کش از پیشنهادات خود دارد (One-to-One)
   wallet            Wallet?
   payments          Payment[]
+       
+  targetVipCodes   VipCode[]        
+  vipCodeUsages    VipCodeUsage[] 
+  vipExpiresAt     DateTime?  
+
 }
 
 model UserProfile {
@@ -865,4 +870,36 @@ enum PaymentStatus {
   FAILED         // پرداخت ناموفق
   CANCELED       // لغو شده توسط کاربر
   VERIFYING      // در حال تایید
+}
+
+model VipCode {
+  id            String          @id @default(uuid())
+  code          String          @unique
+  title         String
+
+  maxUses       Int             @default(1)
+  usedCount     Int             @default(0)
+  vipDuration   Int             @default(30) // days
+
+  isActive      Boolean         @default(true)
+  isPublic      Boolean         @default(false) 
+
+  // If it's exclusive (isPublic = false)
+  targetUserId  String?
+  targetUser    User?           @relation(fields: [targetUserId], references: [id])
+
+  usages        VipCodeUsage[]
+
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model VipCodeUsage {
+  id          String     @id @default(uuid())
+  vipCodeId   String
+  vipCode     VipCode    @relation(fields: [vipCodeId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  usedAt      DateTime   @default(now())
+  expiresAt   DateTime? 
 }
