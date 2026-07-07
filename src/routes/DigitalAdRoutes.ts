@@ -94,12 +94,45 @@ router.post(
  *   get:
  *     summary: دریافت همه آگهی‌های دیجیتال (عمومی)
  *     tags: [DigitalAds]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: شماره صفحه
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 9
+ *         description: تعداد آیتم در هر صفحه
  *     responses:
  *       200:
  *         description: موفق
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     total:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
  *       500:
  *         description: خطای سرور
- */
+ */ 
 router.get("/ads/digital", DigitalAdCtrl.getAllDigitalAds);
 
 /**

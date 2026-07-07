@@ -3,6 +3,7 @@ import prisma from "../config/prisma";
 import { transformFileUrls, transformS3Url } from "../middleware/upload";
 import fs from "fs/promises";
 import path from "path";
+import { AdType } from "@prisma/client";
 
 // ==========================================
 // 📋 لیست فیلدهای مجاز در مدل JobSeekerAd
@@ -235,32 +236,61 @@ export const uploadWorkSample = async (req: Request, res: Response) => {
 // ==========================================
 export const getAllJobSeekerAds = async (req: Request, res: Response) => {
   try {
-    const ads = await prisma.jobSeekerAd.findMany({
-      include: {
-        ownerRelation: {
-          select: {
-            name: true,
-            lastName: true,
-            phone: true,
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 9;
+    const skip = (page - 1) * limit;
+
+    const [ads, total] = await Promise.all([
+      prisma.jobSeekerAd.findMany({
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          ownerRelation: {
+            select: {
+              name: true,
+              lastName: true,
+              phone: true,
+            },
           },
         },
+      }),
+      prisma.jobSeekerAd.count(),
+    ]);
+
+    const formattedAds = await Promise.all(
+      (ads as any[]).map(async (ad) => {
+        const enhancement = await getAdEnhancement(ad.id, AdType.JobSeekerAd);
+
+        return {
+          ...ad,
+          owner: ad.ownerRelation
+            ? {
+                fullName: `${ad.ownerRelation.name || ""} ${ad.ownerRelation.lastName || ""}`.trim(),
+                phoneNumber: ad.ownerRelation.phone,
+              }
+            : null,
+          ownerRelation: undefined,
+          enhancements: {
+            isSpecial: enhancement.isSpecial,
+            specialStartDate: enhancement.specialStartDate,
+            specialEndDate: enhancement.specialEndDate,
+            isLadder: enhancement.isLadder,
+            ladders: enhancement.ladders,
+          },
+        };
+      })
+    );
+
+    res.json({
+      data: formattedAds,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
     });
-
-    const formattedAds = (ads as any[]).map((ad) => ({
-      ...ad,
-      owner: ad.ownerRelation
-        ? {
-            fullName: `${ad.ownerRelation.name || ""} ${
-              ad.ownerRelation.lastName || ""
-            }`.trim(),
-            phoneNumber: ad.ownerRelation.phone,
-          }
-        : null,
-      ownerRelation: undefined,
-    }));
-
-    res.json(formattedAds);
   } catch (err: any) {
     console.error("❌ ERROR GETTING ALL JOB SEEKER ADS:", err);
     res.status(500).json({ error: "خطای سرور، لطفا دوباره تلاش کنید." });
@@ -295,17 +325,24 @@ export const getJobSeekerAdById = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "آگهی یافت نشد" });
     }
 
+    const enhancement = await getAdEnhancement(ad.id, AdType.JobSeekerAd);
+
     const formattedAd = {
       ...(ad as any),
       owner: (ad as any).ownerRelation
         ? {
-            fullName: `${(ad as any).ownerRelation.name || ""} ${
-              (ad as any).ownerRelation.lastName || ""
-            }`.trim(),
+            fullName: `${(ad as any).ownerRelation.name || ""} ${(ad as any).ownerRelation.lastName || ""}`.trim(),
             phoneNumber: (ad as any).ownerRelation.phone,
           }
         : null,
       ownerRelation: undefined,
+      enhancements: {
+        isSpecial: enhancement.isSpecial,
+        specialStartDate: enhancement.specialStartDate,
+        specialEndDate: enhancement.specialEndDate,
+        isLadder: enhancement.isLadder,
+        ladders: enhancement.ladders,
+      },
     };
 
     res.json(formattedAd);
@@ -326,33 +363,63 @@ export const getAdsByOwner = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "شناسه کاربر نامعتبر است" });
     }
 
-    const ads = await prisma.jobSeekerAd.findMany({
-      where: { owner: ownerId },
-      include: {
-        ownerRelation: {
-          select: {
-            name: true,
-            lastName: true,
-            phone: true,
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    const [ads, total] = await Promise.all([
+      prisma.jobSeekerAd.findMany({
+        where: { owner: ownerId },
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          ownerRelation: {
+            select: {
+              name: true,
+              lastName: true,
+              phone: true,
+            },
           },
         },
+      }),
+      prisma.jobSeekerAd.count({ where: { owner: ownerId } }),
+    ]);
+
+    const formattedAds = await Promise.all(
+      (ads as any[]).map(async (ad) => {
+        const enhancement = await getAdEnhancement(ad.id, AdType.JobSeekerAd);
+
+        return {
+          ...ad,
+          owner: ad.ownerRelation
+            ? {
+                fullName: `${ad.ownerRelation.name || ""} ${ad.ownerRelation.lastName || ""}`.trim(),
+                phoneNumber: ad.ownerRelation.phone,
+              }
+            : null,
+          ownerRelation: undefined,
+          enhancements: {
+            isSpecial: enhancement.isSpecial,
+            specialStartDate: enhancement.specialStartDate,
+            specialEndDate: enhancement.specialEndDate,
+            isLadder: enhancement.isLadder,
+            ladders: enhancement.ladders,
+          },
+        };
+      })
+    );
+
+    res.status(200).json({
+      status: "success",
+      data: formattedAds,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
     });
-
-    const formattedAds = (ads as any[]).map((ad) => ({
-      ...ad,
-      owner: ad.ownerRelation
-        ? {
-            fullName: `${ad.ownerRelation.name || ""} ${
-              ad.ownerRelation.lastName || ""
-            }`.trim(),
-            phoneNumber: ad.ownerRelation.phone,
-          }
-        : null,
-      ownerRelation: undefined,
-    }));
-
-    res.status(200).json({ status: "success", ads: formattedAds });
   } catch (error: any) {
     console.error("❌ ERROR GETTING JOB SEEKER ADS BY OWNER:", error);
     res.status(500).json({ status: "error", message: error.message });
@@ -392,17 +459,24 @@ export const getJobSeekerAdByOwnerAndId = async (
 
     if (!ad) return res.status(404).json({ message: "آگهی یافت نشد" });
 
+    const enhancement = await getAdEnhancement(ad.id, AdType.JobSeekerAd);
+
     const formattedAd = {
       ...(ad as any),
       owner: (ad as any).ownerRelation
         ? {
-            fullName: `${(ad as any).ownerRelation.name || ""} ${
-              (ad as any).ownerRelation.lastName || ""
-            }`.trim(),
+            fullName: `${(ad as any).ownerRelation.name || ""} ${(ad as any).ownerRelation.lastName || ""}`.trim(),
             phoneNumber: (ad as any).ownerRelation.phone,
           }
         : null,
       ownerRelation: undefined,
+      enhancements: {
+        isSpecial: enhancement.isSpecial,
+        specialStartDate: enhancement.specialStartDate,
+        specialEndDate: enhancement.specialEndDate,
+        isLadder: enhancement.isLadder,
+        ladders: enhancement.ladders,
+      },
     };
 
     res.status(200).json({ status: "success", ad: formattedAd });
@@ -596,6 +670,43 @@ export const deleteJobSeekerAd = async (req: Request, res: Response) => {
       .json({ message: "خطای سرور در حذف آگهی", error: err.message });
   }
 };
+
+//  helper
+async function getAdEnhancement(adId: string, adType: AdType) {
+  const enhancement = await prisma.adEnhancement.findFirst({
+    where: { adId, adType },
+    include: {
+      ladders: {
+        orderBy: { scheduledAt: 'asc' },
+      },
+    },
+  });
+
+  if (!enhancement) {
+    return {
+      isSpecial: false,
+      specialStartDate: null,
+      specialEndDate: null,
+      isLadder: false,
+      ladders: [],
+    };
+  }
+
+  const now = new Date();
+  const isSpecialActive = enhancement.isSpecial &&
+    enhancement.specialStartDate &&
+    enhancement.specialEndDate &&
+    enhancement.specialStartDate <= now &&
+    enhancement.specialEndDate > now;
+
+  return {
+    isSpecial: isSpecialActive,
+    specialStartDate: enhancement.specialStartDate,
+    specialEndDate: enhancement.specialEndDate,
+    isLadder: enhancement.ladders && enhancement.ladders.length > 0,
+    ladders: enhancement.ladders || [],
+  };
+}
 
 // ==========================================
 // export default
