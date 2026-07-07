@@ -61,8 +61,7 @@ router.post("/user/vip/apply", authenticateUser, VipCtrl.apply);
  *       201:
  *         description: موفق
  */
-router.post("/admin/vip-codes/generate", VipCtrl.generate);
-// router.post("/admin/vip-codes/generate", authenticateAdmin, VipCtrl.generate);
+router.post("/admin/vip-codes/generate", authenticateAdmin, VipCtrl.generate);
 
 /**
  * @swagger
@@ -82,8 +81,7 @@ router.post("/admin/vip-codes/generate", VipCtrl.generate);
  *       200:
  *         description: موفق
  */
-router.put("/admin/vip-codes/:id/activate", VipCtrl.activate);
-// router.put("/admin/vip-codes/:id/activate", authenticateAdmin, VipCtrl.activate);
+router.put("/admin/vip-codes/:id/activate", authenticateAdmin, VipCtrl.activate);
 
 /**
  * @swagger
@@ -103,8 +101,7 @@ router.put("/admin/vip-codes/:id/activate", VipCtrl.activate);
  *       200:
  *         description: موفق
  */
-router.put("/admin/vip-codes/:id/deactivate", VipCtrl.deactivate);
-// router.put("/admin/vip-codes/:id/deactivate", authenticateAdmin, VipCtrl.deactivate);
+router.put("/admin/vip-codes/:id/deactivate", authenticateAdmin, VipCtrl.deactivate);
 
 /**
  * @swagger
@@ -124,8 +121,7 @@ router.put("/admin/vip-codes/:id/deactivate", VipCtrl.deactivate);
  *       200:
  *         description: موفق
  */
-router.get("/admin/vip-codes", VipCtrl.list);
-// router.get("/admin/vip-codes", authenticateAdmin, VipCtrl.list);
+router.get("/admin/vip-codes", authenticateAdmin, VipCtrl.list);
 
 /**
  * @swagger
@@ -145,8 +141,7 @@ router.get("/admin/vip-codes", VipCtrl.list);
  *       200:
  *         description: موفق
  */
-router.delete("/admin/vip-codes/:id", VipCtrl.delete);
-// router.delete("/admin/vip-codes/:id", authenticateAdmin, VipCtrl.delete);
+router.delete("/admin/vip-codes/:id", authenticateAdmin, VipCtrl.delete);
 
 /**
  * @swagger
@@ -166,7 +161,6 @@ router.delete("/admin/vip-codes/:id", VipCtrl.delete);
  *       200:
  *         description: موفق
  */
-router.put("/admin/vip/revoke/:userId", VipCtrl.revokeUserVip);
-// router.put("/admin/vip/revoke/:userId", authenticateAdmin, VipCtrl.revokeUserVip);
+router.put("/admin/vip/revoke/:userId", authenticateAdmin, VipCtrl.revokeUserVip);
 
 export default router;
