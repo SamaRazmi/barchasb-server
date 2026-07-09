@@ -173,9 +173,49 @@ router.post(
  *         required: true
  *         schema:
  *           type: string
+ *         description: شناسه کاربر
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: شماره صفحه
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 9
+ *         description: تعداد آیتم در هر صفحه
  *     responses:
  *       200:
  *         description: موفق
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     total:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ *       400:
+ *         description: شناسه نامعتبر
+ *       500:
+ *         description: خطای سرور
  */
 router.get("/ads/jobseeker/owner/:ownerId", JobSeekerAdCtrl.getAdsByOwner);
 
@@ -207,11 +247,81 @@ router.get(
  * @swagger
  * /api/ads/jobseeker:
  *   get:
- *     summary: دریافت همه آگهی‌ها
+ *     summary: دریافت همه آگهی‌های جوینده کار (عمومی)
  *     tags: [JobSeekerAds]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: شماره صفحه
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 9
+ *         description: تعداد آیتم در هر صفحه
  *     responses:
  *       200:
  *         description: موفق
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       owner:
+ *                         type: object
+ *                         properties:
+ *                           fullName:
+ *                             type: string
+ *                           phoneNumber:
+ *                             type: string
+ *                       enhancements:
+ *                         type: object
+ *                         properties:
+ *                           isSpecial:
+ *                             type: boolean
+ *                           specialStartDate:
+ *                             type: string
+ *                             format: date-time
+ *                           specialEndDate:
+ *                             type: string
+ *                             format: date-time
+ *                           isLadder:
+ *                             type: boolean
+ *                           ladders:
+ *                             type: array
+ *                             items:
+ *                               type: object
+ *                               properties:
+ *                                 id:
+ *                                   type: string
+ *                                 scheduledAt:
+ *                                   type: string
+ *                                   format: date-time
+ *                                 isExecuted:
+ *                                   type: boolean
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     total:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ *       500:
+ *         description: خطای سرور
  */
 router.get("/ads/jobseeker", JobSeekerAdCtrl.getAllJobSeekerAds);
 

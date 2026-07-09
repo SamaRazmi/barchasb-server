@@ -338,6 +338,239 @@
         }
       }
     },
+    "/api/user/vip/apply": {
+      "post": {
+        "summary": "اعمال کد VIP توسط کاربر",
+        "tags": [
+          "VIP"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code"
+                ],
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "موفق"
+          }
+        }
+      }
+    },
+    "/api/admin/vip-codes/generate": {
+      "post": {
+        "summary": "تولید کدهای VIP جدید",
+        "tags": [
+          "VIP-Admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "count",
+                  "vipDuration"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "count": {
+                    "type": "integer"
+                  },
+                  "maxUses": {
+                    "type": "integer"
+                  },
+                  "vipDuration": {
+                    "type": "integer"
+                  },
+                  "isPublic": {
+                    "type": "boolean"
+                  },
+                  "targetUserId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "موفق"
+          }
+        }
+      }
+    },
+    "/api/admin/vip-codes/{id}/activate": {
+      "put": {
+        "summary": "فعال‌سازی یک کد VIP",
+        "tags": [
+          "VIP-Admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "موفق"
+          }
+        }
+      }
+    },
+    "/api/admin/vip-codes/{id}/deactivate": {
+      "put": {
+        "summary": "غیرفعال کردن یک کد VIP",
+        "tags": [
+          "VIP-Admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "موفق"
+          }
+        }
+      }
+    },
+    "/api/admin/vip-codes": {
+      "get": {
+        "summary": "دریافت لیست کدها با فیلتر (فعال/غیرفعال/همه)",
+        "tags": [
+          "VIP-Admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "inactive",
+                "all"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "موفق"
+          }
+        }
+      }
+    },
+    "/api/admin/vip-codes/{id}": {
+      "delete": {
+        "summary": "حذف کامل یک کد VIP و تاریخچه استفاده‌های آن",
+        "tags": [
+          "VIP-Admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "موفق"
+          }
+        }
+      }
+    },
+    "/api/admin/vip/revoke/{userId}": {
+      "put": {
+        "summary": "لغو VIP یک کاربر خاص",
+        "tags": [
+          "VIP-Admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "userId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "موفق"
+          }
+        }
+      }
+    },
     "/api/users": {
       "get": {
         "summary": "دریافت همه کاربران",
@@ -4380,13 +4613,121 @@
         }
       },
       "get": {
-        "summary": "دریافت همه آگهی‌ها",
+        "summary": "دریافت همه آگهی‌های جوینده کار (عمومی)",
         "tags": [
           "JobSeekerAds"
         ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "شماره صفحه"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 9
+            },
+            "description": "تعداد آیتم در هر صفحه"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "موفق"
+            "description": "موفق",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "owner": {
+                            "type": "object",
+                            "properties": {
+                              "fullName": {
+                                "type": "string"
+                              },
+                              "phoneNumber": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "enhancements": {
+                            "type": "object",
+                            "properties": {
+                              "isSpecial": {
+                                "type": "boolean"
+                              },
+                              "specialStartDate": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "specialEndDate": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "isLadder": {
+                                "type": "boolean"
+                              },
+                              "ladders": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "scheduledAt": {
+                                      "type": "string",
+                                      "format": "date-time"
+                                    },
+                                    "isExecuted": {
+                                      "type": "boolean"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "page": {
+                          "type": "integer"
+                        },
+                        "limit": {
+                          "type": "integer"
+                        },
+                        "total": {
+                          "type": "integer"
+                        },
+                        "totalPages": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور"
           }
         }
       }
@@ -4504,12 +4845,73 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "شناسه کاربر"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "شماره صفحه"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 9
+            },
+            "description": "تعداد آیتم در هر صفحه"
           }
         ],
         "responses": {
           "200": {
-            "description": "موفق"
+            "description": "موفق",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "page": {
+                          "type": "integer"
+                        },
+                        "limit": {
+                          "type": "integer"
+                        },
+                        "total": {
+                          "type": "integer"
+                        },
+                        "totalPages": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "شناسه نامعتبر"
+          },
+          "500": {
+            "description": "خطای سرور"
           }
         }
       }
@@ -4841,16 +5243,127 @@
         "tags": [
           "EmployerAds"
         ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "شماره صفحه"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 9
+            },
+            "description": "تعداد آیتم در هر صفحه"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "موفق"
+            "description": "موفق",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "owner": {
+                            "type": "object",
+                            "properties": {
+                              "fullName": {
+                                "type": "string"
+                              },
+                              "phoneNumber": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "enhancements": {
+                            "type": "object",
+                            "properties": {
+                              "isSpecial": {
+                                "type": "boolean"
+                              },
+                              "specialStartDate": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "specialEndDate": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "isLadder": {
+                                "type": "boolean"
+                              },
+                              "ladders": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "scheduledAt": {
+                                      "type": "string",
+                                      "format": "date-time"
+                                    },
+                                    "isExecuted": {
+                                      "type": "boolean"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "page": {
+                          "type": "integer"
+                        },
+                        "limit": {
+                          "type": "integer"
+                        },
+                        "total": {
+                          "type": "integer"
+                        },
+                        "totalPages": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور"
           }
         }
       }
     },
     "/api/ads/employer/owner/{ownerId}": {
       "get": {
-        "summary": "دریافت آگهی‌های یک کاربر خاص",
+        "summary": "دریافت آگهی‌های یک کاربر خاص (با پیجینیشن)",
         "tags": [
           "EmployerAds"
         ],
@@ -4861,12 +5374,67 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "شناسه کاربر"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "شماره صفحه"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 9
+            },
+            "description": "تعداد آیتم در هر صفحه"
           }
         ],
         "responses": {
           "200": {
-            "description": "موفق"
+            "description": "موفق",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "page": {
+                          "type": "integer"
+                        },
+                        "limit": {
+                          "type": "integer"
+                        },
+                        "total": {
+                          "type": "integer"
+                        },
+                        "totalPages": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "شناسه نامعتبر"
@@ -5138,9 +5706,61 @@
         "tags": [
           "DigitalAds"
         ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "شماره صفحه"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 9
+            },
+            "description": "تعداد آیتم در هر صفحه"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "موفق"
+            "description": "موفق",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "page": {
+                          "type": "integer"
+                        },
+                        "limit": {
+                          "type": "integer"
+                        },
+                        "total": {
+                          "type": "integer"
+                        },
+                        "totalPages": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "500": {
             "description": "خطای سرور"

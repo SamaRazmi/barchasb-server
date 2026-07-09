@@ -1,6 +1,7 @@
 import prisma from "../config/prisma";
 import { PRICING_KEYS, getPricingValue } from "./PricingService";
 import { AdType, PaymentMethod } from "@prisma/client";
+import { isUserVip } from "./VipService";
 
 const PAID_AD_TYPES: AdType[] = [AdType.EmployerAd, AdType.DigitalAd];
 const FREE_AD_TYPES: AdType[] = [AdType.JobSeekerAd, AdType.SellerAd];
@@ -42,6 +43,20 @@ export async function calculateCost(
     paymentMethod,
     userId,
   } = input;
+
+  const isVip = await isUserVip(userId);
+  if (isVip) {
+    return {
+      baseCost: 0,
+      specialCost: 0,
+      ladderCost: 0,
+      renewalCost: 0,
+      totalCost: 0,
+      canAfford: true,
+      paymentMethod,
+      message: "برای کاربران vip هزینه‌ها رایگان است.",
+    };
+  }
 
   // get price from db
   const [basePrice, specialPrice, ladderPrice, renewalPrice] = await Promise.all([
