@@ -122,7 +122,13 @@ export const createJobSeekerAd = async (req: Request, res: Response) => {
     }
 
     // adStatus: فقط "pending", "approved", "rejected", "expired" – پیش‌فرض "pending"
-    const validStatus = ["pending", "approved", "rejected", "expired"];
+    const validStatus = [
+      "pending",
+      "approved",
+      "rejected",
+      "expired",
+      "pending_payment",
+    ];
     if (updateData.adStatus) {
       if (!validStatus.includes(updateData.adStatus)) {
         updateData.adStatus = "pending";

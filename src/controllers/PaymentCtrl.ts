@@ -36,7 +36,10 @@ const PaymentCtrl = {
         });
       }
 
-      if (!paymentMethod || !Object.values(PaymentMethod).includes(paymentMethod)) {
+      if (
+        !paymentMethod ||
+        !Object.values(PaymentMethod).includes(paymentMethod)
+      ) {
         return res.status(400).json({
           status: "error",
           message: "روش پرداخت معتبر نیست",
@@ -90,10 +93,10 @@ const PaymentCtrl = {
       });
 
       // Redirect the user to the frontend with the result
-    const frontendUrl = process.env.RESULT_PAYMENT_FRONTEND_URL || "/api/payments/result";
-    const redirectUrl = result.success
-      ? `${frontendUrl}?status=success&paymentId=${result.paymentId}&refId=${result.refId}`
-      : `${frontendUrl}?status=failed&message=${encodeURIComponent(result.message)}`;
+      const frontendUrl = process.env.RESULT_PAYMENT_FRONTEND_URL;
+      const redirectUrl = result.success
+        ? `${frontendUrl}?status=success&paymentId=${result.paymentId}&refId=${result.refId}`
+        : `${frontendUrl}?status=failed&message=${encodeURIComponent(result.message)}`;
 
       return res.redirect(redirectUrl);
     } catch (error: any) {

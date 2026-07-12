@@ -7,6 +7,12 @@ import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 import "dotenv/config";
 import prisma from "./config/prisma";
+// ===== اضافه شده: ماژول‌های امنیتی =====
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import hpp from "hpp";
+// @ts-ignore
+import xss from "xss-clean";
 
 // Middlewares
 import {
@@ -113,7 +119,40 @@ const corsOptions: CorsOptions = {
   credentials: true,
 };
 
+// ====================================================
+// ========== MIDDLEWARES امنیتی (اضافه شده) ==========
+// ====================================================
+
+// 1. Helmet: محافظت از هدرهای HTTP
+app.use(helmet());
+
+// 2. CORS
 app.use(cors(corsOptions));
+
+// 3. Rate Limiting: جلوگیری از حملات Brute Force و DoS
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // ۱۵ دقیقه
+  max: 100, // حداکثر ۱۰۰ درخواست از هر IP در بازه زمانی
+  message: {
+    success: false,
+    message:
+      "تعداد درخواست‌های شما از حد مجاز بیشتر شده، لطفاً بعداً تلاش کنید.",
+  },
+  standardHeaders: true, // ارسال `RateLimit-*` headers
+  legacyHeaders: false, // غیرفعال کردن `X-RateLimit-*` headers
+});
+app.use(limiter);
+
+// 4. HPP: جلوگیری از حملات HTTP Parameter Pollution
+app.use(hpp());
+
+// 5. XSS Clean: پاکسازی ورودی‌ها از کدهای مخرب XSS
+app.use(xss());
+
+// ====================================================
+// ========== سایر MIDDLEWARES ========================
+// ====================================================
+
 app.use(express.json({ limit: "50mb" }));
 app.use(
   express.urlencoded({ limit: "50mb", extended: true, parameterLimit: 50000 }),
