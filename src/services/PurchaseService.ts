@@ -70,6 +70,19 @@ export async function processAdPayment(
     userId,
   });
 
+  if (costResult.totalCost === 0) {
+    await prisma.$transaction(async (tx) => {
+      await createAdEnhancement(tx, adId, adType, isSpecial, isLadder, ladderOption);
+      await updateAdStatus(tx, adId, adType, "pending");
+    });
+
+    return {
+      success: true,
+      message: "آگهی با موفقیت ثبت شد و برای تایید به ادمین ارسال شد",
+      adId,
+    };
+  }
+
   if (!costResult.canAfford && paymentMethod === PaymentMethod.Wallet) {
     return {
       success: false,
@@ -162,6 +175,70 @@ export async function purchaseEnhancement(input: PurchaseEnhancementInput): Prom
     paymentMethod,
     userId,
   });
+
+  if (costResult.totalCost === 0) {
+    await prisma.$transaction(async (tx) => {
+      if (enhancementType === "SPECIAL") {
+        const existing = await tx.adEnhancement.findFirst({ where: { adId, adType } });
+        if (existing) {
+          await tx.adEnhancement.update({
+            where: { id: existing.id },
+            data: { isSpecial: true, specialStartDate: new Date(), specialEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) },
+          });
+        } else {
+          await tx.adEnhancement.create({
+            data: { adId, adType, isSpecial: true, specialStartDate: new Date(), specialEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) },
+          });
+        }
+      } else if (enhancementType === "LADDER") {
+        let finalScheduledAt: Date;
+        if (ladderOption === "now") {
+          finalScheduledAt = new Date();
+        } else if (ladderOption === "24h") {
+          finalScheduledAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        } else if (ladderOption === "72h") {
+          finalScheduledAt = new Date(Date.now() + 72 * 60 * 60 * 1000);
+        } else if (ladderOption === "7d") {
+          finalScheduledAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        } else if (ladderSchedule) {
+          finalScheduledAt = new Date(ladderSchedule);
+        } else {
+          throw new Error("زمان پله مشخص نشده است");
+        }
+
+        let enhancement = await tx.adEnhancement.findFirst({ where: { adId, adType } });
+        if (!enhancement) {
+          enhancement = await tx.adEnhancement.create({ data: { adId, adType, isSpecial: false } });
+        }
+        await tx.adLadder.create({
+          data: {
+            adEnhancementId: enhancement.id,
+            scheduledAt: finalScheduledAt,
+            isExecuted: false,
+            option: ladderOption || null,
+          },
+        });
+      } else if (enhancementType === "RENEWAL") {
+        const currentExpire = ad.expiresAt || new Date();
+        const newExpireAt = new Date(currentExpire);
+        newExpireAt.setDate(newExpireAt.getDate() + 30);
+        const modelMap: Record<AdType, keyof Omit<typeof tx, `$${string}`>> = {
+          [AdType.EmployerAd]: "employerAd",
+          [AdType.DigitalAd]: "digitalAd",
+          [AdType.JobSeekerAd]: "jobSeekerAd",
+          [AdType.SellerAd]: "sellerAd",
+        };
+        const targetModel = modelMap[adType];
+        await (tx[targetModel] as any).update({ where: { id: adId }, data: { expiresAt: newExpireAt } });
+      }
+    });
+
+    return {
+      success: true,
+      message: "افزونه با موفقیت اعمال شد",
+      adId,
+    };
+  }
 
   if (!costResult.canAfford && paymentMethod === PaymentMethod.Wallet) {
     return { success: false, message: costResult.message || "موجودی کیف پول کافی نیست" };

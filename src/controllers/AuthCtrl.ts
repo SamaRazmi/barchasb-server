@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import prisma from "../config/prisma";
+import { isUserVip } from "../services/VipService";
+import * as WalletService from "../services/WalletService";
 
 export const getMe = async (req: Request, res: Response) => {
   try {
@@ -28,12 +30,22 @@ export const getMe = async (req: Request, res: Response) => {
         email_confirmed: true,
         phone_confirmed: true,
         // password حذف شده
+        vipExpiresAt: true,
       },
     });
 
     if (!user) return res.status(404).json({ message: "کاربر یافت نشد" });
 
-    res.json({ user });
+    let balance = 0;
+    try {
+      const balanceData = await WalletService.getAvailableBalance(userId);
+      balance = balanceData.available;
+    } catch (error) {
+      balance = 0;
+    }
+    const isVip = await isUserVip(userId);
+
+    res.json({ ...user, isVip, balance});
   } catch (err) {
     console.error("GetMe error:", err);
     res.status(500).json({ message: "خطا در دریافت اطلاعات کاربر" });
