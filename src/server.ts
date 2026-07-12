@@ -11,8 +11,8 @@ import prisma from "./config/prisma";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import hpp from "hpp";
-// @ts-ignore
-import xss from "xss-clean";
+// @ts-ignore 
+import xss from "xss"; 
 import vipRoutes from "./routes/VipRoutes";
 
 // Middlewares
@@ -147,8 +147,34 @@ app.use(limiter);
 // 4. HPP: جلوگیری از حملات HTTP Parameter Pollution
 app.use(hpp());
 
-// 5. XSS Clean: پاکسازی ورودی‌ها از کدهای مخرب XSS
-app.use(xss());
+// 5. XSS Protection: پاکسازی ورودی‌ها از کدهای مخرب XSS (جایگزین xss-clean)
+app.use((req, res, next) => {
+  // پاکسازی query
+  if (req.query) {
+    for (const key in req.query) {
+      if (typeof req.query[key] === "string") {
+        req.query[key] = xss(req.query[key] as string);
+      }
+    }
+  }
+  // پاکسازی body
+  if (req.body) {
+    for (const key in req.body) {
+      if (typeof req.body[key] === "string") {
+        req.body[key] = xss(req.body[key] as string);
+      }
+    }
+  }
+  // پاکسازی params
+  if (req.params) {
+    for (const key in req.params) {
+      if (typeof req.params[key] === "string") {
+        req.params[key] = xss(req.params[key] as string);
+      }
+    }
+  }
+  next();
+});
 
 // ====================================================
 // ========== سایر MIDDLEWARES ========================
