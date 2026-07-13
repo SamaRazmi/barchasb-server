@@ -1,6 +1,7 @@
 import { Router } from "express";
 import ResumeCtrl from "../controllers/ResumeCtrl";
 import multer from "multer";
+import { authenticateUser } from "../middleware/authMidleware";
 
 const router = Router();
 
@@ -115,7 +116,7 @@ const upload = multer({
  *       404:
  *         description: رزومه یافت نشد
  */
-router.post("/data", ResumeCtrl.saveResumeData);
+router.post("/data", authenticateUser, ResumeCtrl.saveResumeData);
 
 /**
  * @swagger
@@ -139,7 +140,7 @@ router.post("/data", ResumeCtrl.saveResumeData);
  *       404:
  *         description: رزومه یافت نشد
  */
-router.get("/data/:id", ResumeCtrl.getResumeData);
+router.get("/data/:id", authenticateUser, ResumeCtrl.getResumeData);
 
 /**
  * @swagger
@@ -177,6 +178,7 @@ router.get("/data/:id", ResumeCtrl.getResumeData);
  */
 router.post(
   "/upload/:resumeId",
+  authenticateUser,
   upload.single("resumeFile"),
   ResumeCtrl.uploadResumeFile,
 );
@@ -203,7 +205,7 @@ router.post(
  *       404:
  *         description: فایلی یافت نشد
  */
-router.get("/preview/:id", ResumeCtrl.getResumeUrl);
+router.get("/preview/:id", authenticateUser, ResumeCtrl.getResumeUrl);
 
 // ====== مسیرهای اضافی (اختیاری) ======
 
@@ -221,7 +223,7 @@ router.get("/preview/:id", ResumeCtrl.getResumeUrl);
  *       401:
  *         description: احراز هویت نشده
  */
-router.get("/my", ResumeCtrl.getMyResumes);
+router.get("/my", authenticateUser, ResumeCtrl.getMyResumes);
 
 /**
  * @swagger
@@ -239,6 +241,6 @@ router.get("/my", ResumeCtrl.getMyResumes);
  *       403:
  *         description: دسترسی غیرمجاز
  */
-router.get("/admin/users-with-resumes", ResumeCtrl.getUsersWithResumes);
+router.get("/admin/users-with-resumes", authenticateUser, ResumeCtrl.getUsersWithResumes);
 
 export default router;
