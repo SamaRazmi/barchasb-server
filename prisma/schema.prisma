@@ -111,8 +111,22 @@ enum TimeUnit {
 }
 
 enum AdminRole {
-  admin
-  super_admin
+  OWNER
+  ADMIN
+  SUPPORTER
+}
+
+enum AdminStatus {
+  PENDING
+  ACTIVE
+  INACTIVE
+}
+
+enum Platform {
+  SHOP
+  EDUCATION
+  CLUB
+  MAIN
 }
 
 // ============================================
@@ -673,14 +687,18 @@ model ToolUsageLog {
 }
 
 model Admin {
-  id        String    @id @default(uuid())
-  role      AdminRole
-  firstname String?
-  lastname  String?
-  phone     String    @unique
-  password  String
-  verified  Boolean   @default(false)
-  createdAt DateTime  @default(now())
+  id           String        @id @default(uuid())
+  fullName     String
+  username     String        @unique
+  phone        String?       @unique
+  password     String
+  role         AdminRole     @default(SUPPORTER)
+  status       AdminStatus   @default(PENDING)
+  platforms    Platform[]    
+  permissions  Json?         
+  lastLoginAt  DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }
 
 // ============================================
