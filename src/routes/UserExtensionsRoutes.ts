@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const testController = require('../controllers/TestCtrl');
 const resumeController = require('../controllers/ResumeCtrl');
+import { authenticateUser } from "../middleware/authMidleware";
 
 /**
  * @swagger
@@ -37,7 +38,7 @@ const resumeController = require('../controllers/ResumeCtrl');
  *       401:
  *         description: Unauthorized - Missing or invalid token
  */
-router.get('/my-tests', testController.getMyTestsSummary);
+router.get('/my-tests', authenticateUser, testController.getMyTestsSummary);
 
 /**
  * @swagger
@@ -91,7 +92,7 @@ router.get('/my-tests', testController.getMyTestsSummary);
  *       404:
  *         description: Session not found
  */
-router.get('/my-tests/:sessionId', testController.getMyTestDetail);
+router.get('/my-tests/:sessionId', authenticateUser, testController.getMyTestDetail);
 
 /**
  * @swagger
@@ -109,7 +110,7 @@ router.get('/my-tests/:sessionId', testController.getMyTestDetail);
  *       500:
  *         description: server error
  */
-router.get('/my-resumes', resumeController.getMyResumes);
+router.get('/my-resumes', authenticateUser, resumeController.getMyResumes);
 
 /**
  * @swagger
@@ -131,6 +132,6 @@ router.get('/my-resumes', resumeController.getMyResumes);
  *       500:
  *         description: server error
  */
-router.get('/my-resume/preview/:id', resumeController.getResumeUrl);
+router.get('/my-resume/preview/:id', authenticateUser, resumeController.getResumeUrl);
 
 export default router;

@@ -47,16 +47,20 @@ import ResumeRoutes from "./routes/ResumeRoutes";
 import converterRoutes from "./routes/converterRoutes";
 import AdminExtensionsRoutes from "./routes/AdminExtensionsRoutes";
 import UserExtensionsRoutes from "./routes/UserExtensionsRoutes";
-// import SubAdmin from "./routes/admin/authentication/sub-admin";
 import walletRoutes from "./routes/WalletRoutes";
 import pricingRoutes from "./routes/PricingRoutes";
-import SubAdminRoutes from "./routes/admin/auth/sub-admin";
-import SuperAdminRoutes from "./routes/admin/auth/super-admin";
-import PublicAdCategoriesRoutes from "./routes/admin/public/ad-categories";
-import AdminLoginRoutes from "./routes/admin/auth/login";
 import checkoutRoutes from "./routes/CheckoutRoutes";
 import purchaseRoutes from "./routes/PurchaseRoutes";
 import paymentRoutes from "./routes/PaymentRoutes";
+
+// import SubAdmin from "./routes/admin/authentication/sub-admin";
+// import SubAdminRoutes from "./routes/admin/auth/sub-admin";
+// import SuperAdminRoutes from "./routes/admin/auth/super-admin";
+import PublicAdCategoriesRoutes from "./routes/admin/public/ad-categories";
+// import AdminLoginRoutes from "./routes/admin/auth/login";
+
+import adminAuthRoutes from './Admin/routes/AuthRoutes';
+import adminManagementRoutes from './Admin/routes/AdminManagementRoutes'
 
 import SuggestionRoutes from "./routes/SuggestionRoutes";
 
@@ -199,12 +203,6 @@ const swaggerOptions = {
         "API documentation for Barchasb backend (including Admin APIs)",
     },
     servers: [{ url: "/" }],
-    tags: [
-      {
-        name: "Admin",
-        description: "Admin-only endpoints (authenticated with admin role)",
-      },
-    ],
     components: {
       securitySchemes: {
         BearerAuth: {
@@ -216,7 +214,7 @@ const swaggerOptions = {
     },
     security: [{ BearerAuth: [] }],
   },
-  apis: ["./src/routes/**/*.ts", "./src/routes/**/*.js"],
+  apis: ["./src/routes/**/*.ts", "./src/routes/**/*.js", "./src/Admin/routes/**/*.ts"],
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
@@ -272,8 +270,7 @@ app.use("/api", RecentViewRoutes);
 app.use("/api", userProfileRoutes);
 app.use("/api", UploadFileRoutes);
 app.use("/api", ChatRoutes);
-app.use("/api", authenticateUser, SuggestionRoutes);
-// app.use('/auth', SubAdmin)
+app.use("/api", SuggestionRoutes);
 app.use("/api", walletRoutes);
 app.use("/api", pricingRoutes);
 app.use("/api", checkoutRoutes);
@@ -281,23 +278,24 @@ app.use("/api", purchaseRoutes);
 app.use("/api", paymentRoutes);
 app.use("/api", vipRoutes);
 
-// Protected routes
-app.use("/api/tests", authenticateUser, TestRoutes);
-app.use("/api/resume", authenticateUser, ResumeRoutes);
-app.use("/api/converter", authenticateUser, converterRoutes);
-app.use("/api/admin", authenticateAdmin, AdminExtensionsRoutes);
-app.use("/api/user", authenticateUser, UserExtensionsRoutes);
+// extensions routes
+app.use("/api/tests", TestRoutes);
+app.use("/api/resume", ResumeRoutes);
+app.use("/api/converter", converterRoutes);
+app.use("/api/user", UserExtensionsRoutes);
+app.use("/api/admin/extension", AdminExtensionsRoutes);
 
 // admin route
-app.use("/auth", SubAdminRoutes);
-app.use("/auth", SuperAdminRoutes);
-app.use("/", AdminLoginRoutes);
-app.use("/public/ad-categories", PublicAdCategoriesRoutes);
-//app.use('/ads', AdsRoutes);
-// app.use('/articles', ArticlesRoutes);
+app.use('/api/admin/auth', adminAuthRoutes)
+app.use('/api/admin', adminManagementRoutes)
+// app.use("/auth", SubAdminRoutes);
+// app.use("/auth", SuperAdminRoutes);
+// app.use("/", AdminLoginRoutes);
+// app.use("/public/ad-categories", PublicAdCategoriesRoutes);
+// app.use('/auth', SubAdmin)
 
 // ===== اضافه شده: مسیرهای مدیریت گزارش توسط ادمین =====
-app.use("/api/admin", adminReportRoutes);
+// app.use("/api/admin", adminReportRoutes);
 
 /* =====================================================
    =============== GLOBAL ERROR HANDLING ===============

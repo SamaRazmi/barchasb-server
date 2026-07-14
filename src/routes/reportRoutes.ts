@@ -1,6 +1,6 @@
 import { Router } from "express";
 import reportReasonCtrl from "../controllers/reportReasonCtrl";
-import { authAdmin } from "../middleware/authAdmin";
+import { authenticateAdmin } from "../middleware/authMidleware";
 
 const router = Router();
 
@@ -79,7 +79,7 @@ router.get("/report-reasons", reportReasonCtrl.getReportReasons);
  */
 router.post(
   "/admin/report-reasons",
-  authAdmin, // ✅ استفاده از middleware
+  authenticateAdmin,
   reportReasonCtrl.createReportReason,
 );
 
@@ -128,7 +128,7 @@ router.post(
  */
 router.put(
   "/admin/report-reasons/:id",
-  authAdmin, // ✅ استفاده از middleware
+  authenticateAdmin, 
   reportReasonCtrl.updateReportReason,
 );
 
@@ -158,7 +158,7 @@ router.put(
  */
 router.delete(
   "/admin/report-reasons/:id",
-  authAdmin, // ✅ استفاده از middleware
+  authenticateAdmin,
   reportReasonCtrl.deleteReportReason,
 );
 
