@@ -68,117 +68,147 @@ const toStr = (value: string | string[] | undefined): string => {
 // ==========================================
 export const createEmployerAd = async (req: Request, res: Response) => {
   console.log("\n🚀 createEmployerAd START");
+  console.log("Content-Type:", req.headers["content-type"]);
   console.log("Body received:", req.body);
   console.log("Files received:", (req as any).files);
 
   try {
-    const updateData: any = { ...req.body };
+    const updateData: any = {};
+    const isMultipart = req.headers["content-type"]?.includes(
+      "multipart/form-data",
+    );
+
+    if (isMultipart) {
+      // ========== پردازش FormData ==========
+      updateData.name = req.body.name || "";
+      updateData.title = req.body.title || "";
+      updateData.state = req.body.state || "";
+      updateData.city = req.body.city || "";
+      updateData.cooperationType = req.body.cooperationType || "";
+      updateData.gender = req.body.gender || "";
+      updateData.militaryStatus = req.body.militaryStatus || "None";
+      updateData.experience = req.body.experience || "";
+      updateData.startTime = req.body.startTime || "";
+      updateData.endTime = req.body.endTime || "";
+      updateData.minSalary = req.body.minSalary || "";
+      updateData.maxSalary = req.body.maxSalary || "";
+      updateData.companyName = req.body.companyName || "";
+      updateData.companyType = req.body.companyType || "";
+      updateData.benefits = req.body.benefits || "";
+      updateData.insurance = req.body.insurance || "";
+      updateData.education = req.body.education || "";
+      updateData.companyDescription = req.body.companyDescription || "";
+      updateData.person = req.body.person || "self";
+
+      // تصحیح adPaymentMethod
+      let payment =
+        req.body.adPaymentMethod || req.body.paymentMethod || "Bank_card";
+      if (payment === "Bank card") payment = "Bank_card";
+      updateData.adPaymentMethod = payment;
+
+      // تبدیل بولی
+      const toBool = (v: any) => v === "true" || v === true;
+      updateData.isRemote = toBool(req.body.isRemote);
+      updateData.thursdayUntilNoon = toBool(req.body.thursdayUntilNoon);
+      updateData.enableChat = toBool(req.body.enableChat);
+      updateData.enablePhone = toBool(req.body.enablePhone);
+      updateData.isVerified = toBool(req.body.isVerified);
+
+      // پردازش categories
+      let categories = req.body.categories;
+      if (typeof categories === "string") {
+        try {
+          categories = JSON.parse(categories);
+        } catch {
+          categories = [];
+        }
+      }
+      if (!Array.isArray(categories)) categories = [];
+      updateData.categories = categories;
+
+      // پردازش jobDetails
+      let jobDetails = req.body.jobDetails;
+      if (typeof jobDetails === "string") {
+        try {
+          jobDetails = JSON.parse(jobDetails);
+        } catch {
+          jobDetails = [];
+        }
+      }
+      if (!Array.isArray(jobDetails)) jobDetails = [];
+      updateData.jobDetails = jobDetails;
+
+      // پردازش images
+      let uploadedImages = (req as any).files?.images || [];
+      if (uploadedImages.length > 0) {
+        uploadedImages = transformFileUrls(uploadedImages);
+      }
+      const images = uploadedImages.map((file: any, i: number) => ({
+        url: file.location || file.path || "",
+        isMain: i === 0,
+      }));
+      updateData.images = images;
+    } else {
+      // ========== پردازش JSON ==========
+      Object.assign(updateData, req.body || {});
+
+      // تصحیح adPaymentMethod
+      if (updateData.adPaymentMethod === "Bank card") {
+        updateData.adPaymentMethod = "Bank_card";
+      }
+      if (!updateData.adPaymentMethod) {
+        updateData.adPaymentMethod = "Bank_card";
+      }
+      if (!updateData.images) updateData.images = [];
+    }
 
     // ─── بررسی فیلد اجباری name ───
     if (!updateData.name) {
       return res.status(400).json({ error: "فیلد name اجباری است" });
     }
 
-    // ─── پردازش images (همیشه آرایه) ───
-    let uploadedImages = (req as any).files?.images || [];
-    if (uploadedImages.length > 0) {
-      uploadedImages = transformFileUrls(uploadedImages);
-    }
-    const images = uploadedImages.map((file: any, i: number) => ({
-      url: file.location || file.path || "",
-      isMain: i === 0,
-    }));
-    updateData.images = images;
-
-    // ─── پردازش categories ───
-    let categories = req.body.categories;
-    if (typeof categories === "string") {
-      try {
-        categories = JSON.parse(categories);
-        if (!Array.isArray(categories)) categories = [];
-      } catch (err) {
-        console.error("❌ Invalid categories JSON:", err);
-        categories = [];
-      }
-    } else if (!Array.isArray(categories)) {
-      categories = [];
-    }
-    updateData.categories = categories;
-
-    // ─── پردازش jobDetails ───
-    let jobDetails = req.body.jobDetails;
-    if (typeof jobDetails === "string") {
-      try {
-        jobDetails = JSON.parse(jobDetails);
-        if (!Array.isArray(jobDetails)) jobDetails = [];
-      } catch (err) {
-        console.error("❌ Invalid jobDetails JSON:", err);
-        jobDetails = [];
-      }
-    } else if (!Array.isArray(jobDetails)) {
-      jobDetails = [];
-    }
-    updateData.jobDetails = jobDetails;
-
-    // ─── تبدیل فیلدهای بولی ───
-    const BOOLEAN_FIELDS = [
-      "isRemote",
-      "thursdayUntilNoon",
-      "enableChat",
-      "enablePhone",
-      "isVerified",
-    ];
-    const toBool = (v: any) => v === "true" || v === true;
-    BOOLEAN_FIELDS.forEach((field) => {
-      if (req.body[field] !== undefined) {
-        updateData[field] = toBool(req.body[field]);
-        delete req.body[field];
-      }
-    });
-
     // ─── اعتبارسنجی و تصحیح فیلدهای Enum ───
-    // person: فقط "self" یا "other" – پیش‌فرض "self"
     const validPerson = ["self", "other"];
-    if (updateData.person) {
-      if (!validPerson.includes(updateData.person)) {
-        updateData.person = "self";
-        console.warn(`⚠️ person مقدار نامعتبر داشت، به "self" تغییر یافت`);
-      }
-    } else {
+    if (updateData.person && !validPerson.includes(updateData.person)) {
       updateData.person = "self";
     }
 
-    // adPaymentMethod: فقط "Subscription", "Wallet", "Bank_card" – پیش‌فرض "Subscription"
     const validPayment = ["Subscription", "Wallet", "Bank_card"];
-    if (updateData.adPaymentMethod) {
-      if (!validPayment.includes(updateData.adPaymentMethod)) {
-        updateData.adPaymentMethod = "Subscription";
-        console.warn(
-          `⚠️ adPaymentMethod مقدار نامعتبر داشت، به "Subscription" تغییر یافت`,
-        );
-      }
-    } else {
-      updateData.adPaymentMethod = "Subscription";
+    if (
+      updateData.adPaymentMethod &&
+      !validPayment.includes(updateData.adPaymentMethod)
+    ) {
+      updateData.adPaymentMethod = "Bank_card";
     }
 
-    // adStatus: فقط "pending", "approved", "rejected", "expired" – پیش‌فرض "pending"
     const validStatus = ["pending", "approved", "rejected", "expired"];
-    if (updateData.adStatus) {
-      if (!validStatus.includes(updateData.adStatus)) {
-        updateData.adStatus = "pending";
-        console.warn(`⚠️ adStatus مقدار نامعتبر داشت، به "pending" تغییر یافت`);
-      }
-    } else {
+    if (updateData.adStatus && !validStatus.includes(updateData.adStatus)) {
       updateData.adStatus = "pending";
     }
 
     // ─── فیلتر کردن داده‌ها ───
     const filteredData = filterAdData(updateData);
 
-    // ─── ساخت آگهی با owner ───
+    // ─── بررسی وجود owner ───
+    const ownerId = (req as any).user?.id || req.body.owner;
+    if (!ownerId) {
+      return res
+        .status(400)
+        .json({ error: "شناسه کاربر (owner) ارسال نشده است" });
+    }
+
+    const userExists = await prisma.user.findUnique({
+      where: { id: ownerId },
+      select: { id: true },
+    });
+    if (!userExists) {
+      return res.status(404).json({ error: "کاربر مورد نظر یافت نشد" });
+    }
+
+    // ─── ساخت آگهی ───
     const ad = await prisma.employerAd.create({
       data: {
-        owner: (req as any).user?.id || req.body.owner,
+        owner: ownerId,
         ...filteredData,
         adStatus: "pending_payment",
       },
@@ -188,6 +218,9 @@ export const createEmployerAd = async (req: Request, res: Response) => {
     res.status(201).json(ad);
   } catch (err: any) {
     console.error("❌ ERROR CREATING EMPLOYER AD:", err);
+    if (err.code === "P2003") {
+      return res.status(400).json({ error: "کاربر نامعتبر یا وجود ندارد" });
+    }
     res.status(400).json({ error: err.message });
   }
 };
@@ -205,7 +238,7 @@ export const getAllEmployerAds = async (req: Request, res: Response) => {
       prisma.employerAd.findMany({
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         include: {
           ownerRelation: {
             select: {
@@ -218,7 +251,7 @@ export const getAllEmployerAds = async (req: Request, res: Response) => {
       }),
       prisma.employerAd.count(),
     ]);
-    
+
     const formattedAds = await Promise.all(
       (ads as any[]).map(async (ad) => {
         const enhancement = await getAdEnhancement(ad.id, AdType.EmployerAd);
@@ -227,7 +260,8 @@ export const getAllEmployerAds = async (req: Request, res: Response) => {
           ...ad,
           owner: ad.ownerRelation
             ? {
-                fullName: `${ad.ownerRelation.name || ""} ${ad.ownerRelation.lastName || ""}`.trim(),
+                fullName:
+                  `${ad.ownerRelation.name || ""} ${ad.ownerRelation.lastName || ""}`.trim(),
                 phoneNumber: ad.ownerRelation.phone,
               }
             : null,
@@ -240,7 +274,7 @@ export const getAllEmployerAds = async (req: Request, res: Response) => {
             ladders: enhancement.ladders,
           },
         };
-      })
+      }),
     );
 
     res.json({
@@ -287,7 +321,8 @@ export const getEmployerAdById = async (req: Request, res: Response) => {
       ...(ad as any),
       owner: (ad as any).ownerRelation
         ? {
-            fullName: `${(ad as any).ownerRelation.name || ""} ${(ad as any).ownerRelation.lastName || ""}`.trim(),
+            fullName:
+              `${(ad as any).ownerRelation.name || ""} ${(ad as any).ownerRelation.lastName || ""}`.trim(),
             phoneNumber: (ad as any).ownerRelation.phone,
           }
         : null,
@@ -327,7 +362,7 @@ export const getAdsByOwner = async (req: Request, res: Response) => {
         where: { owner: ownerId },
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         include: {
           ownerRelation: {
             select: {
@@ -349,7 +384,8 @@ export const getAdsByOwner = async (req: Request, res: Response) => {
           ...ad,
           owner: ad.ownerRelation
             ? {
-                fullName: `${ad.ownerRelation.name || ""} ${ad.ownerRelation.lastName || ""}`.trim(),
+                fullName:
+                  `${ad.ownerRelation.name || ""} ${ad.ownerRelation.lastName || ""}`.trim(),
                 phoneNumber: ad.ownerRelation.phone,
               }
             : null,
@@ -362,7 +398,7 @@ export const getAdsByOwner = async (req: Request, res: Response) => {
             ladders: enhancement.ladders,
           },
         };
-      })
+      }),
     );
 
     res.status(200).json({
@@ -413,14 +449,15 @@ export const getEmployerAdByOwnerAndId = async (
     });
 
     if (!ad) return res.status(404).json({ message: "آگهی یافت نشد" });
-    
+
     const enhancement = await getAdEnhancement(ad.id, AdType.EmployerAd);
-    
+
     const formattedAd = {
       ...(ad as any),
       owner: (ad as any).ownerRelation
         ? {
-            fullName: `${(ad as any).ownerRelation.name || ""} ${(ad as any).ownerRelation.lastName || ""}`.trim(),
+            fullName:
+              `${(ad as any).ownerRelation.name || ""} ${(ad as any).ownerRelation.lastName || ""}`.trim(),
             phoneNumber: (ad as any).ownerRelation.phone,
           }
         : null,
@@ -534,38 +571,24 @@ export const updateEmployerAd = async (req: Request, res: Response) => {
     };
 
     // ─── اعتبارسنجی و تصحیح فیلدهای Enum ───
-    // person: فقط "self" یا "other" – پیش‌فرض "self"
     const validPerson = ["self", "other"];
-    if (updateData.person) {
-      if (!validPerson.includes(updateData.person)) {
-        updateData.person = "self";
-        console.warn(`⚠️ person مقدار نامعتبر داشت، به "self" تغییر یافت`);
-      }
-    } else {
+    if (updateData.person && !validPerson.includes(updateData.person)) {
       updateData.person = "self";
     }
 
-    // adPaymentMethod: فقط "Subscription", "Wallet", "Bank_card" – پیش‌فرض "Subscription"
     const validPayment = ["Subscription", "Wallet", "Bank_card"];
     if (updateData.adPaymentMethod) {
+      if (updateData.adPaymentMethod === "Bank card")
+        updateData.adPaymentMethod = "Bank_card";
       if (!validPayment.includes(updateData.adPaymentMethod)) {
-        updateData.adPaymentMethod = "Subscription";
-        console.warn(
-          `⚠️ adPaymentMethod مقدار نامعتبر داشت، به "Subscription" تغییر یافت`,
-        );
+        updateData.adPaymentMethod = "Bank_card";
       }
     } else {
-      updateData.adPaymentMethod = "Subscription";
+      updateData.adPaymentMethod = "Bank_card";
     }
 
-    // adStatus: فقط "pending", "approved", "rejected", "expired" – پیش‌فرض "pending"
     const validStatus = ["pending", "approved", "rejected", "expired"];
-    if (updateData.adStatus) {
-      if (!validStatus.includes(updateData.adStatus)) {
-        updateData.adStatus = "pending";
-        console.warn(`⚠️ adStatus مقدار نامعتبر داشت، به "pending" تغییر یافت`);
-      }
-    } else {
+    if (updateData.adStatus && !validStatus.includes(updateData.adStatus)) {
       updateData.adStatus = "pending";
     }
 
@@ -651,7 +674,7 @@ async function getAdEnhancement(adId: string, adType: AdType) {
     where: { adId, adType },
     include: {
       ladders: {
-        orderBy: { scheduledAt: 'asc' },
+        orderBy: { scheduledAt: "asc" },
       },
     },
   });
@@ -667,7 +690,8 @@ async function getAdEnhancement(adId: string, adType: AdType) {
   }
 
   const now = new Date();
-  const isSpecialActive = enhancement.isSpecial &&
+  const isSpecialActive =
+    enhancement.isSpecial &&
     enhancement.specialStartDate &&
     enhancement.specialEndDate &&
     enhancement.specialStartDate <= now &&

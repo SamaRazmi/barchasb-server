@@ -65,64 +65,122 @@ const toStr = (value: string | string[] | undefined): string => {
 // ==========================================
 export const createJobSeekerAd = async (req: Request, res: Response) => {
   console.log("\n🚀 createJobSeekerAd START");
+  console.log("Content-Type:", req.headers["content-type"]);
   console.log("Body received:", req.body);
   console.log("Files received:", (req as any).files);
 
   try {
-    const updateData: any = { ...req.body };
+    const updateData: any = {};
+    const isMultipart = req.headers["content-type"]?.includes(
+      "multipart/form-data",
+    );
 
-    // ─── پردازش عکس‌ها (همیشه آرایه) ───
-    let uploadedImages = (req as any).files?.images || [];
-    if (uploadedImages.length > 0) {
-      uploadedImages = transformFileUrls(uploadedImages);
+    if (isMultipart) {
+      // ========== پردازش FormData ==========
+      updateData.name = req.body.name || "";
+      updateData.age = req.body.age || "";
+      updateData.gender = req.body.gender || "";
+      updateData.maritalStatus = req.body.maritalStatus || "";
+      updateData.militaryStatus = req.body.militaryStatus || "";
+      updateData.phoneNumber = req.body.phoneNumber || "";
+      updateData.state = req.body.state || "";
+      updateData.city = req.body.city || "";
+      updateData.category = req.body.category || "";
+      updateData.education = req.body.education || "";
+      updateData.suggestedSalaryIRT = req.body.suggestedSalaryIRT || "";
+      updateData.aboutMe = req.body.aboutMe || "";
+      updateData.instagram = req.body.instagram || "";
+      updateData.linkedIn = req.body.linkedIn || "";
+      updateData.gitHub = req.body.gitHub || "";
+      updateData.userDesc = req.body.userDesc || "";
+      updateData.person = req.body.person || "self";
+
+      // تصحیح paymentMethod
+      let payment = req.body.paymentMethod || "Bank_card";
+      if (payment === "Bank card") payment = "Bank_card";
+      updateData.paymentMethod = payment;
+
+      // تبدیل بولی
+      const toBool = (v: any) => v === "true" || v === true;
+      updateData.isVerified = toBool(req.body.isVerified);
+      updateData.enableChat = toBool(req.body.enableChat);
+      updateData.enablePhone = toBool(req.body.enablePhone);
+
+      // ─── پردازش skills ───
+      let skills = req.body.skills || [];
+      if (typeof skills === "string") {
+        skills = skills
+          .split(",")
+          .map((s: string) => s.trim())
+          .filter(Boolean);
+      }
+      if (!Array.isArray(skills)) skills = [];
+      updateData.skills = skills;
+
+      // ─── پردازش careerHistory ───
+      let careerHistory = req.body.careerHistory || [];
+      if (typeof careerHistory === "string") {
+        try {
+          careerHistory = JSON.parse(careerHistory);
+        } catch {
+          careerHistory = [];
+        }
+      }
+      if (!Array.isArray(careerHistory)) careerHistory = [];
+      updateData.careerHistory = careerHistory;
+
+      // ─── پردازش images ───
+      let uploadedImages = (req as any).files?.images || [];
+      if (uploadedImages.length > 0) {
+        uploadedImages = transformFileUrls(uploadedImages);
+      }
+      const images = uploadedImages.map((file: any, i: number) => ({
+        url: file.location || file.path || "",
+        isMain: i === 0,
+      }));
+      updateData.images = images;
+
+      // ─── پردازش resumeFile و workSampleFile (اگر از فیلدهای دیگر بیایند) ───
+      // این فایل‌ها معمولاً از طریق آپلود جداگانه ارسال می‌شوند، اما اگر در req.body باشند
+      // آنها را به روز می‌کنیم (اما معمولاً در روت جداگانه هستند)
+      if (req.body.resumeFile) updateData.resumeFile = req.body.resumeFile;
+      if (req.body.workSampleFile)
+        updateData.workSampleFile = req.body.workSampleFile;
+    } else {
+      // ========== پردازش JSON ==========
+      Object.assign(updateData, req.body || {});
+
+      // تصحیح paymentMethod
+      if (updateData.paymentMethod === "Bank card") {
+        updateData.paymentMethod = "Bank_card";
+      }
+      if (!updateData.paymentMethod) {
+        updateData.paymentMethod = "Bank_card";
+      }
+      if (!updateData.images) updateData.images = [];
+      if (!updateData.skills) updateData.skills = [];
+      if (!updateData.careerHistory) updateData.careerHistory = [];
     }
-    const images = uploadedImages.map((file: any, i: number) => ({
-      url: file.location || file.path || "",
-      isMain: i === 0,
-    }));
-    updateData.images = images;
 
-    console.log("Processed images:", images);
-
-    // ─── پردازش skills ───
-    let skills = req.body.skills || [];
-    if (typeof skills === "string") {
-      skills = skills
-        .split(",")
-        .map((s: string) => s.trim())
-        .filter(Boolean);
+    // ─── اعتبارسنجی فیلد name ───
+    if (!updateData.name) {
+      return res.status(400).json({ error: "فیلد name اجباری است" });
     }
-    if (!Array.isArray(skills)) skills = [];
-    updateData.skills = skills;
-
-    console.log("Final skills:", skills);
 
     // ─── اعتبارسنجی و تصحیح فیلدهای Enum ───
-    // person: فقط "self" یا "other" – پیش‌فرض "self"
     const validPerson = ["self", "other"];
-    if (updateData.person) {
-      if (!validPerson.includes(updateData.person)) {
-        updateData.person = "self";
-        console.warn(`⚠️ person مقدار نامعتبر داشت، به "self" تغییر یافت`);
-      }
-    } else {
+    if (updateData.person && !validPerson.includes(updateData.person)) {
       updateData.person = "self";
     }
 
-    // paymentMethod: فقط "Subscription", "Wallet", "Bank_card" – پیش‌فرض "Subscription"
     const validPayment = ["Subscription", "Wallet", "Bank_card"];
-    if (updateData.paymentMethod) {
-      if (!validPayment.includes(updateData.paymentMethod)) {
-        updateData.paymentMethod = "Subscription";
-        console.warn(
-          `⚠️ paymentMethod مقدار نامعتبر داشت، به "Subscription" تغییر یافت`,
-        );
-      }
-    } else {
-      updateData.paymentMethod = "Subscription";
+    if (
+      updateData.paymentMethod &&
+      !validPayment.includes(updateData.paymentMethod)
+    ) {
+      updateData.paymentMethod = "Bank_card";
     }
 
-    // adStatus: فقط "pending", "approved", "rejected", "expired" – پیش‌فرض "pending"
     const validStatus = [
       "pending",
       "approved",
@@ -130,22 +188,33 @@ export const createJobSeekerAd = async (req: Request, res: Response) => {
       "expired",
       "pending_payment",
     ];
-    if (updateData.adStatus) {
-      if (!validStatus.includes(updateData.adStatus)) {
-        updateData.adStatus = "pending";
-        console.warn(`⚠️ adStatus مقدار نامعتبر داشت، به "pending" تغییر یافت`);
-      }
-    } else {
+    if (updateData.adStatus && !validStatus.includes(updateData.adStatus)) {
       updateData.adStatus = "pending";
     }
 
-    // ─── فیلتر کردن داده‌ها (فقط فیلدهای مجاز) ───
+    // ─── فیلتر کردن داده‌ها ───
     const filteredData = filterAdData(updateData);
 
-    // ─── ساخت آگهی با owner ───
+    // ─── بررسی وجود owner ───
+    const ownerId = (req as any).user?.id || req.body.owner;
+    if (!ownerId) {
+      return res
+        .status(400)
+        .json({ error: "شناسه کاربر (owner) ارسال نشده است" });
+    }
+
+    const userExists = await prisma.user.findUnique({
+      where: { id: ownerId },
+      select: { id: true },
+    });
+    if (!userExists) {
+      return res.status(404).json({ error: "کاربر مورد نظر یافت نشد" });
+    }
+
+    // ─── ساخت آگهی ───
     const ad = await prisma.jobSeekerAd.create({
       data: {
-        owner: (req as any).user?.id || req.body.owner,
+        owner: ownerId,
         ...filteredData,
         adStatus: "pending_payment",
       },
@@ -155,11 +224,12 @@ export const createJobSeekerAd = async (req: Request, res: Response) => {
     res.status(201).json(ad);
   } catch (err: any) {
     console.error("❌ ERROR CREATING JOB SEEKER AD:", err);
-
-    if (err.code === "P2002" || err.name === "ValidationError") {
-      return res.status(400).json({ error: err.message });
+    if (err.code === "P2003") {
+      return res.status(400).json({ error: "کاربر نامعتبر یا وجود ندارد" });
     }
-
+    if (err.code === "P2002") {
+      return res.status(400).json({ error: "مقادیر تکراری ارسال شده است" });
+    }
     res.status(500).json({ error: "خطای سرور، لطفا دوباره تلاش کنید." });
   }
 };
@@ -250,7 +320,7 @@ export const getAllJobSeekerAds = async (req: Request, res: Response) => {
       prisma.jobSeekerAd.findMany({
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         include: {
           ownerRelation: {
             select: {
@@ -272,7 +342,8 @@ export const getAllJobSeekerAds = async (req: Request, res: Response) => {
           ...ad,
           owner: ad.ownerRelation
             ? {
-                fullName: `${ad.ownerRelation.name || ""} ${ad.ownerRelation.lastName || ""}`.trim(),
+                fullName:
+                  `${ad.ownerRelation.name || ""} ${ad.ownerRelation.lastName || ""}`.trim(),
                 phoneNumber: ad.ownerRelation.phone,
               }
             : null,
@@ -285,7 +356,7 @@ export const getAllJobSeekerAds = async (req: Request, res: Response) => {
             ladders: enhancement.ladders,
           },
         };
-      })
+      }),
     );
 
     res.json({
@@ -337,7 +408,8 @@ export const getJobSeekerAdById = async (req: Request, res: Response) => {
       ...(ad as any),
       owner: (ad as any).ownerRelation
         ? {
-            fullName: `${(ad as any).ownerRelation.name || ""} ${(ad as any).ownerRelation.lastName || ""}`.trim(),
+            fullName:
+              `${(ad as any).ownerRelation.name || ""} ${(ad as any).ownerRelation.lastName || ""}`.trim(),
             phoneNumber: (ad as any).ownerRelation.phone,
           }
         : null,
@@ -378,7 +450,7 @@ export const getAdsByOwner = async (req: Request, res: Response) => {
         where: { owner: ownerId },
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         include: {
           ownerRelation: {
             select: {
@@ -400,7 +472,8 @@ export const getAdsByOwner = async (req: Request, res: Response) => {
           ...ad,
           owner: ad.ownerRelation
             ? {
-                fullName: `${ad.ownerRelation.name || ""} ${ad.ownerRelation.lastName || ""}`.trim(),
+                fullName:
+                  `${ad.ownerRelation.name || ""} ${ad.ownerRelation.lastName || ""}`.trim(),
                 phoneNumber: ad.ownerRelation.phone,
               }
             : null,
@@ -413,7 +486,7 @@ export const getAdsByOwner = async (req: Request, res: Response) => {
             ladders: enhancement.ladders,
           },
         };
-      })
+      }),
     );
 
     res.status(200).json({
@@ -471,7 +544,8 @@ export const getJobSeekerAdByOwnerAndId = async (
       ...(ad as any),
       owner: (ad as any).ownerRelation
         ? {
-            fullName: `${(ad as any).ownerRelation.name || ""} ${(ad as any).ownerRelation.lastName || ""}`.trim(),
+            fullName:
+              `${(ad as any).ownerRelation.name || ""} ${(ad as any).ownerRelation.lastName || ""}`.trim(),
             phoneNumber: (ad as any).ownerRelation.phone,
           }
         : null,
@@ -556,34 +630,23 @@ export const updateJobSeekerAd = async (req: Request, res: Response) => {
 
     // ─── اعتبارسنجی Enum ───
     const validPerson = ["self", "other"];
-    if (updateData.person) {
-      if (!validPerson.includes(updateData.person)) {
-        updateData.person = "self";
-        console.warn(`⚠️ person مقدار نامعتبر داشت، به "self" تغییر یافت`);
-      }
-    } else {
+    if (updateData.person && !validPerson.includes(updateData.person)) {
       updateData.person = "self";
     }
 
     const validPayment = ["Subscription", "Wallet", "Bank_card"];
     if (updateData.paymentMethod) {
+      if (updateData.paymentMethod === "Bank card")
+        updateData.paymentMethod = "Bank_card";
       if (!validPayment.includes(updateData.paymentMethod)) {
-        updateData.paymentMethod = "Subscription";
-        console.warn(
-          `⚠️ paymentMethod مقدار نامعتبر داشت، به "Subscription" تغییر یافت`,
-        );
+        updateData.paymentMethod = "Bank_card";
       }
     } else {
-      updateData.paymentMethod = "Subscription";
+      updateData.paymentMethod = "Bank_card";
     }
 
     const validStatus = ["pending", "approved", "rejected", "expired"];
-    if (updateData.adStatus) {
-      if (!validStatus.includes(updateData.adStatus)) {
-        updateData.adStatus = "pending";
-        console.warn(`⚠️ adStatus مقدار نامعتبر داشت، به "pending" تغییر یافت`);
-      }
-    } else {
+    if (updateData.adStatus && !validStatus.includes(updateData.adStatus)) {
       updateData.adStatus = "pending";
     }
 
@@ -683,7 +746,7 @@ async function getAdEnhancement(adId: string, adType: AdType) {
     where: { adId, adType },
     include: {
       ladders: {
-        orderBy: { scheduledAt: 'asc' },
+        orderBy: { scheduledAt: "asc" },
       },
     },
   });
@@ -699,7 +762,8 @@ async function getAdEnhancement(adId: string, adType: AdType) {
   }
 
   const now = new Date();
-  const isSpecialActive = enhancement.isSpecial &&
+  const isSpecialActive =
+    enhancement.isSpecial &&
     enhancement.specialStartDate &&
     enhancement.specialEndDate &&
     enhancement.specialStartDate <= now &&

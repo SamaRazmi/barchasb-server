@@ -11,8 +11,8 @@ import prisma from "./config/prisma";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import hpp from "hpp";
-// @ts-ignore 
-import xss from "xss"; 
+// @ts-ignore
+import xss from "xss";
 import vipRoutes from "./routes/VipRoutes";
 
 // Middlewares
@@ -133,7 +133,7 @@ app.use(cors(corsOptions));
 // 3. Rate Limiting: جلوگیری از حملات Brute Force و DoS
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // ۱۵ دقیقه
-  max: 100, // حداکثر ۱۰۰ درخواست از هر IP در بازه زمانی
+  max: 1000, // حداکثر ۱۰۰ درخواست از هر IP در بازه زمانی
   message: {
     success: false,
     message:
