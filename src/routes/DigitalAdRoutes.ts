@@ -132,7 +132,7 @@ router.post(
  *                       type: integer
  *       500:
  *         description: خطای سرور
- */ 
+ */
 router.get("/ads/digital", DigitalAdCtrl.getAllDigitalAds);
 
 /**

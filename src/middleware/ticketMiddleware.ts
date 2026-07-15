@@ -1,48 +1,74 @@
-import Ticket from "../models/Ticket";
+import prisma from "../config/prisma";
+import { TicketStatus } from "@prisma/client";
 
-// Middleware برای save (ایجاد و آپدیت)
-Ticket.schema.pre("save", function (next) {
-  // بروزرسانی updatedAt
-  this.updatedAt = new Date().toLocaleDateString("fa-IR", {
-    hour: "2-digit",
-    minute: "2-digit",
+/**
+ * تاریخچه وضعیت تیکت را به‌روز می‌کند.
+ * این تابع جایگزین middlewareهای Mongoose است.
+ */
+export async function updateTicketWithHistory(
+  ticketId: string,
+  newStatus: TicketStatus,
+) {
+  // ۱. دریافت تیکت فعلی
+  const currentTicket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
   });
 
-  // اضافه کردن رکورد جدید به statusHistory اگر status تغییر کرده باشد
-  if (this.isModified("status")) {
-    this.statusHistory.push({
-      status: this.status,
-      changedAt: this.updatedAt,
+  if (!currentTicket) {
+    throw new Error("Ticket not found");
+  }
+
+  // ۲. اگر وضعیت تغییری نکرده، فقط updatedAt را به‌روز می‌کنیم
+  if (currentTicket.status === newStatus) {
+    return prisma.ticket.update({
+      where: { id: ticketId },
+      data: {
+        updatedAt: new Date().toISOString(),
+      },
     });
   }
 
-  next();
-});
+  // ۳. اگر وضعیت تغییر کرده، تاریخچه را به‌روز می‌کنیم
+  const now = new Date().toISOString();
+  const newHistoryEntry = {
+    status: newStatus,
+    changedAt: now,
+  };
 
-// Middleware برای findOneAndUpdate (آپدیت مستقیم)
-Ticket.schema.pre("findOneAndUpdate", async function (next) {
-  const update = this.getUpdate();
-  if (!update) return next();
+  // ۴. ترکیب تاریخچه قبلی با جدید
+  const updatedHistory = [
+    ...((currentTicket.statusHistory as any[]) || []),
+    newHistoryEntry,
+  ];
 
-  // آپدیت updatedAt
-  update.updatedAt = new Date().toLocaleDateString("fa-IR", {
-    hour: "2-digit",
-    minute: "2-digit",
+  // ۵. به‌روزرسانی نهایی
+  return prisma.ticket.update({
+    where: { id: ticketId },
+    data: {
+      status: newStatus,
+      statusHistory: updatedHistory,
+      updatedAt: now,
+    },
   });
+}
 
-  // اضافه کردن تاریخچه وضعیت اگر status تغییر کرده باشد
-  if (update.status) {
-    const doc = await this.model.findOne(this.getQuery());
-    if (doc.status !== update.status) {
-      update.$push = {
-        ...(update.$push || {}),
-        statusHistory: {
-          status: update.status,
-          changedAt: update.updatedAt,
+/**
+ * ایجاد تیکت جدید با تاریخچه اولیه
+ */
+export async function createTicketWithHistory(data: any) {
+  const now = new Date().toISOString();
+
+  return prisma.ticket.create({
+    data: {
+      ...data,
+      statusHistory: [
+        {
+          status: data.status || "open",
+          changedAt: now,
         },
-      };
-    }
-  }
-
-  next();
-});
+      ],
+      createdAt: now,
+      updatedAt: now,
+    },
+  });
+}

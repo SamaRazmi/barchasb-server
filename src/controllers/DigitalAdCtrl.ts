@@ -48,113 +48,144 @@ function filterAdData(data: any): any {
 // ==========================================
 export const createDigitalAd = async (req: Request, res: Response) => {
   console.log("\n🚀 createDigitalAd START");
+  console.log("Content-Type:", req.headers["content-type"]);
   console.log("Body received:", req.body);
   console.log("Files received:", (req as any).files);
 
   try {
-    const updateData: any = { ...req.body };
+    const updateData: any = {};
 
-    // ─── پردازش images (همیشه آرایه) ───
-    let uploadedFiles = (req as any).files || [];
-    if (uploadedFiles.length > 0) {
-      uploadedFiles = transformFileUrls(uploadedFiles);
-    }
-    const images = uploadedFiles.map((file: any, i: number) => ({
-      url: file.location || file.path || "",
-      isMain: i === 0,
-    }));
-    updateData.images = images;
+    // تشخیص نوع درخواست (JSON یا multipart/form-data)
+    const isMultipart = req.headers["content-type"]?.includes(
+      "multipart/form-data",
+    );
 
-    // ─── پردازش requiredSkills ───
-    let requiredSkills = req.body.requiredSkills || [];
-    if (typeof requiredSkills === "string") {
+    if (isMultipart) {
+      // ========== پردازش FormData ==========
+      updateData.title = req.body.title || "";
+      updateData.description = req.body.description || "";
+      updateData.digitalTotalDesc = req.body.digitalTotalDesc || "";
+      updateData.minBudget = req.body.minBudget || "";
+      updateData.maxBudget = req.body.maxBudget || "";
+      updateData.person = req.body.person || "self";
+      updateData.paymentMethod = req.body.paymentMethod || "Bank_card"; // ✅ پیش‌فرض صحیح
+      updateData.requestType = req.body.requestType || "";
+      updateData.durationUnit = req.body.durationUnit || "";
+      updateData.durationAmount = req.body.durationAmount || "";
+      updateData.verifyCode = req.body.verifyCode || "";
+
+      updateData.remote =
+        req.body.remote === "true" || req.body.remote === true;
+      updateData.thursdayHalf =
+        req.body.thursdayHalf === "true" || req.body.thursdayHalf === true;
+
       try {
-        requiredSkills = JSON.parse(requiredSkills);
-        if (!Array.isArray(requiredSkills)) requiredSkills = [];
+        updateData.requiredSkills = req.body.requiredSkills
+          ? JSON.parse(req.body.requiredSkills)
+          : [];
+        if (!Array.isArray(updateData.requiredSkills))
+          updateData.requiredSkills = [];
       } catch {
-        requiredSkills = [];
+        updateData.requiredSkills = [];
       }
-    }
-    if (!Array.isArray(requiredSkills)) requiredSkills = [];
-    updateData.requiredSkills = requiredSkills;
 
-    // ─── پردازش projectNames و projectDescriptions ───
-    let projectNames = req.body.projectNames || [];
-    if (typeof projectNames === "string") {
       try {
-        projectNames = JSON.parse(projectNames);
-        if (!Array.isArray(projectNames)) projectNames = [];
+        updateData.projectNames = req.body.projectNames
+          ? JSON.parse(req.body.projectNames)
+          : [];
+        if (!Array.isArray(updateData.projectNames))
+          updateData.projectNames = [];
       } catch {
-        projectNames = [];
+        updateData.projectNames = [];
       }
-    }
-    if (!Array.isArray(projectNames)) projectNames = [];
-    updateData.projectNames = projectNames;
 
-    let projectDescriptions = req.body.projectDescriptions || [];
-    if (typeof projectDescriptions === "string") {
       try {
-        projectDescriptions = JSON.parse(projectDescriptions);
-        if (!Array.isArray(projectDescriptions)) projectDescriptions = [];
+        updateData.projectDescriptions = req.body.projectDescriptions
+          ? JSON.parse(req.body.projectDescriptions)
+          : [];
+        if (!Array.isArray(updateData.projectDescriptions))
+          updateData.projectDescriptions = [];
       } catch {
-        projectDescriptions = [];
+        updateData.projectDescriptions = [];
+      }
+
+      // ─── پردازش images ───
+      let uploadedFiles = (req as any).files || [];
+      if (uploadedFiles.length > 0) {
+        uploadedFiles = transformFileUrls(uploadedFiles);
+      }
+      const images = uploadedFiles.map((file: any, i: number) => ({
+        url: file.location || file.path || "",
+        isMain: i === 0,
+      }));
+      updateData.images = images;
+    } else {
+      // ========== پردازش JSON ==========
+      const body = req.body || {};
+      Object.assign(updateData, body);
+
+      // ✅ مقدار پیش‌فرض برای فیلدهای اجباری
+      if (!updateData.title) {
+        updateData.title = "عنوان پیش‌فرض";
+      }
+      if (!updateData.description) {
+        updateData.description = "توضیحی وارد نشده است";
+      }
+      if (!updateData.images) {
+        updateData.images = [];
       }
     }
-    if (!Array.isArray(projectDescriptions)) projectDescriptions = [];
-    updateData.projectDescriptions = projectDescriptions;
-
-    // ─── تبدیل فیلدهای بولی ───
-    const toBool = (v: any) => v === "true" || v === true;
-    const BOOLEAN_FIELDS = ["remote", "thursdayHalf"];
-    BOOLEAN_FIELDS.forEach((field) => {
-      if (req.body[field] !== undefined) {
-        updateData[field] = toBool(req.body[field]);
-      }
-    });
 
     // ─── اعتبارسنجی و تصحیح فیلدهای Enum ───
-    // person: فقط "self" یا "other" – پیش‌فرض "self"
+    // person
     const validPerson = ["self", "other"];
-    if (updateData.person) {
-      if (!validPerson.includes(updateData.person)) {
-        updateData.person = "self";
-        console.warn(`⚠️ person مقدار نامعتبر داشت، به "self" تغییر یافت`);
-      }
-    } else {
+    if (updateData.person && !validPerson.includes(updateData.person)) {
       updateData.person = "self";
     }
 
-    // paymentMethod: فقط "Subscription", "Wallet", "Bank_card" – پیش‌فرض "Subscription"
-    const validPayment = ["Subscription", "Wallet", "Bank_card"];
-    if (updateData.paymentMethod) {
-      if (!validPayment.includes(updateData.paymentMethod)) {
-        updateData.paymentMethod = "Subscription";
-        console.warn(
-          `⚠️ paymentMethod مقدار نامعتبر داشت، به "Subscription" تغییر یافت`,
-        );
-      }
-    } else {
-      updateData.paymentMethod = "Subscription";
+    // paymentMethod – تصحیح مقدار "Bank card" به "Bank_card"
+    let payment = updateData.paymentMethod;
+    if (payment === "Bank card") {
+      payment = "Bank_card";
     }
+    const validPayment = ["Subscription", "Wallet", "Bank_card"];
+    if (payment && !validPayment.includes(payment)) {
+      payment = "Bank_card"; // ✅ پیش‌فرض ایمن
+    }
+    updateData.paymentMethod = payment || "Bank_card";
 
-    // adStatus: فقط "pending", "approved", "rejected", "expired" – پیش‌فرض "pending"
+    // adStatus
     const validStatus = ["pending", "approved", "rejected", "expired"];
-    if (updateData.adStatus) {
-      if (!validStatus.includes(updateData.adStatus)) {
-        updateData.adStatus = "pending";
-        console.warn(`⚠️ adStatus مقدار نامعتبر داشت، به "pending" تغییر یافت`);
-      }
-    } else {
+    if (updateData.adStatus && !validStatus.includes(updateData.adStatus)) {
       updateData.adStatus = "pending";
     }
 
     // ─── فیلتر کردن داده‌ها ───
     const filteredData = filterAdData(updateData);
 
-    // ─── ساخت آگهی با owner ───
+    console.log("📦 Final data to save:", filteredData);
+
+    // ─── بررسی وجود owner ───
+    const ownerId = (req as any).user?.id || req.body.owner;
+    if (!ownerId) {
+      return res
+        .status(400)
+        .json({ error: "شناسه کاربر (owner) ارسال نشده است" });
+    }
+
+    // بررسی وجود کاربر در دیتابیس (برای جلوگیری از خطای Foreign Key)
+    const userExists = await prisma.user.findUnique({
+      where: { id: ownerId },
+      select: { id: true },
+    });
+    if (!userExists) {
+      return res.status(404).json({ error: "کاربر مورد نظر یافت نشد" });
+    }
+
+    // ─── ساخت آگهی ───
     const ad = await prisma.digitalAd.create({
       data: {
-        owner: (req as any).user?.id || req.body.owner,
+        owner: ownerId,
         ...filteredData,
         adStatus: "pending_payment",
       },
@@ -164,6 +195,10 @@ export const createDigitalAd = async (req: Request, res: Response) => {
     res.status(201).json(ad);
   } catch (err: any) {
     console.error("❌ ERROR CREATING DIGITAL AD:", err);
+    // اگر خطای Foreign Key بود، پیام واضح‌تری بده
+    if (err.code === "P2003") {
+      return res.status(400).json({ error: "کاربر نامعتبر یا وجود ندارد" });
+    }
     res.status(400).json({ error: err.message });
   }
 };
@@ -181,7 +216,7 @@ export const getAllDigitalAds = async (req: Request, res: Response) => {
       prisma.digitalAd.findMany({
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         include: {
           ownerRelation: {
             select: {
@@ -205,7 +240,8 @@ export const getAllDigitalAds = async (req: Request, res: Response) => {
           ...ad,
           owner: ad.ownerRelation
             ? {
-                fullName: `${ad.ownerRelation.name || ""} ${ad.ownerRelation.lastName || ""}`.trim(),
+                fullName:
+                  `${ad.ownerRelation.name || ""} ${ad.ownerRelation.lastName || ""}`.trim(),
                 phoneNumber: ad.ownerRelation.phone,
                 province: ad.ownerRelation.province,
                 city: ad.ownerRelation.city,
@@ -220,7 +256,7 @@ export const getAllDigitalAds = async (req: Request, res: Response) => {
             ladders: enhancement.ladders,
           },
         };
-      })
+      }),
     );
 
     res.json({
@@ -275,7 +311,8 @@ export const getDigitalAdById = async (req: Request, res: Response) => {
       ...(ad as any),
       owner: (ad as any).ownerRelation
         ? {
-            fullName: `${(ad as any).ownerRelation.name || ""} ${(ad as any).ownerRelation.lastName || ""}`.trim(),
+            fullName:
+              `${(ad as any).ownerRelation.name || ""} ${(ad as any).ownerRelation.lastName || ""}`.trim(),
             phoneNumber: (ad as any).ownerRelation.phone,
             province: (ad as any).ownerRelation.province,
             city: (ad as any).ownerRelation.city,
@@ -304,7 +341,7 @@ async function getAdEnhancement(adId: string, adType: AdType) {
     where: { adId, adType },
     include: {
       ladders: {
-        orderBy: { scheduledAt: 'asc' },
+        orderBy: { scheduledAt: "asc" },
       },
     },
   });
@@ -320,7 +357,8 @@ async function getAdEnhancement(adId: string, adType: AdType) {
   }
 
   const now = new Date();
-  const isSpecialActive = enhancement.isSpecial &&
+  const isSpecialActive =
+    enhancement.isSpecial &&
     enhancement.specialStartDate &&
     enhancement.specialEndDate &&
     enhancement.specialStartDate <= now &&

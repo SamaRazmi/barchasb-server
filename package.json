@@ -4,11 +4,9 @@
   "description": "Server for Barchasb project",
   "main": "server.js",
   "scripts": {
-    "start": "node dist/server.js",
-    "dev": "nodemon --exec tsx src/server.ts",
-    "prisma:generate": "prisma generate --schema=prisma/schema.prisma",
-    "prisma:push": "prisma db push --schema=prisma/schema.prisma",
-    "postinstall": "prisma generate --schema=prisma/schema.prisma"
+    "build": "npx prisma generate && tsc",
+    "start": "tsx src/server.ts",
+    "dev": "nodemon --exec tsx src/server.ts"
   },
   "prisma": {
     "schema": "prisma/schema.prisma",
@@ -17,15 +15,14 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.958.0",
     "@aws-sdk/lib-storage": "^3.958.0",
-    "@prisma/adapter-pg": "^7.8.0",
-    "@prisma/client": "^6.19.3",
+    "@prisma/adapter-pg": "^6.17.1",
+    "@prisma/client": "^6.17.1",
     "axios": "^1.16.1",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
     "body-parser": "^2.2.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "express-rate-limit": "^8.5.2",
     "helmet": "^8.2.0",
@@ -80,6 +77,7 @@
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
     "@types/xml2js": "^0.4.14",
+    "dotenv": "^17.4.2",
     "nodemon": "^3.1.14",
     "prisma": "^6.19.3",
     "regenerator-runtime": "^0.14.1",
