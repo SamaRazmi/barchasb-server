@@ -60,108 +60,138 @@ const toStr = (value: string | string[] | undefined): string => {
 // ==========================================
 export const createSellerAd = async (req: Request, res: Response) => {
   console.log("\n🚀 createSellerAd START");
+  console.log("Content-Type:", req.headers["content-type"]);
   console.log("Body received:", req.body);
   console.log("Files received:", (req as any).files);
 
   try {
-    const updateData: any = { ...req.body };
+    const updateData: any = {};
+    const isMultipart = req.headers["content-type"]?.includes(
+      "multipart/form-data",
+    );
 
-    // ─── پردازش images (همیشه آرایه) ───
-    let uploadedFiles = (req as any).files || [];
-    if (uploadedFiles.length > 0) {
-      uploadedFiles = transformFileUrls(uploadedFiles);
-    }
-    const mainIndex = Number(req.body.mainImageIndex || 0);
-    const images = uploadedFiles.map((file: any, i: number) => ({
-      url: file.location || file.path || "",
-      isMain: i === mainIndex,
-    }));
-    updateData.images = images;
+    if (isMultipart) {
+      // ========== پردازش FormData ==========
+      updateData.title = req.body.title || "";
+      updateData.description = req.body.description || "";
+      updateData.category = req.body.category || "";
+      updateData.state = req.body.state || "";
+      updateData.city = req.body.city || "";
+      updateData.application = req.body.application || "";
+      updateData.status = req.body.status || "";
+      updateData.person = req.body.person || "self";
 
-    // ─── پردازش extraFeatures ───
-    let extraFeatures = {};
-    if (req.body.extraFeatures) {
-      try {
-        extraFeatures =
-          typeof req.body.extraFeatures === "string"
-            ? JSON.parse(req.body.extraFeatures)
-            : req.body.extraFeatures;
-      } catch (err) {
-        console.warn("Invalid JSON in extraFeatures:", err);
-        extraFeatures = {};
+      // تصحیح paymentMethod
+      let payment = req.body.paymentMethod || "Bank_card";
+      if (payment === "Bank card") payment = "Bank_card";
+      updateData.paymentMethod = payment;
+
+      // تبدیل بولی
+      const toBool = (v: any) => v === "true" || v === true;
+      updateData.isFixedPrice = toBool(req.body.isFixedPrice);
+      updateData.isNegotiable = toBool(req.body.isNegotiable);
+      updateData.hasWarranty = toBool(req.body.hasWarranty);
+      updateData.isShippable = toBool(req.body.isShippable);
+      updateData.isVerified = toBool(req.body.isVerified);
+      updateData.enableChat = toBool(req.body.enableChat);
+      updateData.enablePhone = toBool(req.body.enablePhone);
+
+      // ─── پردازش images ───
+      let uploadedFiles = (req as any).files || [];
+      if (uploadedFiles.length > 0) {
+        uploadedFiles = transformFileUrls(uploadedFiles);
       }
-    }
-    updateData.extraFeatures = extraFeatures;
+      const mainIndex = Number(req.body.mainImageIndex || 0);
+      const images = uploadedFiles.map((file: any, i: number) => ({
+        url: file.location || file.path || "",
+        isMain: i === mainIndex,
+      }));
+      updateData.images = images;
 
-    // ─── تبدیل فیلدهای بولی ───
-    const toBool = (v: any) => v === "true" || v === true;
-    const BOOLEAN_FIELDS = [
-      "isFixedPrice",
-      "isNegotiable",
-      "hasWarranty",
-      "isShippable",
-      "isVerified",
-      "enableChat",
-      "enablePhone",
-    ];
-    BOOLEAN_FIELDS.forEach((field) => {
-      if (req.body[field] !== undefined) {
-        updateData[field] = toBool(req.body[field]);
+      // ─── پردازش extraFeatures ───
+      let extraFeatures = {};
+      if (req.body.extraFeatures) {
+        try {
+          extraFeatures =
+            typeof req.body.extraFeatures === "string"
+              ? JSON.parse(req.body.extraFeatures)
+              : req.body.extraFeatures;
+        } catch (err) {
+          console.warn("Invalid JSON in extraFeatures:", err);
+          extraFeatures = {};
+        }
       }
-    });
+      updateData.extraFeatures = extraFeatures;
 
-    // ─── پردازش priceIRT ───
-    if (req.body.priceIRT !== undefined) {
-      const priceStr = String(req.body.priceIRT).replace(/,/g, "");
-      updateData.priceIRT = parseInt(priceStr) || 0;
+      // ─── پردازش priceIRT ───
+      if (req.body.priceIRT) {
+        const priceStr = String(req.body.priceIRT).replace(/,/g, "");
+        updateData.priceIRT = parseInt(priceStr) || 0;
+      }
+    } else {
+      // ========== پردازش JSON ==========
+      Object.assign(updateData, req.body || {});
+
+      // تصحیح paymentMethod
+      if (updateData.paymentMethod === "Bank card") {
+        updateData.paymentMethod = "Bank_card";
+      }
+      if (!updateData.paymentMethod) {
+        updateData.paymentMethod = "Bank_card";
+      }
+      if (!updateData.images) updateData.images = [];
+      if (!updateData.extraFeatures) updateData.extraFeatures = {};
+    }
+
+    // ─── اعتبارسنجی فیلدهای اجباری ───
+    if (!updateData.title) {
+      return res.status(400).json({ error: "فیلد title اجباری است" });
     }
 
     // ─── اعتبارسنجی و تصحیح فیلدهای Enum ───
-    // person: فقط "self" یا "other"
     const validPerson = ["self", "other"];
-    if (updateData.person) {
-      if (!validPerson.includes(updateData.person)) {
-        updateData.person = "self";
-        console.warn(`⚠️ person مقدار نامعتبر داشت، به "self" تغییر یافت`);
-      }
-    } else {
+    if (updateData.person && !validPerson.includes(updateData.person)) {
       updateData.person = "self";
     }
 
-    // paymentMethod: فقط "Subscription", "Wallet", "Bank_card" — مقدار پیش‌فرض Subscription
     const validPayment = ["Subscription", "Wallet", "Bank_card"];
-    if (updateData.paymentMethod) {
-      if (!validPayment.includes(updateData.paymentMethod)) {
-        updateData.paymentMethod = "Subscription";
-        console.warn(
-          `⚠️ paymentMethod مقدار نامعتبر داشت، به "Subscription" تغییر یافت`,
-        );
-      }
-    } else {
-      updateData.paymentMethod = "Subscription";
+    if (
+      updateData.paymentMethod &&
+      !validPayment.includes(updateData.paymentMethod)
+    ) {
+      updateData.paymentMethod = "Bank_card";
     }
 
-    // adStatus: فقط "pending", "approved", "rejected", "expired"
     const validStatus = ["pending", "approved", "rejected", "expired"];
-    if (updateData.adStatus) {
-      if (!validStatus.includes(updateData.adStatus)) {
-        updateData.adStatus = "pending";
-        console.warn(`⚠️ adStatus مقدار نامعتبر داشت، به "pending" تغییر یافت`);
-      }
-    } else {
+    if (updateData.adStatus && !validStatus.includes(updateData.adStatus)) {
       updateData.adStatus = "pending";
     }
 
     // ─── فیلتر کردن داده‌ها ───
     const filteredData = filterAdData(updateData);
 
-    // ─── ساخت آگهی با owner ───
+    // ─── بررسی وجود owner ───
+    const ownerId = (req as any).user?.id || req.body.owner;
+    if (!ownerId) {
+      return res
+        .status(400)
+        .json({ error: "شناسه کاربر (owner) ارسال نشده است" });
+    }
+
+    const userExists = await prisma.user.findUnique({
+      where: { id: ownerId },
+      select: { id: true },
+    });
+    if (!userExists) {
+      return res.status(404).json({ error: "کاربر مورد نظر یافت نشد" });
+    }
+
+    // ─── ساخت آگهی ───
     const ad = await prisma.sellerAd.create({
       data: {
-        owner: (req as any).user?.id || req.body.owner,
+        owner: ownerId,
         ...filteredData,
         adStatus: "pending_payment",
-        paymentMethod: req.body.paymentMethod || "Bank_card",
       },
     });
 
@@ -169,6 +199,9 @@ export const createSellerAd = async (req: Request, res: Response) => {
     res.status(201).json({ message: "Seller ad saved successfully", ad });
   } catch (err: any) {
     console.error("❌ ERROR CREATING SELLER AD:", err);
+    if (err.code === "P2003") {
+      return res.status(400).json({ error: "کاربر نامعتبر یا وجود ندارد" });
+    }
     res
       .status(400)
       .json({ message: "Seller ad save failed", error: err.message });
@@ -188,7 +221,7 @@ export const getAllSellerAds = async (req: Request, res: Response) => {
       prisma.sellerAd.findMany({
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         include: {
           ownerRelation: {
             select: {
@@ -210,7 +243,8 @@ export const getAllSellerAds = async (req: Request, res: Response) => {
           ...ad,
           owner: ad.ownerRelation
             ? {
-                fullName: `${ad.ownerRelation.name || ""} ${ad.ownerRelation.lastName || ""}`.trim(),
+                fullName:
+                  `${ad.ownerRelation.name || ""} ${ad.ownerRelation.lastName || ""}`.trim(),
                 phoneNumber: ad.ownerRelation.phone,
               }
             : null,
@@ -223,7 +257,7 @@ export const getAllSellerAds = async (req: Request, res: Response) => {
             ladders: enhancement.ladders,
           },
         };
-      })
+      }),
     );
 
     res.json({
@@ -274,7 +308,8 @@ export const getSellerAdById = async (req: Request, res: Response) => {
       ...(ad as any),
       owner: (ad as any).ownerRelation
         ? {
-            fullName: `${(ad as any).ownerRelation.name || ""} ${(ad as any).ownerRelation.lastName || ""}`.trim(),
+            fullName:
+              `${(ad as any).ownerRelation.name || ""} ${(ad as any).ownerRelation.lastName || ""}`.trim(),
             phoneNumber: (ad as any).ownerRelation.phone,
           }
         : null,
@@ -314,7 +349,7 @@ export const getAdsByOwner = async (req: Request, res: Response) => {
         where: { owner: ownerId },
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         include: {
           ownerRelation: {
             select: {
@@ -336,7 +371,8 @@ export const getAdsByOwner = async (req: Request, res: Response) => {
           ...ad,
           owner: ad.ownerRelation
             ? {
-                fullName: `${ad.ownerRelation.name || ""} ${ad.ownerRelation.lastName || ""}`.trim(),
+                fullName:
+                  `${ad.ownerRelation.name || ""} ${ad.ownerRelation.lastName || ""}`.trim(),
                 phoneNumber: ad.ownerRelation.phone,
               }
             : null,
@@ -349,7 +385,7 @@ export const getAdsByOwner = async (req: Request, res: Response) => {
             ladders: enhancement.ladders,
           },
         };
-      })
+      }),
     );
 
     res.status(200).json({
@@ -404,7 +440,8 @@ export const getSellerAdByOwnerAndId = async (req: Request, res: Response) => {
       ...(ad as any),
       owner: (ad as any).ownerRelation
         ? {
-            fullName: `${(ad as any).ownerRelation.name || ""} ${(ad as any).ownerRelation.lastName || ""}`.trim(),
+            fullName:
+              `${(ad as any).ownerRelation.name || ""} ${(ad as any).ownerRelation.lastName || ""}`.trim(),
             phoneNumber: (ad as any).ownerRelation.phone,
           }
         : null,
@@ -523,13 +560,14 @@ export const updateSellerAd = async (req: Request, res: Response) => {
     }
 
     const validPayment = ["Subscription", "Wallet", "Bank_card"];
-    if (
-      updateData.paymentMethod &&
-      !validPayment.includes(updateData.paymentMethod)
-    ) {
-      updateData.paymentMethod = "Subscription";
-    } else if (!updateData.paymentMethod) {
-      updateData.paymentMethod = "Subscription";
+    if (updateData.paymentMethod) {
+      if (updateData.paymentMethod === "Bank card")
+        updateData.paymentMethod = "Bank_card";
+      if (!validPayment.includes(updateData.paymentMethod)) {
+        updateData.paymentMethod = "Bank_card";
+      }
+    } else {
+      updateData.paymentMethod = "Bank_card";
     }
 
     const validStatus = ["pending", "approved", "rejected", "expired"];
@@ -628,7 +666,7 @@ async function getAdEnhancement(adId: string, adType: AdType) {
     where: { adId, adType },
     include: {
       ladders: {
-        orderBy: { scheduledAt: 'asc' },
+        orderBy: { scheduledAt: "asc" },
       },
     },
   });
@@ -644,7 +682,8 @@ async function getAdEnhancement(adId: string, adType: AdType) {
   }
 
   const now = new Date();
-  const isSpecialActive = enhancement.isSpecial &&
+  const isSpecialActive =
+    enhancement.isSpecial &&
     enhancement.specialStartDate &&
     enhancement.specialEndDate &&
     enhancement.specialStartDate <= now &&

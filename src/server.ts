@@ -11,8 +11,8 @@ import prisma from "./config/prisma";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import hpp from "hpp";
-// @ts-ignore 
-import xss from "xss"; 
+// @ts-ignore
+import xss from "xss";
 import vipRoutes from "./routes/VipRoutes";
 
 // Middlewares
@@ -35,7 +35,7 @@ import SellerAdRoutes from "./routes/SellerAdRoutes";
 import JobSeekerAdRoutes from "./routes/JobSeekerAdRoutes";
 import DigitalAdRoutes from "./routes/DigitalAdRoutes";
 import AdMarkRoutes from "./routes/AdMarkRoutes";
-import userProfileRoutes from "./routes/UserProfileRoutes";
+import userProfileRoutes from "./routes/UploadFileRoutes";
 import UploadFileRoutes from "./routes/UploadFileRoutes";
 import ChatRoutes from "./routes/ChatRoutes";
 import StatsRoutes from "./routes/StatsRoutes";
@@ -56,16 +56,16 @@ import paymentRoutes from "./routes/PaymentRoutes";
 // import SubAdmin from "./routes/admin/authentication/sub-admin";
 // import SubAdminRoutes from "./routes/admin/auth/sub-admin";
 // import SuperAdminRoutes from "./routes/admin/auth/super-admin";
-import PublicAdCategoriesRoutes from "./routes/admin/public/ad-categories";
+// import PublicAdCategoriesRoutes from "./routes/admin/public/ad-categories"; // ✅ کامنت شد
 // import AdminLoginRoutes from "./routes/admin/auth/login";
 
-import adminAuthRoutes from './Admin/routes/AuthRoutes';
-import adminManagementRoutes from './Admin/routes/AdminManagementRoutes'
+import adminAuthRoutes from "./Admin/routes/AuthRoutes";
+import adminManagementRoutes from "./Admin/routes/AdminManagementRoutes";
 
 import SuggestionRoutes from "./routes/SuggestionRoutes";
 
 // ===== اضافه شده: مسیرهای مدیریت گزارش توسط ادمین =====
-import adminReportRoutes from "./routes/admin/adminReportRoutes";
+// import adminReportRoutes from "./routes/admin/adminReportRoutes"; // ✅ کامنت شد
 
 import cron from "node-cron";
 import { cleanExpiredAds } from "./jobs/cleanExpiredAds";
@@ -84,6 +84,7 @@ interface SocketMessage {
 }
 
 const app: Application = express();
+app.set('trust proxy', true);
 const server = http.createServer(app);
 
 const io = new Server(server, {
@@ -107,7 +108,7 @@ const allowedOrigins = [
   "https://barchasb.org",
   "https://www.barchasb.org",
   "http://localhost:5000",
-  "https://barchasb-server.liara.run",
+  "https://barchasb-apis.liara.run",
   "https://barchasb-main-server.ir",
   "https://www.barchasb-main-server.ir",
 ];
@@ -137,7 +138,7 @@ app.use(cors(corsOptions));
 // 3. Rate Limiting: جلوگیری از حملات Brute Force و DoS
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // ۱۵ دقیقه
-  max: 100, // حداکثر ۱۰۰ درخواست از هر IP در بازه زمانی
+  max: 1000, // حداکثر ۱۰۰ درخواست از هر IP در بازه زمانی
   message: {
     success: false,
     message:
@@ -190,6 +191,13 @@ app.use(
 );
 app.use(cookieParser());
 
+// ====================================================
+// ========== ROUTE TEST (برای عیب‌یابی) ==============
+// ====================================================
+app.get("/test", (req: Request, res: Response) => {
+  res.send("✅ Server is alive!");
+});
+
 /* =====================================================
    ================== SWAGGER SETUP ====================
    ===================================================== */
@@ -214,14 +222,18 @@ const swaggerOptions = {
     },
     security: [{ BearerAuth: [] }],
   },
-  apis: ["./src/routes/**/*.ts", "./src/routes/**/*.js", "./src/Admin/routes/**/*.ts"],
+  apis: [
+    "./src/routes/**/*.ts",
+    "./src/routes/**/*.js",
+    "./src/Admin/routes/**/*.ts",
+  ],
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
-fs.writeFileSync(
-  join(__dirname, "../openapi.json"),
-  JSON.stringify(swaggerSpec, null, 2),
-);
+// fs.writeFileSync(
+//   join(__dirname, "../openapi.json"),
+//   JSON.stringify(swaggerSpec, null, 2),
+// );
 
 const swaggerUiOptions = {
   swaggerOptions: {
@@ -286,16 +298,16 @@ app.use("/api/user", UserExtensionsRoutes);
 app.use("/api/admin/extension", AdminExtensionsRoutes);
 
 // admin route
-app.use('/api/admin/auth', adminAuthRoutes)
-app.use('/api/admin', adminManagementRoutes)
+app.use("/api/admin/auth", adminAuthRoutes);
+app.use("/api/admin", adminManagementRoutes);
 // app.use("/auth", SubAdminRoutes);
 // app.use("/auth", SuperAdminRoutes);
 // app.use("/", AdminLoginRoutes);
-// app.use("/public/ad-categories", PublicAdCategoriesRoutes);
+// app.use("/public/ad-categories", PublicAdCategoriesRoutes); // ✅ کامنت شد
 // app.use('/auth', SubAdmin)
 
 // ===== اضافه شده: مسیرهای مدیریت گزارش توسط ادمین =====
-// app.use("/api/admin", adminReportRoutes);
+// app.use("/api/admin", adminReportRoutes); // ✅ کامنت شد
 
 /* =====================================================
    =============== GLOBAL ERROR HANDLING ===============
@@ -445,7 +457,7 @@ io.on("connection", (socket: CustomSocket) => {
 /* =====================================================
    ================ DATABASE & LIFECYCLE ===============
    ===================================================== */
-const port = process.env.PORT || 5000;
+const port = Number(process.env.PORT) || 5000;
 
 cron.schedule("0 3 * * *", async () => {
   console.log("⏰ اجرای کرون جاب پاکسازی آگهی‌های منقضی...");
@@ -473,10 +485,11 @@ async function startServer() {
       console.log("⏩ Data seeding skipped (ENABLE_DATA_SEEDING is not true)");
     }
 
-    server.listen(port, () => {
+    server.listen(port, "0.0.0.0", () => {
       console.log(`🚀 Server is running on http://localhost:${port}`);
       console.log(`📄 Swagger docs: http://localhost:${port}/api-docs`);
     });
+    console.log("✅ Server listen called, waiting for connections...");
   } catch (err: unknown) {
     console.error(
       "❌ Failed to connect to PostgreSQL:",

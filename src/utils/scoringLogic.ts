@@ -788,12 +788,14 @@ const ScoringLogic = {
       };
     }
 
+    // محاسبه مجموع امتیازات به روشی که TypeScript خطا ندهد
+    const scoresArray = Object.values(finalResults).map(
+      (item: any) => Number(item.score) || 0,
+    );
+    const totalScore = scoresArray.reduce((acc, val) => acc + val, 0) / 5;
+
     return {
-      totalScore:
-        Object.values(finalResults).reduce(
-          (acc: number, curr: any) => acc + curr.score,
-          0,
-        ) / 5,
+      totalScore: totalScore,
       levelResults: finalResults,
       questions: processedQuestions,
     };
