@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "build": "npx prisma generate && tsc",
-    "start": "node dist/server.js"
+    "start": "tsx src/server.ts",
+    "dev": "nodemon --exec tsx src/server.ts"
   },
   "prisma": {
     "schema": "prisma/schema.prisma",

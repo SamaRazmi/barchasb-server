@@ -1,5 +1,7 @@
+// src/controllers/StatsController.ts
 import { Request, Response } from "express";
 import prisma from "../config/prisma";
+import jwt from "jsonwebtoken";
 
 // ====== توابع کمکی ======
 const getAdModel = (adType: string) => {
@@ -22,11 +24,7 @@ const verifyToken = (req: Request) => {
   if (!authHeader) throw new Error("No token provided");
   const token = authHeader.split(" ")[1];
   if (!token) throw new Error("Invalid token format");
-  // در Prisma از id استفاده می‌کنیم، بنابراین decoded را به صورت any گرفته و id را برمی‌گردانیم
-  const decoded = require("jsonwebtoken").verify(
-    token,
-    process.env.JWT_SECRET as string,
-  );
+  const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
   return (decoded as any).id || (decoded as any).userId;
 };
 
@@ -66,11 +64,15 @@ export const getUserViewStats = async (req: Request, res: Response) => {
     const userId = verifyToken(req);
     const { period = "weekly", adType } = req.query;
 
+    // ✅ تبدیل مطمئن به string
+    const adTypeStr = String(adType || "");
+    const periodStr = String(period || "weekly");
+
     let startDate = new Date();
     const endDate = new Date();
     endDate.setHours(23, 59, 59, 999);
 
-    if (period === "monthly") {
+    if (periodStr === "monthly") {
       startDate.setMonth(startDate.getMonth() - 1);
       startDate.setDate(1);
       startDate.setHours(0, 0, 0, 0);
@@ -83,15 +85,16 @@ export const getUserViewStats = async (req: Request, res: Response) => {
       ownerId: userId,
       viewedAt: { gte: startDate, lte: endDate },
     };
-    if (adType && adType !== "all") whereClause.adType = adType as string;
+    if (adTypeStr && adTypeStr !== "all") {
+      whereClause.adType = adTypeStr; // ✅ اینجا adTypeStr از نوع string است
+    }
 
     const views = await prisma.adView.findMany({
       where: whereClause,
       select: { viewedAt: true, adType: true },
     });
 
-    // گروه‌بندی دستی در جاوااسکریپت
-    if (period === "weekly") {
+    if (periodStr === "weekly") {
       const dayNameMap: Record<number, string> = {
         7: "شنبه",
         1: "یکشنبه",
@@ -150,18 +153,22 @@ export const getUserViewStats = async (req: Request, res: Response) => {
 // ========== 3. دریافت آمار یک آگهی مشخص ==========
 export const getAdViewStats = async (req: Request, res: Response) => {
   try {
-    const { adId } = req.params;
-    const { adType, period = "weekly" } = req.query;
+    const { adId, adType, period = "weekly" } = req.query;
 
     if (!adId || !adType) {
       return res.status(400).json({ error: "adId and adType are required" });
     }
 
+    // ✅ تبدیل مطمئن به string
+    const adIdStr = String(adId);
+    const adTypeStr = String(adType);
+    const periodStr = String(period || "weekly");
+
     const userId = verifyToken(req);
 
-    const AdModel = getAdModel(adType as string);
+    const AdModel = getAdModel(adTypeStr);
     const ad = await (AdModel as any).findUnique({
-      where: { id: adId },
+      where: { id: adIdStr },
       select: { owner: true },
     });
     if (!ad) return res.status(404).json({ error: "Ad not found" });
@@ -175,7 +182,7 @@ export const getAdViewStats = async (req: Request, res: Response) => {
     const endDate = new Date();
     endDate.setHours(23, 59, 59, 999);
 
-    if (period === "monthly") {
+    if (periodStr === "monthly") {
       startDate.setMonth(startDate.getMonth() - 1);
       startDate.setDate(1);
       startDate.setHours(0, 0, 0, 0);
@@ -186,14 +193,14 @@ export const getAdViewStats = async (req: Request, res: Response) => {
 
     const views = await prisma.adView.findMany({
       where: {
-        adId,
-        adType: adType as any,
+        adId: adIdStr, // ✅ string
+        adType: adTypeStr as any,
         viewedAt: { gte: startDate, lte: endDate },
       },
       select: { viewedAt: true },
     });
 
-    if (period === "weekly") {
+    if (periodStr === "weekly") {
       const dayNameMap: Record<number, string> = {
         7: "شنبه",
         1: "یکشنبه",
@@ -253,18 +260,21 @@ export const getAdViewStats = async (req: Request, res: Response) => {
 // ========== 4. خلاصه آمار یک آگهی ==========
 export const getAdViewSummaryStats = async (req: Request, res: Response) => {
   try {
-    const { adId } = req.params;
-    const { adType } = req.query;
+    const { adId, adType } = req.query;
 
     if (!adId || !adType) {
       return res.status(400).json({ error: "adId and adType are required" });
     }
 
+    // ✅ تبدیل مطمئن به string
+    const adIdStr = String(adId);
+    const adTypeStr = String(adType);
+
     const userId = verifyToken(req);
 
-    const AdModel = getAdModel(adType as string);
+    const AdModel = getAdModel(adTypeStr);
     const ad = await (AdModel as any).findUnique({
-      where: { id: adId },
+      where: { id: adIdStr },
       select: { owner: true },
     });
     if (!ad) return res.status(404).json({ error: "Ad not found" });
@@ -280,24 +290,21 @@ export const getAdViewSummaryStats = async (req: Request, res: Response) => {
     const endOfToday = new Date(now);
     endOfToday.setHours(23, 59, 59, 999);
 
-    // 1) today
     const todayCount = await prisma.adView.count({
       where: {
-        adId,
-        adType: adType as any,
+        adId: adIdStr,
+        adType: adTypeStr as any,
         viewedAt: { gte: startOfToday, lte: endOfToday },
       },
     });
 
-    // 2) total
     const totalCount = await prisma.adView.count({
       where: {
-        adId,
-        adType: adType as any,
+        adId: adIdStr,
+        adType: adTypeStr as any,
       },
     });
 
-    // 3) weekly (7 روز گذشته)
     const weeklyData: number[] = [];
     for (let i = 6; i >= 0; i--) {
       const date = new Date(now);
@@ -307,15 +314,14 @@ export const getAdViewSummaryStats = async (req: Request, res: Response) => {
       nextDate.setDate(date.getDate() + 1);
       const count = await prisma.adView.count({
         where: {
-          adId,
-          adType: adType as any,
+          adId: adIdStr,
+          adType: adTypeStr as any,
           viewedAt: { gte: date, lt: nextDate },
         },
       });
       weeklyData.push(count);
     }
 
-    // 4) monthly (4 هفته اخیر)
     const monthlyData: number[] = [];
     for (let week = 3; week >= 0; week--) {
       const end = new Date(now);
@@ -326,8 +332,8 @@ export const getAdViewSummaryStats = async (req: Request, res: Response) => {
       start.setHours(0, 0, 0, 0);
       const count = await prisma.adView.count({
         where: {
-          adId,
-          adType: adType as any,
+          adId: adIdStr,
+          adType: adTypeStr as any,
           viewedAt: { gte: start, lte: end },
         },
       });

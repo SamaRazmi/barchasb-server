@@ -1,6 +1,6 @@
 import { Router } from "express";
 import testController from "../controllers/TestCtrl";
-
+import { authenticateUser } from "../middleware/authMidleware";
 const router = Router();
 
 /**
@@ -19,7 +19,7 @@ const router = Router();
  *               items:
  *                 $ref: '#/components/schemas/TestCategory'
  */
-router.get("/categories", testController.getCategories);
+router.get("/categories", authenticateUser, testController.getCategories);
 
 /**
  * @swagger
@@ -37,7 +37,7 @@ router.get("/categories", testController.getCategories);
  *       200:
  *         description: Success
  */
-router.get("/categories/:categoryId/types", testController.getTypesByCategory);
+router.get("/categories/:categoryId/types", authenticateUser, testController.getTypesByCategory);
 
 /**
  * @swagger
@@ -72,7 +72,7 @@ router.get("/categories/:categoryId/types", testController.getTypesByCategory);
  *                   items:
  *                     $ref: '#/components/schemas/Question'
  */
-router.post("/start", testController.startTest);
+router.post("/start", authenticateUser, testController.startTest);
 
 /**
  * @swagger
@@ -125,6 +125,6 @@ router.post("/start", testController.startTest);
  *                   type: object
  *                   description: Contains Summary/LevelBreakdown for Language OR AnalysisProfile for Psych
  */
-router.post("/submit", testController.submitTest);
+router.post("/submit", authenticateUser, testController.submitTest);
 
 export default router;

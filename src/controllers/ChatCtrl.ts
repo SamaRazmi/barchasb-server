@@ -1,41 +1,26 @@
+// src/controllers/ChatCtrl.ts
 import { Request, Response } from "express";
-import Chat from "../models/Chat";
-import Conversation from "../models/Conversation";
-import NodeCache from "node-cache";
+import prisma from "../config/prisma";
 
-// ====== Redis Mock (بدون نیاز به redis واقعی) ======
+// ====== Redis Mock ======
 const redis = {
-  hget: async (key: string, field: string) => {
-    return null;
-  },
-  hset: async (key: string, field: string, value: any) => {
-    return 1;
-  },
-  hdel: async (key: string, field: string) => {
-    return 1;
-  },
+  hget: async (key: string, field: string) => null,
+  hset: async (key: string, field: string, value: any) => 1,
+  hdel: async (key: string, field: string) => 1,
   publish: async (channel: string, message: string) => {
     console.log(`📨 [Redis Mock] Publish to ${channel}`);
     return 1;
   },
-  hgetall: async (key: string) => {
-    return {};
-  },
-  setex: async (key: string, seconds: number, value: string) => {
-    return "OK";
-  },
-  expire: async (key: string, seconds: number) => {
-    return 1;
-  },
-  del: async (key: string) => {
-    return 1;
-  },
+  hgetall: async (key: string) => ({}),
+  setex: async (key: string, seconds: number, value: string) => "OK",
+  expire: async (key: string, seconds: number) => 1,
+  del: async (key: string) => 1,
 };
-// ===================================================
+// ===================================
 
-/**
- * ارسال پیام و آپدیت Conversation
- */
+// ------------------------------------------------------------
+// ۱. ارسال پیام و آپدیت Conversation
+// ------------------------------------------------------------
 export const sendMessage = async (req: Request, res: Response) => {
   try {
     const { from, to, adId, adType, content, type } = req.body;
@@ -47,33 +32,46 @@ export const sendMessage = async (req: Request, res: Response) => {
       });
     }
 
-    let conv = await Conversation.findOne({
-      adId,
-      adType,
-      participants: { $all: [from, to] },
-    });
-
-    if (conv) {
-      conv.lastMessage = content;
-      conv.updatedAt = new Date();
-      await conv.save();
-    } else {
-      conv = await Conversation.create({
-        participants: [from, to],
+    let conv = await prisma.conversation.findFirst({
+      where: {
         adId,
         adType,
-        lastMessage: content,
+        participants: {
+          hasEvery: [from, to],
+        },
+      },
+    });
+
+    if (!conv) {
+      conv = await prisma.conversation.create({
+        data: {
+          participants: [from, to],
+          adId,
+          adType,
+          lastMessage: content,
+        },
+      });
+    } else {
+      conv = await prisma.conversation.update({
+        where: { id: conv.id },
+        data: {
+          lastMessage: content,
+          updatedAt: new Date(),
+        },
       });
     }
 
-    const message = await Chat.create({
-      from,
-      to,
-      adId,
-      adType,
-      conversationId: conv._id,
-      content,
-      type,
+    const message = await prisma.chat.create({
+      data: {
+        from,
+        to,
+        adId,
+        adType,
+        conversationId: conv.id,
+        content,
+        type: type || "text",
+        read: false,
+      },
     });
 
     try {
@@ -98,27 +96,46 @@ export const sendMessage = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * گرفتن پیام‌های یک آگهی مشخص بین دو کاربر
- */
+// ------------------------------------------------------------
+// ۲. گرفتن پیام‌های یک آگهی بین دو کاربر
+// ------------------------------------------------------------
 export const getMessages = async (req: Request, res: Response) => {
   try {
     const { adType, adId, userId1, userId2 } = req.params;
 
-    const messages = await Chat.find({
-      adType,
-      adId,
-      $or: [
-        { from: userId1, to: userId2 },
-        { from: userId2, to: userId1 },
-      ],
-    })
-      .sort({ createdAt: 1 })
-      .populate("from to", "name");
+    // تبدیل پارامترها به string (رفع خطای TS2322)
+    const adIdStr = typeof adId === "string" ? adId : adId?.[0] || "";
+    const fromUser1 =
+      typeof userId1 === "string" ? userId1 : userId1?.[0] || "";
+    const fromUser2 =
+      typeof userId2 === "string" ? userId2 : userId2?.[0] || "";
+
+    const messages = await prisma.chat.findMany({
+      where: {
+        adType: adType as any, // cast به AdType
+        adId: adIdStr,
+        OR: [
+          { from: fromUser1, to: fromUser2 },
+          { from: fromUser2, to: fromUser1 },
+        ],
+      },
+      orderBy: { createdAt: "asc" },
+      include: {
+        fromUser: { select: { name: true, id: true } },
+        toUser: { select: { name: true, id: true } },
+      },
+    });
+
+    // استفاده از any برای راحت‌تر شدن نوع‌دهی
+    const formatted = messages.map((msg: any) => ({
+      ...msg,
+      from: msg.fromUser,
+      to: msg.toUser,
+    }));
 
     res.status(200).json({
       success: true,
-      messages,
+      messages: formatted,
     });
   } catch (err: any) {
     res.status(500).json({
@@ -128,9 +145,9 @@ export const getMessages = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * وضعیت آنلاین / آخرین بازدید
- */
+// ------------------------------------------------------------
+// ۳. وضعیت آنلاین / آخرین بازدید
+// ------------------------------------------------------------
 export const getUserStatus = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
@@ -162,29 +179,51 @@ export const getUserStatus = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * گرفتن لیست مکالمات یک کاربر
- */
+// ------------------------------------------------------------
+// ۴. گرفتن لیست مکالمات یک کاربر
+// ------------------------------------------------------------
 export const getConversations = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
     const userIdStr = typeof userId === "string" ? userId : userId?.[0] || "";
 
-    const conversations = await Conversation.find({
-      participants: userIdStr,
-    })
-      .sort({ updatedAt: -1 })
-      .populate("participants", "name");
+    const conversations = await prisma.conversation.findMany({
+      where: {
+        participants: { has: userIdStr },
+      },
+      orderBy: { updatedAt: "desc" },
+    });
 
-    res.status(200).json({ success: true, conversations });
+    // جمع‌آوری تمام userIdهای شرکت‌کننده
+    const allParticipantIds = new Set<string>();
+    conversations.forEach((conv) => {
+      conv.participants.forEach((p) => allParticipantIds.add(p));
+    });
+
+    // دریافت اطلاعات کاربران
+    const users = await prisma.user.findMany({
+      where: { id: { in: Array.from(allParticipantIds) } },
+      select: { id: true, name: true },
+    });
+
+    const userMap = new Map(users.map((u) => [u.id, u]));
+
+    const result = conversations.map((conv) => ({
+      ...conv,
+      participants: conv.participants.map(
+        (pId) => userMap.get(pId) || { id: pId, name: "ناشناس" },
+      ),
+    }));
+
+    res.status(200).json({ success: true, conversations: result });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
 };
 
-/**
- * تایپینگ (typing) برای realtime
- */
+// ------------------------------------------------------------
+// ۵. تایپینگ (typing)
+// ------------------------------------------------------------
 export const typingStatus = async (req: Request, res: Response) => {
   try {
     const { fromUserId, toUserId, isTyping } = req.body;
@@ -207,11 +246,9 @@ export const typingStatus = async (req: Request, res: Response) => {
   }
 };
 
-// ======================= NEW =======================
-
-/**
- * دریافت تعداد پیام‌های خوانده نشده برای هر adType
- */
+// ------------------------------------------------------------
+// ۶. تعداد پیام‌های خوانده نشده به تفکیک adType
+// ------------------------------------------------------------
 export const getUnreadCounts = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
@@ -223,15 +260,25 @@ export const getUnreadCounts = async (req: Request, res: Response) => {
         .json({ success: false, message: "userId required" });
     }
 
-    const unreadMessages = await Chat.find({ to: userIdStr, read: false })
-      .populate("conversationId")
-      .lean();
+    const unreadMessages = await prisma.chat.findMany({
+      where: {
+        to: userIdStr,
+        read: false,
+      },
+      include: {
+        conversation: true,
+      },
+    });
 
-    const counts = { JobSeekerAd: 0, EmployerAd: 0, SellerAd: 0 };
+    const counts: Record<string, number> = {
+      JobSeekerAd: 0,
+      EmployerAd: 0,
+      SellerAd: 0,
+      DigitalAd: 0,
+    };
 
     for (const msg of unreadMessages) {
-      const conv = msg.conversationId as any;
-      const adType = conv?.adType;
+      const adType = msg.conversation?.adType;
       if (adType && counts.hasOwnProperty(adType)) {
         counts[adType as keyof typeof counts]++;
       }
@@ -240,9 +287,9 @@ export const getUnreadCounts = async (req: Request, res: Response) => {
     res.status(200).json({
       success: true,
       data: {
-        karjo: counts.JobSeekerAd,
-        karfarma: counts.EmployerAd,
-        agahi: counts.SellerAd,
+        karjo: counts.JobSeekerAd || 0,
+        karfarma: counts.EmployerAd || 0,
+        agahi: counts.SellerAd || 0,
       },
     });
   } catch (error) {
@@ -251,9 +298,9 @@ export const getUnreadCounts = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * دریافت تعداد پیام‌های خوانده نشده برای هر مکالمه
- */
+// ------------------------------------------------------------
+// ۷. تعداد پیام‌های خوانده نشده به تفکیک هر مکالمه
+// ------------------------------------------------------------
 export const getUnreadDetails = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
@@ -265,14 +312,19 @@ export const getUnreadDetails = async (req: Request, res: Response) => {
         .json({ success: false, message: "userId required" });
     }
 
-    const unreadMessages = await Chat.find({ to: userIdStr, read: false })
-      .populate("conversationId")
-      .lean();
+    const unreadMessages = await prisma.chat.findMany({
+      where: {
+        to: userIdStr,
+        read: false,
+      },
+      include: {
+        conversation: true,
+      },
+    });
 
-    const details: any = {};
+    const details: Record<string, number> = {};
     for (const msg of unreadMessages) {
-      const conv = msg.conversationId as any;
-      const convId = conv?._id?.toString();
+      const convId = msg.conversation?.id;
       if (convId) {
         details[convId] = (details[convId] || 0) + 1;
       }
@@ -285,12 +337,13 @@ export const getUnreadDetails = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * علامت زدن تمام پیام‌های یک مکالمه به عنوان خوانده شده
- */
+// ------------------------------------------------------------
+// ۸. علامت زدن پیام‌های یک مکالمه به عنوان خوانده شده
+// ------------------------------------------------------------
 export const markMessagesAsRead = async (req: Request, res: Response) => {
   try {
     const { userId, conversationId } = req.body;
+
     if (!userId || !conversationId) {
       return res.status(400).json({
         success: false,
@@ -298,14 +351,20 @@ export const markMessagesAsRead = async (req: Request, res: Response) => {
       });
     }
 
-    const result = await Chat.updateMany(
-      { to: userId, conversationId, read: false },
-      { $set: { read: true } },
-    );
+    const result = await prisma.chat.updateMany({
+      where: {
+        to: userId,
+        conversationId: conversationId,
+        read: false,
+      },
+      data: {
+        read: true,
+      },
+    });
 
     res.status(200).json({
       success: true,
-      message: `${result.modifiedCount} پیام به عنوان خوانده شده علامت زده شد`,
+      message: `${result.count} پیام به عنوان خوانده شده علامت زده شد`,
     });
   } catch (err: any) {
     console.error("Error in markMessagesAsRead:", err);

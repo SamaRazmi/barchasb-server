@@ -10,108 +10,6 @@
       "url": "/"
     }
   ],
-  "tags": [
-    {
-      "name": "Admin",
-      "description": "Admin-only endpoints (authenticated with admin role)"
-    },
-    {
-      "name": "Wallet",
-      "description": "مدیریت کیف پول کاربر"
-    },
-    {
-      "name": "Users",
-      "description": "مدیریت کاربران"
-    },
-    {
-      "name": "Auth",
-      "description": "احراز هویت"
-    },
-    {
-      "name": "Upload",
-      "description": "آپلود فایل"
-    },
-    {
-      "name": "Ticket",
-      "description": "مدیریت تیکت‌ها"
-    },
-    {
-      "name": "Suggestions",
-      "description": "مدیریت پیشنهادات ویژه"
-    },
-    {
-      "name": "Stats",
-      "description": "مدیریت آمار بازدیدها"
-    },
-    {
-      "name": "SellerAds",
-      "description": "مدیریت آگهی‌های فروشنده"
-    },
-    {
-      "name": "Resume",
-      "description": "مدیریت رزومه‌ها"
-    },
-    {
-      "name": "ReportReason",
-      "description": "مدیریت دلایل گزارش (فقط ادمین)"
-    },
-    {
-      "name": "Report",
-      "description": "مدیریت گزارش‌ها"
-    },
-    {
-      "name": "RecentViews",
-      "description": "مدیریت بازدیدهای اخیر"
-    },
-    {
-      "name": "Province",
-      "description": "مدیریت استان‌ها و شهرها"
-    },
-    {
-      "name": "Pricing",
-      "description": "مدیریت قیمت‌ها"
-    },
-    {
-      "name": "OTP",
-      "description": "مدیریت OTP (ارسال و تایید)"
-    },
-    {
-      "name": "JobSeekerAds",
-      "description": "مدیریت آگهی‌های جوینده کار"
-    },
-    {
-      "name": "JobCategories",
-      "description": "مدیریت دسته‌های شغلی (اصلی و زیردسته‌ها)"
-    },
-    {
-      "name": "EmployerAds",
-      "description": "مدیریت آگهی‌های کارفرما"
-    },
-    {
-      "name": "DigitalAds",
-      "description": "مدیریت آگهی‌های دیجیتال"
-    },
-    {
-      "name": "Chat",
-      "description": "مدیریت چت و پیام‌رسانی"
-    },
-    {
-      "name": "AdCategory",
-      "description": "مدیریت دسته‌بندی‌های آگهی"
-    },
-    {
-      "name": "AdCategoryAttributes",
-      "description": "مدیریت ویژگی‌های دسته‌بندی آگهی‌ها (داده‌های استاتیک)"
-    },
-    {
-      "name": "Admin Reports",
-      "description": "مدیریت گزارش‌ها توسط ادمین (فقط ادمین‌ها)"
-    },
-    {
-      "name": "Profile",
-      "description": "مدیریت پروفایل کاربر"
-    }
-  ],
   "components": {
     "securitySchemes": {
       "BearerAuth": {
@@ -158,10 +56,7 @@
           },
           "gender": {
             "type": "string",
-            "enum": [
-              "male",
-              "female"
-            ],
+            "enum": ["male", "female"],
             "example": "male"
           },
           "province": {
@@ -207,9 +102,7 @@
     "/api/wallet/balance": {
       "get": {
         "summary": "دریافت موجودی کیف پول",
-        "tags": [
-          "Wallet"
-        ],
+        "tags": ["Wallet"],
         "security": [
           {
             "bearerAuth": []
@@ -261,9 +154,7 @@
     "/api/wallet/deposit": {
       "post": {
         "summary": "شارژ کیف پول (از طریق درگاه بانکی)",
-        "tags": [
-          "Wallet"
-        ],
+        "tags": ["Wallet"],
         "security": [
           {
             "bearerAuth": []
@@ -275,9 +166,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "amount"
-                ],
+                "required": ["amount"],
                 "properties": {
                   "amount": {
                     "type": "number",
@@ -337,9 +226,7 @@
     "/api/user/vip/apply": {
       "post": {
         "summary": "اعمال کد VIP توسط کاربر",
-        "tags": [
-          "VIP"
-        ],
+        "tags": ["VIP"],
         "security": [
           {
             "bearerAuth": []
@@ -351,9 +238,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "code"
-                ],
+                "required": ["code"],
                 "properties": {
                   "code": {
                     "type": "string"
@@ -373,9 +258,7 @@
     "/api/admin/vip-codes/generate": {
       "post": {
         "summary": "تولید کدهای VIP جدید",
-        "tags": [
-          "VIP-Admin"
-        ],
+        "tags": ["VIP-Admin"],
         "security": [
           {
             "bearerAuth": []
@@ -387,11 +270,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "title",
-                  "count",
-                  "vipDuration"
-                ],
+                "required": ["title", "count", "vipDuration"],
                 "properties": {
                   "title": {
                     "type": "string"
@@ -426,9 +305,7 @@
     "/api/admin/vip-codes/{id}/activate": {
       "put": {
         "summary": "فعال‌سازی یک کد VIP",
-        "tags": [
-          "VIP-Admin"
-        ],
+        "tags": ["VIP-Admin"],
         "security": [
           {
             "bearerAuth": []
@@ -454,9 +331,7 @@
     "/api/admin/vip-codes/{id}/deactivate": {
       "put": {
         "summary": "غیرفعال کردن یک کد VIP",
-        "tags": [
-          "VIP-Admin"
-        ],
+        "tags": ["VIP-Admin"],
         "security": [
           {
             "bearerAuth": []
@@ -482,9 +357,7 @@
     "/api/admin/vip-codes": {
       "get": {
         "summary": "دریافت لیست کدها با فیلتر (فعال/غیرفعال/همه)",
-        "tags": [
-          "VIP-Admin"
-        ],
+        "tags": ["VIP-Admin"],
         "security": [
           {
             "bearerAuth": []
@@ -496,11 +369,7 @@
             "name": "status",
             "schema": {
               "type": "string",
-              "enum": [
-                "active",
-                "inactive",
-                "all"
-              ]
+              "enum": ["active", "inactive", "all"]
             }
           }
         ],
@@ -514,9 +383,7 @@
     "/api/admin/vip-codes/{id}": {
       "delete": {
         "summary": "حذف کامل یک کد VIP و تاریخچه استفاده‌های آن",
-        "tags": [
-          "VIP-Admin"
-        ],
+        "tags": ["VIP-Admin"],
         "security": [
           {
             "bearerAuth": []
@@ -542,9 +409,7 @@
     "/api/admin/vip/revoke/{userId}": {
       "put": {
         "summary": "لغو VIP یک کاربر خاص",
-        "tags": [
-          "VIP-Admin"
-        ],
+        "tags": ["VIP-Admin"],
         "security": [
           {
             "bearerAuth": []
@@ -570,9 +435,7 @@
     "/api/users": {
       "get": {
         "summary": "دریافت همه کاربران",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "security": [
           {
             "BearerAuth": []
@@ -610,9 +473,7 @@
     "/api/get-one-user/{id}": {
       "get": {
         "summary": "دریافت یک کاربر",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "security": [
           {
             "BearerAuth": []
@@ -661,9 +522,7 @@
     "/api/new-user": {
       "post": {
         "summary": "ایجاد کاربر جدید",
-        "tags": [
-          "Users"
-        ],
+        "tags": ["Users"],
         "requestBody": {
           "required": true,
           "content": {
@@ -703,9 +562,7 @@
     "/api/auth/me": {
       "get": {
         "summary": "دریافت اطلاعات کاربر لاگین شده",
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "security": [
           {
             "BearerAuth": []
@@ -743,9 +600,7 @@
     "/api/auth/logout": {
       "post": {
         "summary": "خروج از حساب کاربری",
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "security": [
           {
             "BearerAuth": []
@@ -784,9 +639,7 @@
     "/api/auth/register": {
       "post": {
         "summary": "ثبت‌نام کاربر جدید",
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "requestBody": {
           "required": true,
           "content": {
@@ -826,19 +679,14 @@
     "/api/auth/login": {
       "post": {
         "summary": "ورود کاربر",
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "phone",
-                  "password"
-                ],
+                "required": ["phone", "password"],
                 "properties": {
                   "phone": {
                     "type": "string",
@@ -893,18 +741,14 @@
     "/api/send-register-email": {
       "post": {
         "summary": "ارسال کد ثبت‌نام به ایمیل",
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "email"
-                ],
+                "required": ["email"],
                 "properties": {
                   "email": {
                     "type": "string",
@@ -941,18 +785,14 @@
     "/api/send-register-phone": {
       "post": {
         "summary": "ارسال کد ثبت‌نام به تلفن",
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "phone"
-                ],
+                "required": ["phone"],
                 "properties": {
                   "phone": {
                     "type": "string",
@@ -989,18 +829,14 @@
     "/api/verify-phone": {
       "post": {
         "summary": "تایید شماره تلفن",
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "userId"
-                ],
+                "required": ["userId"],
                 "properties": {
                   "userId": {
                     "type": "string",
@@ -1043,9 +879,7 @@
     "/api/send-verify-email/{id}": {
       "post": {
         "summary": "ارسال کد تایید ایمیل",
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "parameters": [
           {
             "name": "id",
@@ -1063,9 +897,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "email"
-                ],
+                "required": ["email"],
                 "properties": {
                   "email": {
                     "type": "string",
@@ -1105,9 +937,7 @@
     "/api/verify-email-code/{id}": {
       "post": {
         "summary": "تایید ایمیل با کد ۶ رقمی",
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "parameters": [
           {
             "name": "id",
@@ -1125,9 +955,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "code"
-                ],
+                "required": ["code"],
                 "properties": {
                   "code": {
                     "type": "string",
@@ -1167,9 +995,7 @@
     "/api/verify-email/{token}": {
       "get": {
         "summary": "تایید ایمیل با لینک (قدیمی)",
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "parameters": [
           {
             "name": "token",
@@ -1207,20 +1033,14 @@
     "/api/auth/reset-password": {
       "post": {
         "summary": "تغییر رمز عبور (مرحله دوم فراموشی رمز)",
-        "tags": [
-          "Auth"
-        ],
+        "tags": ["Auth"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "phone",
-                  "code",
-                  "newPassword"
-                ],
+                "required": ["phone", "code", "newPassword"],
                 "properties": {
                   "phone": {
                     "type": "string",
@@ -1278,9 +1098,7 @@
     "/api/user/my-tests": {
       "get": {
         "summary": "Get the current user's test history",
-        "tags": [
-          "User Profile"
-        ],
+        "tags": ["User Profile"],
         "security": [
           {
             "BearerAuth": []
@@ -1330,9 +1148,7 @@
     "/api/user/my-tests/{sessionId}": {
       "get": {
         "summary": "Get specific test results for the current user",
-        "tags": [
-          "User Profile"
-        ],
+        "tags": ["User Profile"],
         "security": [
           {
             "BearerAuth": []
@@ -1411,9 +1227,7 @@
     "/api/user/my-resumes": {
       "get": {
         "summary": "Get all user's resumes",
-        "tags": [
-          "User Profile"
-        ],
+        "tags": ["User Profile"],
         "security": [
           {
             "BearerAuth": []
@@ -1435,9 +1249,7 @@
     "/api/user/my-resume/preview/{id}": {
       "get": {
         "summary": "Get resume url",
-        "tags": [
-          "User Profile"
-        ],
+        "tags": ["User Profile"],
         "parameters": [
           {
             "in": "path",
@@ -1464,9 +1276,7 @@
     "/api/upload/file": {
       "post": {
         "summary": "آپلود یک فایل PDF/Word",
-        "tags": [
-          "Upload"
-        ],
+        "tags": ["Upload"],
         "security": [
           {
             "BearerAuth": []
@@ -1478,9 +1288,7 @@
             "multipart/form-data": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "file"
-                ],
+                "required": ["file"],
                 "properties": {
                   "file": {
                     "type": "string",
@@ -1529,9 +1337,7 @@
     "/api/upload/files": {
       "post": {
         "summary": "آپلود چند فایل PDF/Word (حداکثر ۵ فایل)",
-        "tags": [
-          "Upload"
-        ],
+        "tags": ["Upload"],
         "security": [
           {
             "BearerAuth": []
@@ -1543,9 +1349,7 @@
             "multipart/form-data": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "files"
-                ],
+                "required": ["files"],
                 "properties": {
                   "files": {
                     "type": "array",
@@ -1603,20 +1407,14 @@
     "/api/create-ticket": {
       "post": {
         "summary": "ایجاد تیکت جدید",
-        "tags": [
-          "Ticket"
-        ],
+        "tags": ["Ticket"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "email",
-                  "title",
-                  "description"
-                ],
+                "required": ["email", "title", "description"],
                 "properties": {
                   "email": {
                     "type": "string"
@@ -1648,9 +1446,7 @@
     "/api/tickets": {
       "get": {
         "summary": "دریافت تمام تیکت‌ها",
-        "tags": [
-          "Ticket"
-        ],
+        "tags": ["Ticket"],
         "security": [
           {
             "BearerAuth": []
@@ -1666,9 +1462,7 @@
     "/api/ticket/{id}": {
       "get": {
         "summary": "دریافت یک تیکت با شناسه",
-        "tags": [
-          "Ticket"
-        ],
+        "tags": ["Ticket"],
         "security": [
           {
             "BearerAuth": []
@@ -1697,9 +1491,7 @@
     "/api/ticket/{id}/status": {
       "put": {
         "summary": "تغییر وضعیت تیکت",
-        "tags": [
-          "Ticket"
-        ],
+        "tags": ["Ticket"],
         "security": [
           {
             "BearerAuth": []
@@ -1721,17 +1513,11 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "status"
-                ],
+                "required": ["status"],
                 "properties": {
                   "status": {
                     "type": "string",
-                    "enum": [
-                      "open",
-                      "in_progress",
-                      "closed"
-                    ]
+                    "enum": ["open", "in_progress", "closed"]
                   }
                 }
               }
@@ -1751,9 +1537,7 @@
     "/api/tests/categories": {
       "get": {
         "summary": "Get all active categories",
-        "tags": [
-          "Tests"
-        ],
+        "tags": ["Tests"],
         "responses": {
           "200": {
             "description": "List of categories",
@@ -1774,9 +1558,7 @@
     "/api/tests/categories/{categoryId}/types": {
       "get": {
         "summary": "Get test types (blueprints) for a category",
-        "tags": [
-          "Tests"
-        ],
+        "tags": ["Tests"],
         "parameters": [
           {
             "name": "categoryId",
@@ -1797,18 +1579,14 @@
     "/api/tests/start": {
       "post": {
         "summary": "Initialize a new test session",
-        "tags": [
-          "Tests"
-        ],
+        "tags": ["Tests"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "typeId"
-                ],
+                "required": ["typeId"],
                 "properties": {
                   "typeId": {
                     "type": "string",
@@ -1847,19 +1625,14 @@
     "/api/tests/submit": {
       "post": {
         "summary": "Submit answers and get results (Language or Psych)",
-        "tags": [
-          "Tests"
-        ],
+        "tags": ["Tests"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "sessionId",
-                  "answers"
-                ],
+                "required": ["sessionId", "answers"],
                 "properties": {
                   "sessionId": {
                     "type": "string",
@@ -1922,9 +1695,7 @@
     "/api/suggestions": {
       "get": {
         "summary": "دریافت پیشنهادات ویژه",
-        "tags": [
-          "Suggestions"
-        ],
+        "tags": ["Suggestions"],
         "security": [
           {
             "BearerAuth": []
@@ -1973,9 +1744,7 @@
     "/api/suggestion-preference": {
       "get": {
         "summary": "دریافت تنظیمات پیشنهادات کاربر",
-        "tags": [
-          "Suggestions"
-        ],
+        "tags": ["Suggestions"],
         "security": [
           {
             "BearerAuth": []
@@ -1992,9 +1761,7 @@
       },
       "put": {
         "summary": "به‌روزرسانی تنظیمات پیشنهادات کاربر",
-        "tags": [
-          "Suggestions"
-        ],
+        "tags": ["Suggestions"],
         "security": [
           {
             "BearerAuth": []
@@ -2012,12 +1779,7 @@
                   },
                   "resetPeriod": {
                     "type": "string",
-                    "enum": [
-                      "daily",
-                      "weekly",
-                      "monthly",
-                      "never"
-                    ]
+                    "enum": ["daily", "weekly", "monthly", "never"]
                   },
                   "preferredAdTypes": {
                     "type": "array",
@@ -2061,9 +1823,7 @@
     "/api/suggestion-stats": {
       "get": {
         "summary": "دریافت آمار استفاده از پیشنهادات",
-        "tags": [
-          "Suggestions"
-        ],
+        "tags": ["Suggestions"],
         "security": [
           {
             "BearerAuth": []
@@ -2100,9 +1860,7 @@
     "/api/suggestions/autocomplete": {
       "get": {
         "summary": "جستجوی هوشمند برای پیشنهادات (Autocomplete)",
-        "tags": [
-          "Suggestions"
-        ],
+        "tags": ["Suggestions"],
         "security": [
           {
             "BearerAuth": []
@@ -2141,9 +1899,7 @@
     "/api/suggestion-view": {
       "post": {
         "summary": "ثبت دستی نمایش یک آگهی (در صورت نیاز)",
-        "tags": [
-          "Suggestions"
-        ],
+        "tags": ["Suggestions"],
         "security": [
           {
             "BearerAuth": []
@@ -2155,10 +1911,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "adId",
-                  "adType"
-                ],
+                "required": ["adId", "adType"],
                 "properties": {
                   "adId": {
                     "type": "string"
@@ -2190,9 +1943,7 @@
     "/api/track-view": {
       "post": {
         "summary": "ثبت بازدید آگهی",
-        "tags": [
-          "Stats"
-        ],
+        "tags": ["Stats"],
         "security": [
           {
             "BearerAuth": []
@@ -2204,10 +1955,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "adId",
-                  "adType"
-                ],
+                "required": ["adId", "adType"],
                 "properties": {
                   "adId": {
                     "type": "string"
@@ -2242,9 +1990,7 @@
     "/api/user-views": {
       "get": {
         "summary": "دریافت آمار بازدیدهای کاربر",
-        "tags": [
-          "Stats"
-        ],
+        "tags": ["Stats"],
         "security": [
           {
             "BearerAuth": []
@@ -2256,10 +2002,7 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": [
-                "weekly",
-                "monthly"
-              ]
+              "enum": ["weekly", "monthly"]
             },
             "default": "weekly"
           },
@@ -2289,9 +2032,7 @@
     "/api/ad-views/{adId}": {
       "get": {
         "summary": "دریافت آمار بازدید یک آگهی خاص",
-        "tags": [
-          "Stats"
-        ],
+        "tags": ["Stats"],
         "security": [
           {
             "BearerAuth": []
@@ -2312,12 +2053,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "enum": [
-                "EmployerAd",
-                "JobSeekerAd",
-                "SellerAd",
-                "DigitalAd"
-              ]
+              "enum": ["EmployerAd", "JobSeekerAd", "SellerAd", "DigitalAd"]
             }
           },
           {
@@ -2325,10 +2061,7 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": [
-                "weekly",
-                "monthly"
-              ]
+              "enum": ["weekly", "monthly"]
             },
             "default": "weekly"
           }
@@ -2346,9 +2079,7 @@
     "/api/ad-view-summary/{adId}": {
       "get": {
         "summary": "دریافت خلاصه آمار بازدید یک آگهی",
-        "tags": [
-          "Stats"
-        ],
+        "tags": ["Stats"],
         "security": [
           {
             "BearerAuth": []
@@ -2369,12 +2100,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "enum": [
-                "EmployerAd",
-                "JobSeekerAd",
-                "SellerAd",
-                "DigitalAd"
-              ]
+              "enum": ["EmployerAd", "JobSeekerAd", "SellerAd", "DigitalAd"]
             }
           }
         ],
@@ -2391,9 +2117,7 @@
     "/api/sessions": {
       "get": {
         "summary": "دریافت لیست جلسات فعال کاربر",
-        "tags": [
-          "Sessions"
-        ],
+        "tags": ["Sessions"],
         "security": [
           {
             "BearerAuth": []
@@ -2412,9 +2136,7 @@
     "/api/sessions/{id}/read": {
       "patch": {
         "summary": "علامت‌گذاری جلسه به عنوان خوانده شده",
-        "tags": [
-          "Sessions"
-        ],
+        "tags": ["Sessions"],
         "security": [
           {
             "BearerAuth": []
@@ -2443,9 +2165,7 @@
     "/api/sessions/{id}": {
       "delete": {
         "summary": "حذف یک جلسه (غیرفعال کردن)",
-        "tags": [
-          "Sessions"
-        ],
+        "tags": ["Sessions"],
         "security": [
           {
             "BearerAuth": []
@@ -2474,9 +2194,7 @@
     "/api/sessions/logout-all": {
       "post": {
         "summary": "خروج از همه جلسات",
-        "tags": [
-          "Sessions"
-        ],
+        "tags": ["Sessions"],
         "security": [
           {
             "BearerAuth": []
@@ -2492,9 +2210,7 @@
     "/api/ads/seller": {
       "post": {
         "summary": "ایجاد آگهی فروشنده",
-        "tags": [
-          "SellerAds"
-        ],
+        "tags": ["SellerAds"],
         "security": [
           {
             "BearerAuth": []
@@ -2575,9 +2291,7 @@
       },
       "get": {
         "summary": "دریافت همه آگهی‌های فروشنده (عمومی)",
-        "tags": [
-          "SellerAds"
-        ],
+        "tags": ["SellerAds"],
         "responses": {
           "200": {
             "description": "موفق"
@@ -2591,9 +2305,7 @@
     "/api/ads/seller/owner/{ownerId}": {
       "get": {
         "summary": "دریافت همه آگهی‌های یک کاربر خاص (عمومی)",
-        "tags": [
-          "SellerAds"
-        ],
+        "tags": ["SellerAds"],
         "parameters": [
           {
             "name": "ownerId",
@@ -2617,9 +2329,7 @@
     "/api/ads/seller/:id": {
       "get": {
         "summary": "دریافت یک آگهی تک فروشنده (عمومی)",
-        "tags": [
-          "SellerAds"
-        ],
+        "tags": ["SellerAds"],
         "parameters": [
           {
             "name": "id",
@@ -2646,9 +2356,7 @@
     "/api/ads/seller/owner/{ownerId}/{adId}": {
       "get": {
         "summary": "دریافت یک آگهی مشخص از یک کاربر مشخص (عمومی)",
-        "tags": [
-          "SellerAds"
-        ],
+        "tags": ["SellerAds"],
         "parameters": [
           {
             "name": "ownerId",
@@ -2681,9 +2389,7 @@
       },
       "put": {
         "summary": "ویرایش یک آگهی مشخص",
-        "tags": [
-          "SellerAds"
-        ],
+        "tags": ["SellerAds"],
         "security": [
           {
             "BearerAuth": []
@@ -2784,9 +2490,7 @@
     "/api/ads/seller/{adId}": {
       "delete": {
         "summary": "حذف آگهی فروشنده (فقط مالک)",
-        "tags": [
-          "SellerAds"
-        ],
+        "tags": ["SellerAds"],
         "security": [
           {
             "BearerAuth": []
@@ -2822,9 +2526,7 @@
     "/api/resume/data": {
       "post": {
         "summary": "ایجاد یا بروزرسانی اطلاعات متنی رزومه",
-        "tags": [
-          "Resume"
-        ],
+        "tags": ["Resume"],
         "security": [
           {
             "BearerAuth": []
@@ -2836,9 +2538,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "userId"
-                ],
+                "required": ["userId"],
                 "properties": {
                   "resumeId": {
                     "type": "string",
@@ -2958,9 +2658,7 @@
     "/api/resume/data/{id}": {
       "get": {
         "summary": "دریافت اطلاعات متنی رزومه",
-        "tags": [
-          "Resume"
-        ],
+        "tags": ["Resume"],
         "security": [
           {
             "BearerAuth": []
@@ -2992,9 +2690,7 @@
     "/api/resume/upload/{resumeId}": {
       "post": {
         "summary": "آپلود فایل PDF رزومه",
-        "tags": [
-          "Resume"
-        ],
+        "tags": ["Resume"],
         "security": [
           {
             "BearerAuth": []
@@ -3045,9 +2741,7 @@
     "/api/resume/preview/{id}": {
       "get": {
         "summary": "دریافت لینک فایل رزومه",
-        "tags": [
-          "Resume"
-        ],
+        "tags": ["Resume"],
         "security": [
           {
             "BearerAuth": []
@@ -3079,9 +2773,7 @@
     "/api/resume/my": {
       "get": {
         "summary": "دریافت لیست رزومه‌های کاربر جاری",
-        "tags": [
-          "Resume"
-        ],
+        "tags": ["Resume"],
         "security": [
           {
             "BearerAuth": []
@@ -3100,9 +2792,7 @@
     "/api/resume/admin/users-with-resumes": {
       "get": {
         "summary": "دریافت کاربران دارای رزومه (فقط ادمین)",
-        "tags": [
-          "Resume"
-        ],
+        "tags": ["Resume"],
         "security": [
           {
             "BearerAuth": []
@@ -3124,9 +2814,7 @@
     "/api/report-reasons": {
       "get": {
         "summary": "دریافت لیست دلایل گزارش",
-        "tags": [
-          "ReportReason"
-        ],
+        "tags": ["ReportReason"],
         "parameters": [
           {
             "in": "query",
@@ -3161,9 +2849,7 @@
     "/api/admin/report-reasons": {
       "post": {
         "summary": "ایجاد دلیل گزارش جدید (فقط ادمین)",
-        "tags": [
-          "ReportReason"
-        ],
+        "tags": ["ReportReason"],
         "security": [
           {
             "BearerAuth": []
@@ -3175,12 +2861,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "type",
-                  "key",
-                  "label",
-                  "description"
-                ],
+                "required": ["type", "key", "label", "description"],
                 "properties": {
                   "type": {
                     "type": "string",
@@ -3238,9 +2919,7 @@
     "/api/admin/report-reasons/{id}": {
       "put": {
         "summary": "بروزرسانی دلیل گزارش (فقط ادمین)",
-        "tags": [
-          "ReportReason"
-        ],
+        "tags": ["ReportReason"],
         "security": [
           {
             "BearerAuth": []
@@ -3303,9 +2982,7 @@
       },
       "delete": {
         "summary": "حذف دلیل گزارش (فقط ادمین)",
-        "tags": [
-          "ReportReason"
-        ],
+        "tags": ["ReportReason"],
         "security": [
           {
             "BearerAuth": []
@@ -3340,9 +3017,7 @@
     "/api/employer/report/{targetId}": {
       "post": {
         "summary": "ثبت گزارش برای آگهی کارفرما",
-        "tags": [
-          "Report"
-        ],
+        "tags": ["Report"],
         "security": [
           {
             "BearerAuth": []
@@ -3364,10 +3039,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "reason",
-                  "description"
-                ],
+                "required": ["reason", "description"],
                 "properties": {
                   "reason": {
                     "type": "string"
@@ -3396,9 +3068,7 @@
     "/api/job-seeker/report/{targetId}": {
       "post": {
         "summary": "ثبت گزارش برای آگهی جوینده کار",
-        "tags": [
-          "Report"
-        ],
+        "tags": ["Report"],
         "security": [
           {
             "BearerAuth": []
@@ -3420,10 +3090,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "reason",
-                  "description"
-                ],
+                "required": ["reason", "description"],
                 "properties": {
                   "reason": {
                     "type": "string"
@@ -3452,9 +3119,7 @@
     "/api/seller/report/{targetId}": {
       "post": {
         "summary": "ثبت گزارش برای آگهی فروشنده",
-        "tags": [
-          "Report"
-        ],
+        "tags": ["Report"],
         "security": [
           {
             "BearerAuth": []
@@ -3476,10 +3141,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "reason",
-                  "description"
-                ],
+                "required": ["reason", "description"],
                 "properties": {
                   "reason": {
                     "type": "string"
@@ -3508,9 +3170,7 @@
     "/api/digital/report/{targetId}": {
       "post": {
         "summary": "ثبت گزارش برای آگهی دیجیتال",
-        "tags": [
-          "Report"
-        ],
+        "tags": ["Report"],
         "security": [
           {
             "BearerAuth": []
@@ -3532,10 +3192,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "reason",
-                  "description"
-                ],
+                "required": ["reason", "description"],
                 "properties": {
                   "reason": {
                     "type": "string"
@@ -3564,9 +3221,7 @@
     "/api/chat/report/{targetId}": {
       "post": {
         "summary": "ثبت گزارش برای چت",
-        "tags": [
-          "Report"
-        ],
+        "tags": ["Report"],
         "security": [
           {
             "BearerAuth": []
@@ -3588,10 +3243,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "reason",
-                  "description"
-                ],
+                "required": ["reason", "description"],
                 "properties": {
                   "reason": {
                     "type": "string"
@@ -3620,9 +3272,7 @@
     "/api/ads/{adType}/{ownerId}/{adId}/view": {
       "post": {
         "summary": "ثبت یا آپدیت بازدید اخیر",
-        "tags": [
-          "RecentViews"
-        ],
+        "tags": ["RecentViews"],
         "parameters": [
           {
             "name": "adType",
@@ -3630,12 +3280,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "enum": [
-                "EmployerAd",
-                "JobSeekerAd",
-                "SellerAd",
-                "DigitalAd"
-              ]
+              "enum": ["EmployerAd", "JobSeekerAd", "SellerAd", "DigitalAd"]
             }
           },
           {
@@ -3668,9 +3313,7 @@
     "/api/users/{ownerId}/recent-views/{adType}": {
       "get": {
         "summary": "دریافت بازدیدهای اخیر یک کاربر بر اساس نوع آگهی",
-        "tags": [
-          "RecentViews"
-        ],
+        "tags": ["RecentViews"],
         "parameters": [
           {
             "name": "ownerId",
@@ -3686,12 +3329,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "enum": [
-                "EmployerAd",
-                "JobSeekerAd",
-                "SellerAd",
-                "DigitalAd"
-              ]
+              "enum": ["EmployerAd", "JobSeekerAd", "SellerAd", "DigitalAd"]
             }
           }
         ],
@@ -3705,9 +3343,7 @@
     "/api/recent-views/{ownerId}/all": {
       "get": {
         "summary": "دریافت همه بازدیدهای اخیر یک کاربر (بدون فیلتر نوع)",
-        "tags": [
-          "RecentViews"
-        ],
+        "tags": ["RecentViews"],
         "parameters": [
           {
             "name": "ownerId",
@@ -3728,9 +3364,7 @@
     "/api/users/{ownerId}/recent-views": {
       "get": {
         "summary": "دریافت بازدیدهای اخیر با فیلترهای پیشرفته",
-        "tags": [
-          "RecentViews"
-        ],
+        "tags": ["RecentViews"],
         "parameters": [
           {
             "name": "ownerId",
@@ -3760,12 +3394,7 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": [
-                "today",
-                "week",
-                "month",
-                "all"
-              ]
+              "enum": ["today", "week", "month", "all"]
             },
             "default": "all"
           },
@@ -3796,9 +3425,7 @@
     "/api/purchase/process-ad": {
       "post": {
         "summary": "پرداخت برای آگهی ساخته‌شده",
-        "tags": [
-          "Purchase"
-        ],
+        "tags": ["Purchase"],
         "security": [
           {
             "bearerAuth": []
@@ -3810,11 +3437,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "adId",
-                  "adType",
-                  "paymentMethod"
-                ],
+                "required": ["adId", "adType", "paymentMethod"],
                 "properties": {
                   "adId": {
                     "type": "string"
@@ -3838,18 +3461,11 @@
                   },
                   "ladderOption": {
                     "type": "string",
-                    "enum": [
-                      "24h",
-                      "72h",
-                      "7d"
-                    ]
+                    "enum": ["24h", "72h", "7d"]
                   },
                   "paymentMethod": {
                     "type": "string",
-                    "enum": [
-                      "Wallet",
-                      "Bank_card"
-                    ]
+                    "enum": ["Wallet", "Bank_card"]
                   }
                 }
               }
@@ -3866,9 +3482,7 @@
     "/api/purchase/enhancement": {
       "post": {
         "summary": "خرید افزونه به‌صورت جداگانه",
-        "tags": [
-          "Purchase"
-        ],
+        "tags": ["Purchase"],
         "security": [
           {
             "bearerAuth": []
@@ -3901,11 +3515,7 @@
                   },
                   "enhancementType": {
                     "type": "string",
-                    "enum": [
-                      "SPECIAL",
-                      "LADDER",
-                      "RENEWAL"
-                    ]
+                    "enum": ["SPECIAL", "LADDER", "RENEWAL"]
                   },
                   "ladderSchedule": {
                     "type": "string",
@@ -3914,20 +3524,12 @@
                   },
                   "ladderOption": {
                     "type": "string",
-                    "enum": [
-                      "now",
-                      "24h",
-                      "72h",
-                      "7d"
-                    ],
+                    "enum": ["now", "24h", "72h", "7d"],
                     "description": null
                   },
                   "paymentMethod": {
                     "type": "string",
-                    "enum": [
-                      "Wallet",
-                      "Bank_card"
-                    ]
+                    "enum": ["Wallet", "Bank_card"]
                   }
                 }
               }
@@ -3944,9 +3546,7 @@
     "/api/provinces": {
       "get": {
         "summary": "دریافت لیست تمام استان‌ها",
-        "tags": [
-          "Province"
-        ],
+        "tags": ["Province"],
         "responses": {
           "200": {
             "description": "موفق",
@@ -3970,9 +3570,7 @@
     "/api/cities/{province}": {
       "get": {
         "summary": "دریافت شهرهای یک استان خاص",
-        "tags": [
-          "Province"
-        ],
+        "tags": ["Province"],
         "parameters": [
           {
             "in": "path",
@@ -4010,9 +3608,7 @@
     "/api/all-cities": {
       "get": {
         "summary": "دریافت لیست تمام شهرها (تکراری‌ها حذف شده)",
-        "tags": [
-          "Province"
-        ],
+        "tags": ["Province"],
         "responses": {
           "200": {
             "description": "موفق",
@@ -4036,9 +3632,7 @@
     "/api/pricing": {
       "get": {
         "summary": "دریافت همه قیمت‌ها",
-        "tags": [
-          "Pricing"
-        ],
+        "tags": ["Pricing"],
         "responses": {
           "200": {
             "description": "موفق",
@@ -4087,9 +3681,7 @@
     "/api/pricing/{key}": {
       "get": {
         "summary": "دریافت یک قیمت با کلید",
-        "tags": [
-          "Pricing"
-        ],
+        "tags": ["Pricing"],
         "parameters": [
           {
             "in": "path",
@@ -4141,9 +3733,7 @@
     "/api/admin/pricing/{key}": {
       "put": {
         "summary": "به‌روزرسانی یک قیمت",
-        "tags": [
-          "Pricing"
-        ],
+        "tags": ["Pricing"],
         "security": [
           {
             "bearerAuth": []
@@ -4165,9 +3755,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "value"
-                ],
+                "required": ["value"],
                 "properties": {
                   "value": {
                     "type": "number",
@@ -4236,9 +3824,7 @@
     "/api/payments/create": {
       "post": {
         "summary": "ایجاد درخواست پرداخت جدید",
-        "tags": [
-          "Payment"
-        ],
+        "tags": ["Payment"],
         "security": [
           {
             "bearerAuth": []
@@ -4250,21 +3836,14 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "amount",
-                  "paymentMethod"
-                ],
+                "required": ["amount", "paymentMethod"],
                 "properties": {
                   "amount": {
                     "type": "number"
                   },
                   "paymentMethod": {
                     "type": "string",
-                    "enum": [
-                      "Wallet",
-                      "Bank_card",
-                      "Subscription"
-                    ]
+                    "enum": ["Wallet", "Bank_card", "Subscription"]
                   },
                   "description": {
                     "type": "string"
@@ -4274,10 +3853,7 @@
                   },
                   "referenceType": {
                     "type": "string",
-                    "enum": [
-                      "AD",
-                      "ENHANCEMENT"
-                    ]
+                    "enum": ["AD", "ENHANCEMENT"]
                   },
                   "metadata": {
                     "type": "object"
@@ -4297,9 +3873,7 @@
     "/api/payments/verify": {
       "get": {
         "summary": "تایید پرداخت (Callback از درگاه)",
-        "tags": [
-          "Payment"
-        ],
+        "tags": ["Payment"],
         "parameters": [
           {
             "in": "query",
@@ -4315,10 +3889,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "enum": [
-                "OK",
-                "NOK"
-              ]
+              "enum": ["OK", "NOK"]
             }
           }
         ],
@@ -4332,9 +3903,7 @@
     "/api/payments/pay-mock": {
       "get": {
         "summary": "صفحه شبیه‌سازی درگاه پرداخت",
-        "tags": [
-          "Payment"
-        ],
+        "tags": ["Payment"],
         "parameters": [
           {
             "in": "query",
@@ -4355,20 +3924,14 @@
     "/api/payments/result": {
       "get": {
         "summary": "نمایش نتیجه پرداخت (Mock)",
-        "tags": [
-          "Payment"
-        ],
+        "tags": ["Payment"],
         "parameters": [
           {
             "in": "query",
             "name": "status",
             "schema": {
               "type": "string",
-              "enum": [
-                "success",
-                "failed",
-                "error"
-              ]
+              "enum": ["success", "failed", "error"]
             }
           },
           {
@@ -4403,18 +3966,14 @@
     "/api/otp/send": {
       "post": {
         "summary": "ارسال کد OTP به شماره تلفن",
-        "tags": [
-          "OTP"
-        ],
+        "tags": ["OTP"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "phone"
-                ],
+                "required": ["phone"],
                 "properties": {
                   "phone": {
                     "type": "string",
@@ -4422,10 +3981,7 @@
                   },
                   "purpose": {
                     "type": "string",
-                    "enum": [
-                      "default",
-                      "reset"
-                    ],
+                    "enum": ["default", "reset"],
                     "default": "default",
                     "description": "هدف از ارسال OTP (reset برای فراموشی رمز)"
                   }
@@ -4465,19 +4021,14 @@
     "/api/otp/verify": {
       "post": {
         "summary": "تایید کد OTP",
-        "tags": [
-          "OTP"
-        ],
+        "tags": ["OTP"],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "phone",
-                  "code"
-                ],
+                "required": ["phone", "code"],
                 "properties": {
                   "phone": {
                     "type": "string",
@@ -4489,10 +4040,7 @@
                   },
                   "purpose": {
                     "type": "string",
-                    "enum": [
-                      "default",
-                      "reset"
-                    ],
+                    "enum": ["default", "reset"],
                     "default": "default",
                     "description": "هدف از تایید OTP (reset برای فراموشی رمز)"
                   }
@@ -4533,9 +4081,7 @@
     "/api/ads/jobseeker": {
       "post": {
         "summary": "ایجاد آگهی جوینده کار",
-        "tags": [
-          "JobSeekerAds"
-        ],
+        "tags": ["JobSeekerAds"],
         "security": [
           {
             "BearerAuth": []
@@ -4610,9 +4156,7 @@
       },
       "get": {
         "summary": "دریافت همه آگهی‌های جوینده کار (عمومی)",
-        "tags": [
-          "JobSeekerAds"
-        ],
+        "tags": ["JobSeekerAds"],
         "parameters": [
           {
             "in": "query",
@@ -4731,9 +4275,7 @@
     "/api/ads/jobseeker/{id}/resume": {
       "post": {
         "summary": "آپلود رزومه برای آگهی",
-        "tags": [
-          "JobSeekerAds"
-        ],
+        "tags": ["JobSeekerAds"],
         "security": [
           {
             "BearerAuth": []
@@ -4781,9 +4323,7 @@
     "/api/ads/jobseeker/{id}/work-sample": {
       "post": {
         "summary": "آپلود نمونه‌کار برای آگهی",
-        "tags": [
-          "JobSeekerAds"
-        ],
+        "tags": ["JobSeekerAds"],
         "security": [
           {
             "BearerAuth": []
@@ -4831,9 +4371,7 @@
     "/api/ads/jobseeker/owner/{ownerId}": {
       "get": {
         "summary": "دریافت آگهی‌های یک کاربر خاص",
-        "tags": [
-          "JobSeekerAds"
-        ],
+        "tags": ["JobSeekerAds"],
         "parameters": [
           {
             "name": "ownerId",
@@ -4915,9 +4453,7 @@
     "/api/ads/jobseeker/{ownerId}/{adId}": {
       "get": {
         "summary": "دریافت یک آگهی مشخص از یک کاربر مشخص",
-        "tags": [
-          "JobSeekerAds"
-        ],
+        "tags": ["JobSeekerAds"],
         "parameters": [
           {
             "name": "ownerId",
@@ -4941,9 +4477,7 @@
       },
       "put": {
         "summary": "ویرایش آگهی جوینده کار",
-        "tags": [
-          "JobSeekerAds"
-        ],
+        "tags": ["JobSeekerAds"],
         "security": [
           {
             "BearerAuth": []
@@ -4996,9 +4530,7 @@
     "/api/ads/jobseeker/{id}": {
       "get": {
         "summary": "دریافت آگهی تکی",
-        "tags": [
-          "JobSeekerAds"
-        ],
+        "tags": ["JobSeekerAds"],
         "parameters": [
           {
             "name": "id",
@@ -5022,9 +4554,7 @@
     "/api/ads/jobseeker/{adId}": {
       "delete": {
         "summary": "حذف آگهی جوینده کار (فقط مالک)",
-        "tags": [
-          "JobSeekerAds"
-        ],
+        "tags": ["JobSeekerAds"],
         "security": [
           {
             "BearerAuth": []
@@ -5059,9 +4589,7 @@
     "/api/job-categories/main": {
       "get": {
         "summary": "دریافت همه دسته‌های اصلی (بدون والد)",
-        "tags": [
-          "JobCategories"
-        ],
+        "tags": ["JobCategories"],
         "responses": {
           "200": {
             "description": "موفق",
@@ -5102,9 +4630,7 @@
     "/api/job-categories/sub": {
       "get": {
         "summary": "دریافت زیردسته‌های یک دسته خاص",
-        "tags": [
-          "JobCategories"
-        ],
+        "tags": ["JobCategories"],
         "parameters": [
           {
             "in": "query",
@@ -5159,9 +4685,7 @@
     "/api/job-categories/search": {
       "get": {
         "summary": "جستجو در زیردسته‌ها با کلمه کلیدی",
-        "tags": [
-          "JobCategories"
-        ],
+        "tags": ["JobCategories"],
         "parameters": [
           {
             "in": "query",
@@ -5216,9 +4740,7 @@
     "/api/job-categories/sub/all": {
       "get": {
         "summary": "دریافت همه زیردسته‌ها (مهارت‌ها) بدون نیاز به parentId",
-        "tags": [
-          "JobCategories"
-        ],
+        "tags": ["JobCategories"],
         "responses": {
           "200": {
             "description": "موفق",
@@ -5263,9 +4785,7 @@
     "/api/job-categories/main/{mainId}/jobs": {
       "get": {
         "summary": "دریافت آگهی‌های شغلی بر اساس دسته اصلی (فیلتر سمت سرور)",
-        "tags": [
-          "JobCategories"
-        ],
+        "tags": ["JobCategories"],
         "parameters": [
           {
             "in": "path",
@@ -5312,9 +4832,7 @@
     "/api/ads/employer": {
       "post": {
         "summary": "ایجاد آگهی کارفرما",
-        "tags": [
-          "EmployerAds"
-        ],
+        "tags": ["EmployerAds"],
         "security": [
           {
             "BearerAuth": []
@@ -5326,10 +4844,7 @@
             "multipart/form-data": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "name",
-                  "title"
-                ],
+                "required": ["name", "title"],
                 "properties": {
                   "images": {
                     "type": "array",
@@ -5433,10 +4948,7 @@
                   },
                   "person": {
                     "type": "string",
-                    "enum": [
-                      "self",
-                      "other"
-                    ],
+                    "enum": ["self", "other"],
                     "description": "خودم / دیگری"
                   },
                   "isVerified": {
@@ -5453,21 +4965,12 @@
                   },
                   "adPaymentMethod": {
                     "type": "string",
-                    "enum": [
-                      "Subscription",
-                      "Wallet",
-                      "Bank_card"
-                    ],
+                    "enum": ["Subscription", "Wallet", "Bank_card"],
                     "description": "روش پرداخت آگهی"
                   },
                   "adStatus": {
                     "type": "string",
-                    "enum": [
-                      "pending",
-                      "approved",
-                      "rejected",
-                      "expired"
-                    ],
+                    "enum": ["pending", "approved", "rejected", "expired"],
                     "description": "وضعیت آگهی"
                   }
                 }
@@ -5489,9 +4992,7 @@
       },
       "get": {
         "summary": "دریافت همه آگهی‌های کارفرما (عمومی)",
-        "tags": [
-          "EmployerAds"
-        ],
+        "tags": ["EmployerAds"],
         "parameters": [
           {
             "in": "query",
@@ -5613,9 +5114,7 @@
     "/api/ads/employer/owner/{ownerId}": {
       "get": {
         "summary": "دریافت آگهی‌های یک کاربر خاص (با پیجینیشن)",
-        "tags": [
-          "EmployerAds"
-        ],
+        "tags": ["EmployerAds"],
         "parameters": [
           {
             "name": "ownerId",
@@ -5694,9 +5193,7 @@
     "/api/ads/employer/{id}": {
       "get": {
         "summary": "دریافت آگهی با ID",
-        "tags": [
-          "EmployerAds"
-        ],
+        "tags": ["EmployerAds"],
         "parameters": [
           {
             "name": "id",
@@ -5720,9 +5217,7 @@
     "/api/ads/employer/{ownerId}/{adId}": {
       "get": {
         "summary": "دریافت یک آگهی مشخص از یک کاربر مشخص",
-        "tags": [
-          "EmployerAds"
-        ],
+        "tags": ["EmployerAds"],
         "parameters": [
           {
             "name": "ownerId",
@@ -5752,9 +5247,7 @@
       },
       "put": {
         "summary": "ویرایش آگهی کارفرما (فقط مالک)",
-        "tags": [
-          "EmployerAds"
-        ],
+        "tags": ["EmployerAds"],
         "security": [
           {
             "BearerAuth": []
@@ -5821,9 +5314,7 @@
     "/api/ads/employer/{adId}": {
       "delete": {
         "summary": "حذف آگهی کارفرما (فقط مالک)",
-        "tags": [
-          "EmployerAds"
-        ],
+        "tags": ["EmployerAds"],
         "security": [
           {
             "BearerAuth": []
@@ -5858,9 +5349,7 @@
     "/api/ads/digital": {
       "post": {
         "summary": "ایجاد آگهی دیجیتال",
-        "tags": [
-          "DigitalAds"
-        ],
+        "tags": ["DigitalAds"],
         "security": [
           {
             "BearerAuth": []
@@ -5952,9 +5441,7 @@
       },
       "get": {
         "summary": "دریافت همه آگهی‌های دیجیتال (عمومی)",
-        "tags": [
-          "DigitalAds"
-        ],
+        "tags": ["DigitalAds"],
         "parameters": [
           {
             "in": "query",
@@ -6020,9 +5507,7 @@
     "/api/ads/digital/{id}": {
       "get": {
         "summary": "دریافت یک آگهی دیجیتال (عمومی)",
-        "tags": [
-          "DigitalAds"
-        ],
+        "tags": ["DigitalAds"],
         "parameters": [
           {
             "name": "id",
@@ -6049,18 +5534,14 @@
     "/api/converter/image": {
       "post": {
         "summary": "Image conversion and compression",
-        "tags": [
-          "Converter"
-        ],
+        "tags": ["Converter"],
         "requestBody": {
           "required": true,
           "content": {
             "multipart/form-data": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "image"
-                ],
+                "required": ["image"],
                 "properties": {
                   "image": {
                     "type": "string",
@@ -6106,9 +5587,7 @@
     "/api/converter/merge-pdf": {
       "post": {
         "summary": "Combine multiple PDF files",
-        "tags": [
-          "Converter"
-        ],
+        "tags": ["Converter"],
         "requestBody": {
           "required": true,
           "content": {
@@ -6147,9 +5626,7 @@
     "/api/converter/compress-pdf": {
       "post": {
         "summary": "PDF file compression (basic)",
-        "tags": [
-          "Converter"
-        ],
+        "tags": ["Converter"],
         "requestBody": {
           "required": true,
           "content": {
@@ -6185,19 +5662,14 @@
     "/api/converter/extract-pages": {
       "post": {
         "summary": "Extract specific pages from a PDF file",
-        "tags": [
-          "Converter"
-        ],
+        "tags": ["Converter"],
         "requestBody": {
           "required": true,
           "content": {
             "multipart/form-data": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "file",
-                  "pages"
-                ],
+                "required": ["file", "pages"],
                 "properties": {
                   "file": {
                     "type": "string",
@@ -6237,18 +5709,14 @@
     "/api/converter/to-pdf": {
       "post": {
         "summary": "Convert one or more images (JPG/PNG/WebP) to a PDF file",
-        "tags": [
-          "Converter"
-        ],
+        "tags": ["Converter"],
         "requestBody": {
           "required": true,
           "content": {
             "multipart/form-data": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "files"
-                ],
+                "required": ["files"],
                 "properties": {
                   "files": {
                     "type": "array",
@@ -6287,9 +5755,7 @@
     "/api/checkout/calculate": {
       "post": {
         "summary": "محاسبه هزینه نهایی قبل از خرید",
-        "tags": [
-          "Checkout"
-        ],
+        "tags": ["Checkout"],
         "security": [
           {
             "bearerAuth": []
@@ -6301,10 +5767,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "adType",
-                  "paymentMethod"
-                ],
+                "required": ["adType", "paymentMethod"],
                 "properties": {
                   "adType": {
                     "type": "string",
@@ -6333,11 +5796,7 @@
                   },
                   "paymentMethod": {
                     "type": "string",
-                    "enum": [
-                      "Wallet",
-                      "Bank_card",
-                      "Subscription"
-                    ]
+                    "enum": ["Wallet", "Bank_card", "Subscription"]
                   }
                 }
               }
@@ -6354,9 +5813,7 @@
     "/api/chat/send": {
       "post": {
         "summary": "ارسال پیام جدید",
-        "tags": [
-          "Chat"
-        ],
+        "tags": ["Chat"],
         "security": [
           {
             "BearerAuth": []
@@ -6368,13 +5825,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "from",
-                  "to",
-                  "adId",
-                  "adType",
-                  "content"
-                ],
+                "required": ["from", "to", "adId", "adType", "content"],
                 "properties": {
                   "from": {
                     "type": "string",
@@ -6390,11 +5841,7 @@
                   },
                   "adType": {
                     "type": "string",
-                    "enum": [
-                      "EmployerAd",
-                      "JobSeekerAd",
-                      "SellerAd"
-                    ],
+                    "enum": ["EmployerAd", "JobSeekerAd", "SellerAd"],
                     "description": "نوع آگهی"
                   },
                   "content": {
@@ -6429,9 +5876,7 @@
     "/api/chat/history/{adType}/{adId}/{userId1}/{userId2}": {
       "get": {
         "summary": "دریافت تاریخچه پیام‌های یک آگهی بین دو کاربر",
-        "tags": [
-          "Chat"
-        ],
+        "tags": ["Chat"],
         "security": [
           {
             "BearerAuth": []
@@ -6444,11 +5889,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "enum": [
-                "EmployerAd",
-                "JobSeekerAd",
-                "SellerAd"
-              ]
+              "enum": ["EmployerAd", "JobSeekerAd", "SellerAd"]
             },
             "description": "نوع آگهی"
           },
@@ -6496,9 +5937,7 @@
     "/api/chat/status/{userId}": {
       "get": {
         "summary": "دریافت وضعیت آنلاین کاربر",
-        "tags": [
-          "Chat"
-        ],
+        "tags": ["Chat"],
         "security": [
           {
             "BearerAuth": []
@@ -6550,9 +5989,7 @@
     "/api/chat/conversations/{userId}": {
       "get": {
         "summary": "دریافت لیست مکالمات یک کاربر",
-        "tags": [
-          "Chat"
-        ],
+        "tags": ["Chat"],
         "security": [
           {
             "BearerAuth": []
@@ -6585,9 +6022,7 @@
     "/api/chat/typing": {
       "post": {
         "summary": "ارسال وضعیت تایپ کردن به کاربر مقابل",
-        "tags": [
-          "Chat"
-        ],
+        "tags": ["Chat"],
         "security": [
           {
             "BearerAuth": []
@@ -6599,10 +6034,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "fromUserId",
-                  "toUserId"
-                ],
+                "required": ["fromUserId", "toUserId"],
                 "properties": {
                   "fromUserId": {
                     "type": "string",
@@ -6637,9 +6069,7 @@
     "/api/chat/unread-count/{userId}": {
       "get": {
         "summary": "دریافت تعداد پیام‌های خوانده نشده به تفکیک نوع آگهی",
-        "tags": [
-          "Chat"
-        ],
+        "tags": ["Chat"],
         "security": [
           {
             "BearerAuth": []
@@ -6701,9 +6131,7 @@
     "/api/chat/unread-details/{userId}": {
       "get": {
         "summary": "دریافت تعداد پیام‌های خوانده نشده برای هر مکالمه",
-        "tags": [
-          "Chat"
-        ],
+        "tags": ["Chat"],
         "security": [
           {
             "BearerAuth": []
@@ -6755,9 +6183,7 @@
     "/api/chat/mark-read": {
       "post": {
         "summary": "علامت زدن تمام پیام‌های یک مکالمه به عنوان خوانده شده",
-        "tags": [
-          "Chat"
-        ],
+        "tags": ["Chat"],
         "security": [
           {
             "BearerAuth": []
@@ -6769,10 +6195,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "userId",
-                  "conversationId"
-                ],
+                "required": ["userId", "conversationId"],
                 "properties": {
                   "userId": {
                     "type": "string",
@@ -6821,12 +6244,10 @@
         }
       }
     },
-    "/api/admin/tests/summaryResult/{userId}": {
+    "/api/admin/extension/tests/summaryResult/{userId}": {
       "get": {
         "summary": "Get a summary list of all completed tests for a specific user",
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin-Extensions"],
         "security": [
           {
             "BearerAuth": []
@@ -6883,12 +6304,10 @@
         }
       }
     },
-    "/api/admin/tests/detailedResult/{sessionId}": {
+    "/api/admin/extension/tests/detailedResult/{sessionId}": {
       "get": {
         "summary": "Get full detailed analytics of a specific test session",
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin-Extensions"],
         "security": [
           {
             "BearerAuth": []
@@ -6965,12 +6384,10 @@
         }
       }
     },
-    "/api/admin/categories": {
+    "/api/admin/extension/categories": {
       "get": {
         "summary": "Get all categories",
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin-Extensions"],
         "security": [
           {
             "BearerAuth": []
@@ -6983,12 +6400,10 @@
         }
       }
     },
-    "/api/admin/test-types": {
+    "/api/admin/extension/test-types": {
       "get": {
         "summary": "Get all test types",
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin-Extensions"],
         "security": [
           {
             "BearerAuth": []
@@ -7011,12 +6426,10 @@
         }
       }
     },
-    "/api/admin/users-with-sessions": {
+    "/api/admin/extension/users-with-sessions": {
       "get": {
         "summary": "Get all users id that has test session",
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin-Extensions"],
         "security": [
           {
             "BearerAuth": []
@@ -7032,10 +6445,7 @@
                   "items": {
                     "type": "string"
                   },
-                  "example": [
-                    "user123",
-                    "user456"
-                  ]
+                  "example": ["user123", "user456"]
                 }
               }
             }
@@ -7046,12 +6456,10 @@
         }
       }
     },
-    "/api/admin/all-sessions-info": {
+    "/api/admin/extension/all-sessions-info": {
       "get": {
         "summary": "Get all info of test sessions",
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin-Extensions"],
         "security": [
           {
             "BearerAuth": []
@@ -7075,10 +6483,7 @@
                       },
                       "status": {
                         "type": "string",
-                        "enum": [
-                          "in-progress",
-                          "completed"
-                        ]
+                        "enum": ["in-progress", "completed"]
                       },
                       "startedAt": {
                         "type": "string",
@@ -7105,12 +6510,10 @@
         }
       }
     },
-    "/api/admin/resume-users": {
+    "/api/admin/extension/resume-users": {
       "get": {
         "summary": "Get list of users that have resume(with detail)",
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin-Extensions"],
         "security": [
           {
             "BearerAuth": []
@@ -7126,12 +6529,10 @@
         }
       }
     },
-    "/api/admin/converter-tools/users-tool-usage": {
+    "/api/admin/extension/converter-tools/users-tool-usage": {
       "get": {
         "summary": "User usage report of tools",
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin-Extensions"],
         "security": [
           {
             "BearerAuth": []
@@ -7202,12 +6603,10 @@
         }
       }
     },
-    "/api/admin/converter-tools/tool-popularity": {
+    "/api/admin/extension/converter-tools/tool-popularity": {
       "get": {
         "summary": "Popularity of tools based on frequency of use",
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin-Extensions"],
         "security": [
           {
             "BearerAuth": []
@@ -7269,12 +6668,10 @@
         }
       }
     },
-    "/api/admin/converter-tools/tool-performance": {
+    "/api/admin/extension/converter-tools/tool-performance": {
       "get": {
         "summary": "Performance of tools",
-        "tags": [
-          "Admin"
-        ],
+        "tags": ["Admin-Extensions"],
         "security": [
           {
             "BearerAuth": []
@@ -7357,9 +6754,7 @@
     "/api/ad-categories/main": {
       "get": {
         "summary": "دریافت همه دسته‌های اصلی (سر دسته‌ها)",
-        "tags": [
-          "AdCategory"
-        ],
+        "tags": ["AdCategory"],
         "responses": {
           "200": {
             "description": "موفق",
@@ -7400,9 +6795,7 @@
     "/api/ad-categories/{id}/subcategories": {
       "get": {
         "summary": "دریافت زیر دسته‌ها برای یک دسته اصلی",
-        "tags": [
-          "AdCategory"
-        ],
+        "tags": ["AdCategory"],
         "parameters": [
           {
             "in": "path",
@@ -7468,9 +6861,7 @@
     "/api/ad-category-attributes": {
       "get": {
         "summary": "دریافت همه ویژگی‌های دسته‌بندی‌ها",
-        "tags": [
-          "AdCategoryAttributes"
-        ],
+        "tags": ["AdCategoryAttributes"],
         "responses": {
           "200": {
             "description": "موفق",
@@ -7508,9 +6899,7 @@
     "/api/ad-category-attributes/{categoryName}": {
       "get": {
         "summary": "دریافت ویژگی‌های یک دسته‌بندی خاص بر اساس نام",
-        "tags": [
-          "AdCategoryAttributes"
-        ],
+        "tags": ["AdCategoryAttributes"],
         "parameters": [
           {
             "in": "path",
@@ -7556,1609 +6945,10 @@
         }
       }
     },
-    "/api/admin/reports": {
-      "get": {
-        "summary": "دریافت لیست گزارش‌ها با فیلتر و صفحه‌بندی",
-        "description": "این API برای دریافت لیست تمام گزارش‌ها با قابلیت فیلتر بر اساس وضعیت و نوع گزارش و صفحه‌بندی استفاده می‌شود.\nفقط ادمین‌ها (ADMIN و SUPER_ADMIN) دسترسی دارند.\n",
-        "tags": [
-          "Admin Reports"
-        ],
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "in": "query",
-            "name": "status",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "pending",
-                "reviewed",
-                "rejected"
-              ]
-            },
-            "description": "فیلتر بر اساس وضعیت گزارش (در انتظار، بررسی شده، رد شده)",
-            "required": false
-          },
-          {
-            "in": "query",
-            "name": "reportType",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "employerAd",
-                "jobSeekerAd",
-                "sellerAd",
-                "DigitalAd",
-                "chat"
-              ]
-            },
-            "description": "فیلتر بر اساس نوع گزارش (آگهی کارفرما، جوینده کار، فروشنده، دیجیتال، چت)",
-            "required": false
-          },
-          {
-            "in": "query",
-            "name": "page",
-            "schema": {
-              "type": "integer",
-              "default": 1,
-              "minimum": 1
-            },
-            "description": "شماره صفحه برای صفحه‌بندی",
-            "required": false
-          },
-          {
-            "in": "query",
-            "name": "limit",
-            "schema": {
-              "type": "integer",
-              "default": 20,
-              "minimum": 1,
-              "maximum": 100
-            },
-            "description": "تعداد آیتم‌ها در هر صفحه (حداکثر ۱۰۰)",
-            "required": false
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "لیست گزارش‌ها به همراه اطلاعات صفحه‌بندی",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/Report"
-                      }
-                    },
-                    "pagination": {
-                      "type": "object",
-                      "properties": {
-                        "page": {
-                          "type": "integer"
-                        },
-                        "limit": {
-                          "type": "integer"
-                        },
-                        "total": {
-                          "type": "integer"
-                        },
-                        "totalPages": {
-                          "type": "integer"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "احراز هویت نشده (توکن ارائه نشده یا نامعتبر)"
-          },
-          "403": {
-            "description": "دسترسی غیرمجاز (فقط ادمین‌ها)"
-          },
-          "500": {
-            "description": "خطای داخلی سرور"
-          }
-        }
-      }
-    },
-    "/api/admin/reports/{id}": {
-      "get": {
-        "summary": "دریافت جزئیات کامل یک گزارش",
-        "description": "این API برای دریافت اطلاعات کامل یک گزارش به همراه جزئیات هدف (آگهی یا چت) و اطلاعات کاربر گزارش‌دهنده استفاده می‌شود.\n- برای آگهی‌ها: تمام اطلاعات آگهی به همراه اطلاعات صاحب آگهی برگردانده می‌شود.\n- برای چت: اطلاعات چت، طرفین چت و تمام پیام‌های مکالمه به ترتیب زمان برگردانده می‌شود.\n",
-        "tags": [
-          "Admin Reports"
-        ],
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "شناسه گزارش"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "جزئیات کامل گزارش",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "report": {
-                      "$ref": "#/components/schemas/Report"
-                    },
-                    "target": {
-                      "oneOf": [
-                        {
-                          "$ref": "#/components/schemas/EmployerAd"
-                        },
-                        {
-                          "$ref": "#/components/schemas/JobSeekerAd"
-                        },
-                        {
-                          "$ref": "#/components/schemas/SellerAd"
-                        },
-                        {
-                          "$ref": "#/components/schemas/DigitalAd"
-                        },
-                        {
-                          "$ref": "#/components/schemas/ChatWithConversation"
-                        }
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "شناسه گزارش معتبر نیست"
-          },
-          "401": {
-            "description": "احراز هویت نشده"
-          },
-          "403": {
-            "description": "دسترسی غیرمجاز"
-          },
-          "404": {
-            "description": "گزارش یافت نشد"
-          },
-          "500": {
-            "description": "خطای داخلی سرور"
-          }
-        }
-      },
-      "delete": {
-        "summary": "حذف گزارش (اختیاری)",
-        "description": "این API برای حذف کامل یک گزارش از دیتابیس استفاده می‌شود.\nتوجه: این عملیات فقط خود گزارش را حذف می‌کند و تأثیری بر روی هدف (آگهی یا چت) ندارد.\n",
-        "tags": [
-          "Admin Reports"
-        ],
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "شناسه گزارش"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "گزارش با موفقیت حذف شد",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "گزارش با موفقیت حذف شد"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "شناسه گزارش معتبر نیست"
-          },
-          "401": {
-            "description": "احراز هویت نشده"
-          },
-          "403": {
-            "description": "دسترسی غیرمجاز"
-          },
-          "404": {
-            "description": "گزارش یافت نشد"
-          },
-          "500": {
-            "description": "خطای داخلی سرور"
-          }
-        }
-      }
-    },
-    "/api/admin/reports/{id}/status": {
-      "put": {
-        "summary": "تغییر وضعیت گزارش",
-        "description": "این API برای تغییر وضعیت یک گزارش استفاده می‌شود.\nوضعیت‌های مجاز: pending (در انتظار)، reviewed (بررسی شده)، rejected (رد شده)\n",
-        "tags": [
-          "Admin Reports"
-        ],
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "شناسه گزارش"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "status"
-                ],
-                "properties": {
-                  "status": {
-                    "type": "string",
-                    "enum": [
-                      "pending",
-                      "reviewed",
-                      "rejected"
-                    ],
-                    "description": "وضعیت جدید گزارش"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "وضعیت گزارش با موفقیت به‌روز شد",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "وضعیت گزارش به‌روز شد"
-                    },
-                    "report": {
-                      "$ref": "#/components/schemas/Report"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "درخواست نامعتبر (وضعیت نامعتبر یا缺失)"
-          },
-          "401": {
-            "description": "احراز هویت نشده"
-          },
-          "403": {
-            "description": "دسترسی غیرمجاز"
-          },
-          "404": {
-            "description": "گزارش یافت نشد"
-          },
-          "500": {
-            "description": "خطای داخلی سرور"
-          }
-        }
-      }
-    },
-    "/api/admin/reports/{id}/delete-ad": {
-      "delete": {
-        "summary": "حذف آگهی بر اساس گزارش",
-        "description": "این API برای حذف کامل آگهی مربوط به یک گزارش استفاده می‌شود.\n- فقط برای انواع آگهی (employerAd, jobSeekerAd, sellerAd, DigitalAd) قابل استفاده است.\n- پس از حذف آگهی، وضعیت گزارش به reviewed تغییر می‌کند.\n- برای چت‌ها از API بلاک چت استفاده کنید.\n",
-        "tags": [
-          "Admin Reports"
-        ],
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "شناسه گزارش"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "آگهی با موفقیت حذف شد و گزارش بررسی شد",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "آگهی با موفقیت حذف شد و گزارش بررسی شد"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "خطاهای احتمالی:\n- شناسه گزارش معتبر نیست\n- نوع آگهی برای حذف پشتیبانی نمی‌شود (مثلاً اگر نوع chat باشد)\n"
-          },
-          "401": {
-            "description": "احراز هویت نشده"
-          },
-          "403": {
-            "description": "دسترسی غیرمجاز"
-          },
-          "404": {
-            "description": "خطاهای احتمالی:\n- گزارش یافت نشد\n- آگهی مورد نظر یافت نشد\n"
-          },
-          "500": {
-            "description": "خطای داخلی سرور"
-          }
-        }
-      }
-    },
-    "/api/admin/reports/{id}/block-chat": {
-      "put": {
-        "summary": "بلاک کردن چت بر اساس گزارش",
-        "description": "این API برای بلاک کردن مکالمه چت مربوط به یک گزارش استفاده می‌شود.\n- فقط برای نوع chat قابل استفاده است.\n- پس از بلاک، طرفین نمی‌توانند پیام جدیدی ارسال کنند.\n- وضعیت گزارش به reviewed تغییر می‌کند.\n- اطلاعات کامل چت، طرفین و تمام پیام‌های مکالمه برگردانده می‌شود.\n",
-        "tags": [
-          "Admin Reports"
-        ],
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "شناسه گزارش"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "مکالمه با موفقیت بلاک شد و گزارش بررسی شد",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "مکالمه با موفقیت بلاک شد و گزارش بررسی شد"
-                    },
-                    "conversation": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "string"
-                        },
-                        "isBlocked": {
-                          "type": "boolean",
-                          "example": true
-                        },
-                        "participants": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "id": {
-                                "type": "string"
-                              },
-                              "name": {
-                                "type": "string"
-                              },
-                              "phone": {
-                                "type": "string"
-                              },
-                              "email": {
-                                "type": "string"
-                              },
-                              "role": {
-                                "type": "string"
-                              }
-                            }
-                          }
-                        },
-                        "messages": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "id": {
-                                "type": "string"
-                              },
-                              "content": {
-                                "type": "string"
-                              },
-                              "createdAt": {
-                                "type": "string",
-                                "format": "date-time"
-                              },
-                              "fromUser": {
-                                "type": "object",
-                                "properties": {
-                                  "id": {
-                                    "type": "string"
-                                  },
-                                  "name": {
-                                    "type": "string"
-                                  },
-                                  "phone": {
-                                    "type": "string"
-                                  }
-                                }
-                              },
-                              "toUser": {
-                                "type": "object",
-                                "properties": {
-                                  "id": {
-                                    "type": "string"
-                                  },
-                                  "name": {
-                                    "type": "string"
-                                  },
-                                  "phone": {
-                                    "type": "string"
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "خطاهای احتمالی:\n- شناسه گزارش معتبر نیست\n- این گزارش مربوط به چت نیست (نوع گزارش chat نیست)\n"
-          },
-          "401": {
-            "description": "احراز هویت نشده"
-          },
-          "403": {
-            "description": "دسترسی غیرمجاز"
-          },
-          "404": {
-            "description": "خطاهای احتمالی:\n- گزارش یافت نشد\n- چت یا مکالمه یافت نشد\n"
-          },
-          "500": {
-            "description": "خطای داخلی سرور"
-          }
-        }
-      }
-    },
-    "/public/ad-categories/tree": {
-      "get": {
-        "summary": "Get all ad categories",
-        "description": "Retrieves a list of all ad categories. Maps the database 'id' to '_id' and initializes an empty 'children' array for each item.",
-        "tags": [
-          "Admin backend"
-        ],
-        "security": [],
-        "responses": {
-          "200": {
-            "description": "A list of ad categories retrieved successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "_id": {
-                        "type": "string",
-                        "description": "The category ID (mapped from the original 'id')",
-                        "example": "clxyz123456789"
-                      },
-                      "children": {
-                        "type": "array",
-                        "items": {},
-                        "description": "An empty array (intended for frontend tree building)",
-                        "example": []
-                      },
-                      "name": {
-                        "type": "string",
-                        "example": "Vehicles"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/public/ad-categories/descendants/{id}": {
-      "get": {
-        "summary": "Get a specific ad category by ID",
-        "description": "Retrieves the details of a specific ad category using its unique ID.",
-        "tags": [
-          "Admin backend"
-        ],
-        "security": [],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The unique identifier of the ad category",
-            "example": "clxyz123456789"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The ad category details retrieved successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "string",
-                      "example": "clxyz123456789"
-                    },
-                    "name": {
-                      "type": "string",
-                      "example": "Vehicles"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request - ID parameter is missing",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "Id are required"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found - Ad category does not exist",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "دسته بندی با این مشخصات پیدا نشد"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/super-admin/register": {
-      "post": {
-        "summary": "Register a new super admin",
-        "description": "Registers a new super admin. Validates password match, checks for existing phone numbers, and hashes the password.",
-        "tags": [
-          "Admin backend"
-        ],
-        "security": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "firstName",
-                  "lastName",
-                  "phone",
-                  "password",
-                  "passwordConfirm"
-                ],
-                "properties": {
-                  "firstName": {
-                    "type": "string",
-                    "minLength": 2,
-                    "maxLength": 30,
-                    "example": "Ali"
-                  },
-                  "lastName": {
-                    "type": "string",
-                    "minLength": 2,
-                    "maxLength": 30,
-                    "example": "Yasrebi"
-                  },
-                  "phone": {
-                    "type": "string",
-                    "pattern": "^09\\d{9}$",
-                    "description": "Iranian phone number format",
-                    "example": "09123456789"
-                  },
-                  "password": {
-                    "type": "string",
-                    "minLength": 8,
-                    "format": "password",
-                    "description": "Must contain uppercase, lowercase, and a number",
-                    "example": "SecurePass123"
-                  },
-                  "passwordConfirm": {
-                    "type": "string",
-                    "format": "password",
-                    "description": "Must exactly match the password field",
-                    "example": "SecurePass123"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Super Admin registered successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Super Admin registered"
-                    },
-                    "superAdminId": {
-                      "type": "string",
-                      "example": "clxyz123456789"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request (Missing fields, passwords mismatch, or phone already exists)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "oneOf": [
-                    {
-                      "type": "object",
-                      "properties": {
-                        "error": {
-                          "type": "string",
-                          "example": "Bad Request"
-                        },
-                        "statusCode": {
-                          "type": "integer",
-                          "example": 400
-                        }
-                      }
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "message": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          },
-                          "example": [
-                            "Passwords do not match"
-                          ]
-                        },
-                        "error": {
-                          "type": "string",
-                          "example": "Bad Request"
-                        },
-                        "statusCode": {
-                          "type": "integer",
-                          "example": 400
-                        }
-                      }
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "message": {
-                          "type": "string",
-                          "example": "Phone already exists"
-                        },
-                        "error": {
-                          "type": "string",
-                          "example": "Bad Request"
-                        },
-                        "statusCode": {
-                          "type": "integer",
-                          "example": 400
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/sub-admin/register": {
-      "post": {
-        "summary": "Register a new sub-admin",
-        "description": "Registers a new sub-admin. Validates password match, checks for existing phone numbers, and hashes the password.",
-        "tags": [
-          "Admin backend"
-        ],
-        "security": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "firstName",
-                  "lastName",
-                  "phone",
-                  "password",
-                  "passwordConfirm"
-                ],
-                "properties": {
-                  "firstName": {
-                    "type": "string",
-                    "minLength": 2,
-                    "maxLength": 30,
-                    "example": "Ali"
-                  },
-                  "lastName": {
-                    "type": "string",
-                    "minLength": 2,
-                    "maxLength": 30,
-                    "example": "Yasrebi"
-                  },
-                  "phone": {
-                    "type": "string",
-                    "pattern": "^09\\d{9}$",
-                    "description": "Iranian phone number format",
-                    "example": "09123456789"
-                  },
-                  "password": {
-                    "type": "string",
-                    "minLength": 8,
-                    "description": "Must contain uppercase, lowercase, and a number",
-                    "example": "SecurePass123"
-                  },
-                  "passwordConfirm": {
-                    "type": "string",
-                    "description": "Must exactly match the password field",
-                    "example": "SecurePass123"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Admin registered successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Admin registered"
-                    },
-                    "superAdminId": {
-                      "type": "string",
-                      "example": "clxyz123456789"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request (Missing fields, passwords mismatch, or phone already exists)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "oneOf": [
-                    {
-                      "type": "object",
-                      "properties": {
-                        "error": {
-                          "type": "string",
-                          "example": "Bad Request"
-                        },
-                        "statusCode": {
-                          "type": "integer",
-                          "example": 400
-                        }
-                      }
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "message": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          },
-                          "example": [
-                            "Passwords do not match"
-                          ]
-                        },
-                        "error": {
-                          "type": "string",
-                          "example": "Bad Request"
-                        },
-                        "statusCode": {
-                          "type": "integer",
-                          "example": 400
-                        }
-                      }
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "message": {
-                          "type": "string",
-                          "example": "Phone already exists"
-                        },
-                        "error": {
-                          "type": "string",
-                          "example": "Bad Request"
-                        },
-                        "statusCode": {
-                          "type": "integer",
-                          "example": 400
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/sub-admin/pending": {
-      "get": {
-        "summary": "Get pending admins",
-        "description": "Retrieves a list of admins. Only accessible by Super Admin.",
-        "tags": [
-          "Admin backend"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of admins retrieved successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string"
-                      },
-                      "role": {
-                        "type": "string",
-                        "example": "admin"
-                      },
-                      "firstname": {
-                        "type": "string"
-                      },
-                      "lastname": {
-                        "type": "string"
-                      },
-                      "phone": {
-                        "type": "string"
-                      },
-                      "verified": {
-                        "type": "boolean"
-                      },
-                      "createdAt": {
-                        "type": "string",
-                        "format": "date-time"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized (No token provided)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "دسترسی غیرمجاز: توکن ارسال نشده است."
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden (Invalid token or not Super Admin)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Only Super Admin can perform this action"
-                    },
-                    "error": {
-                      "type": "string",
-                      "example": "Forbidden"
-                    },
-                    "statusCode": {
-                      "type": "integer",
-                      "example": 403
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/sub-admin/approve/{id}": {
-      "post": {
-        "summary": "Approve a sub-admin",
-        "description": "Activates/verifies a pending sub-admin. Only accessible by Super Admin.",
-        "tags": [
-          "Admin backend"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The ID of the admin to approve"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Admin approved successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "string"
-                    },
-                    "role": {
-                      "type": "string"
-                    },
-                    "firstname": {
-                      "type": "string"
-                    },
-                    "lastname": {
-                      "type": "string"
-                    },
-                    "phone": {
-                      "type": "string"
-                    },
-                    "verified": {
-                      "type": "boolean"
-                    },
-                    "createdAt": {
-                      "type": "string",
-                      "format": "date-time"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "دسترسی غیرمجاز: توکن ارسال نشده است."
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Only Super Admin can perform this action"
-                    },
-                    "error": {
-                      "type": "string",
-                      "example": "Forbidden"
-                    },
-                    "statusCode": {
-                      "type": "integer",
-                      "example": 403
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/sub-admin/reject/{id}": {
-      "get": {
-        "summary": "Reject a sub-admin",
-        "description": "Rejects and deletes a pending sub-admin from the database. Only accessible by Super Admin.",
-        "tags": [
-          "Admin backend"
-        ],
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "The ID of the admin to reject"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Admin rejected and deleted successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "string"
-                    },
-                    "role": {
-                      "type": "string"
-                    },
-                    "firstname": {
-                      "type": "string"
-                    },
-                    "lastname": {
-                      "type": "string"
-                    },
-                    "phone": {
-                      "type": "string"
-                    },
-                    "verified": {
-                      "type": "boolean"
-                    },
-                    "createdAt": {
-                      "type": "string",
-                      "format": "date-time"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "دسترسی غیرمجاز: توکن ارسال نشده است."
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Only Super Admin can perform this action"
-                    },
-                    "error": {
-                      "type": "string",
-                      "example": "Forbidden"
-                    },
-                    "statusCode": {
-                      "type": "integer",
-                      "example": 403
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/sub-admins/active": {
-      "get": {
-        "summary": "Get active sub-admins",
-        "description": "Retrieves a list of all verified/active sub-admins. Only accessible by Super Admin.",
-        "tags": [
-          "Admin backend"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of active admins retrieved successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string"
-                      },
-                      "role": {
-                        "type": "string"
-                      },
-                      "firstname": {
-                        "type": "string"
-                      },
-                      "lastname": {
-                        "type": "string"
-                      },
-                      "phone": {
-                        "type": "string"
-                      },
-                      "verified": {
-                        "type": "boolean"
-                      },
-                      "createdAt": {
-                        "type": "string",
-                        "format": "date-time"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "دسترسی غیرمجاز: توکن ارسال نشده است."
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Only Super Admin can perform this action"
-                    },
-                    "error": {
-                      "type": "string",
-                      "example": "Forbidden"
-                    },
-                    "statusCode": {
-                      "type": "integer",
-                      "example": 403
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/login": {
-      "post": {
-        "summary": "Admin Login",
-        "description": "Authenticates an admin user using phone and password, and returns a JWT access token.",
-        "tags": [
-          "Admin backend"
-        ],
-        "security": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "phone",
-                  "password"
-                ],
-                "properties": {
-                  "phone": {
-                    "type": "string",
-                    "description": "The admin's phone number",
-                    "example": "09123456789"
-                  },
-                  "password": {
-                    "type": "string",
-                    "description": "The admin's password",
-                    "example": "securePassword123"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Login successful. Returns a JWT token based on the admin's role (ADMIN or SUPER_ADMIN).",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "accessToken": {
-                      "type": "string",
-                      "description": "JWT access token",
-                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request - Missing phone or password in the request body.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      },
-                      "example": [
-                        "password or phone is not entered"
-                      ]
-                    },
-                    "error": {
-                      "type": "string",
-                      "example": "Bad Request"
-                    },
-                    "statusCode": {
-                      "type": "integer",
-                      "example": 400
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - Admin not found, account not verified, or invalid credentials.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Error message (Returns Persian text if not found/unverified, English if password is wrong)",
-                      "example": "ادمین با این مشخصات وجود ندارد"
-                    },
-                    "error": {
-                      "type": "string",
-                      "example": "Unauthorized"
-                    },
-                    "statusCode": {
-                      "type": "integer",
-                      "example": 401
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/ads/count": {
-      "get": {
-        "summary": "Get Ads Count",
-        "description": "Returns the total count of ads across all categories (digital, seller, employer, jobSeeker), optionally filtered by status.",
-        "tags": [
-          "Admin backend"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "in": "query",
-            "name": "adStatus",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "approved",
-                "rejected",
-                "pending"
-              ]
-            },
-            "required": false,
-            "description": "Filter ads by their status. If omitted, returns the count for all ads."
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful operation. Returns the total count of ads.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "adStatus": {
-                      "type": "string",
-                      "description": "The status filtered, or 'all' if no filter was provided.",
-                      "example": "all"
-                    },
-                    "total": {
-                      "type": "integer",
-                      "description": "Total number of ads.",
-                      "example": 42
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request - Invalid adStatus parameter provided.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "Invalid adStatus parameter"
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "The value 'invalid_status' is not a valid ad status."
-                    },
-                    "validOptions": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      },
-                      "example": [
-                        "approved",
-                        "rejected",
-                        "pending"
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - Admin authorization failed."
-          }
-        }
-      }
-    },
-    "/ads/chart/all": {
-      "get": {
-        "summary": "Get All Ads Chart Data",
-        "description": "Generates chart data for all ads grouped by date. Returns daily counts for digital, employer, seller, and job seeker ads.",
-        "tags": [
-          "Admin backend"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful operation. Returns an array of daily ad counts sorted by date.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "date": {
-                        "type": "string",
-                        "format": "date",
-                        "description": "The date in YYYY-MM-DD format.",
-                        "example": "2023-10-25"
-                      },
-                      "digital": {
-                        "type": "integer",
-                        "description": "Number of digital ads created on this date.",
-                        "example": 5
-                      },
-                      "employer": {
-                        "type": "integer",
-                        "description": "Number of employer ads created on this date.",
-                        "example": 2
-                      },
-                      "seller": {
-                        "type": "integer",
-                        "description": "Number of seller ads created on this date.",
-                        "example": 1
-                      },
-                      "job_seeker": {
-                        "type": "integer",
-                        "description": "Number of job seeker ads created on this date.",
-                        "example": 3
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - Admin authorization failed."
-          },
-          "500": {
-            "description": "Internal Server Error - Failed to generate chart data.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "Failed to generate chart data"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/profile": {
       "get": {
         "summary": "دریافت پروفایل کاربر",
-        "tags": [
-          "Profile"
-        ],
+        "tags": ["Profile"],
         "security": [
           {
             "BearerAuth": []
@@ -9211,9 +7001,7 @@
       },
       "put": {
         "summary": "بروزرسانی پروفایل کاربر",
-        "tags": [
-          "Profile"
-        ],
+        "tags": ["Profile"],
         "security": [
           {
             "BearerAuth": []
@@ -9225,9 +7013,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "userId"
-                ],
+                "required": ["userId"],
                 "properties": {
                   "userId": {
                     "type": "string"
@@ -9350,9 +7136,7 @@
     "/api/profile/upload-photo": {
       "post": {
         "summary": "آپلود عکس پروفایل",
-        "tags": [
-          "Profile"
-        ],
+        "tags": ["Profile"],
         "security": [
           {
             "BearerAuth": []
@@ -9364,10 +7148,7 @@
             "multipart/form-data": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "userId",
-                  "profileImage"
-                ],
+                "required": ["userId", "profileImage"],
                 "properties": {
                   "userId": {
                     "type": "string",
@@ -9411,6 +7192,910 @@
           }
         }
       }
+    },
+    "/api/job-categories/main": {
+      "get": {
+        "summary": "دریافت لیست دسته‌های اصلی شغلی",
+        "tags": ["JobCategories"],
+        "description": "این دسته‌ها برای هر دو نوع کاربر (کارفرما و جوینده کار) یکسان است. هر دسته اصلی شامل مجموعه‌ای از مهارت‌ها (زیردسته‌ها) می‌باشد.",
+        "responses": {
+          "200": {
+            "description": "موفق - لیست دسته‌های اصلی برگردانده شد",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "categories": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string",
+                            "example": "6a09a01592cb42558565abb0"
+                          },
+                          "name": {
+                            "type": "string",
+                            "example": "فناوری اطلاعات و برنامه‌نویسی"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "status": "success",
+                  "categories": [
+                    {
+                      "_id": "6a09a01592cb42558565abb0",
+                      "name": "فناوری اطلاعات و برنامه‌نویسی"
+                    },
+                    {
+                      "_id": "6a09a01592cb42558565abb3",
+                      "name": "طراحی و هنر"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور"
+          }
+        }
+      }
+    },
+    "/api/job-categories/sub": {
+      "get": {
+        "summary": "دریافت زیردسته‌های یک دسته اصلی (مهارت‌های مرتبط)",
+        "tags": ["JobCategories"],
+        "description": "با استفاده از این مسیر می‌توان مهارت‌های مربوط به یک دسته شغلی خاص را دریافت کرد.\nاین مهارت‌ها همان زیردسته‌ها هستند و برای پر کردن فیلد \"مهارت‌ها\" در فرم‌های استخدام و رزومه به کار می‌روند.\n",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "parentId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "شناسه دسته اصلی (که از مسیر /main دریافت شده است)",
+            "example": "6a09a01592cb42558565abb0"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "موفق - لیست مهارت‌ها (زیردسته‌ها) برگردانده شد",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "categories": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string",
+                            "example": "6a09a01592cb42558565abb1"
+                          },
+                          "name": {
+                            "type": "string",
+                            "example": "توسعه وب (فرانت‌اند، بک‌اند، فول‌استک)"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "status": "success",
+                  "categories": [
+                    {
+                      "_id": "6a09a01592cb42558565abb1",
+                      "name": "توسعه وب (فرانت‌اند، بک‌اند، فول‌استک)"
+                    },
+                    {
+                      "_id": "6a09a01592cb42558565abb2",
+                      "name": "توسعه اپلیکیشن موبایل"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "parentId ارائه نشده است"
+          },
+          "500": {
+            "description": "خطای سرور"
+          }
+        }
+      }
+    },
+    "/api/job-categories/search-sub": {
+      "get": {
+        "summary": "جستجوی مهارت‌ها (زیردسته‌ها) بر اساس کلمه کلیدی",
+        "tags": ["JobCategories"],
+        "description": "این مسیر فقط در میان زیردسته‌ها (مهارت‌ها) جستجو می‌کند و دسته‌های اصلی را شامل نمی‌شود.\nمناسب برای جستجوی زنده (live search) هنگام ورود مهارت توسط کاربر.\n",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "keyword",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "کلمه یا عبارت جستجو (ممکن است شامل فاصله باشد)",
+            "example": "طراحی"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "موفق - نتایج جستجو برگردانده شد (ممکن است خالی باشد)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "categories": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "status": "success",
+                  "categories": [
+                    {
+                      "_id": "6a09a01592cb42558565abb8",
+                      "name": "طراحی گرافیک (لوگو، بروشور، بنر)"
+                    },
+                    {
+                      "_id": "6a09a01592cb42558565abb9",
+                      "name": "طراحی UI/UX"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "کلمه کلیدی ارائه نشده است"
+          },
+          "500": {
+            "description": "خطای سرور"
+          }
+        }
+      }
+    },
+    "/api/job-categories/sub/all": {
+      "get": {
+        "summary": "دریافت تمام مهارت‌ها (زیردسته‌ها) بدون نیاز به parentId",
+        "tags": ["JobCategories"],
+        "description": "این مسیر همه زیردسته‌های موجود در دیتابیس را برمی‌گرداند (همه مهارت‌ها، بدون در نظر گرفتن دسته والدشان).",
+        "responses": {
+          "200": {
+            "description": "موفق - لیست تمام مهارت‌ها برگردانده شد",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "categories": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "parent": {
+                            "type": "string",
+                            "description": "شناسه دسته والد (اختیاری)"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "status": "success",
+                  "categories": [
+                    {
+                      "_id": "6a09a01592cb42558565abb1",
+                      "name": "توسعه وب (فرانت‌اند، بک‌اند، فول‌استک)",
+                      "parent": "6a09a01592cb42558565abb0"
+                    },
+                    {
+                      "_id": "6a09a01592cb42558565abb2",
+                      "name": "توسعه اپلیکیشن موبایل",
+                      "parent": "6a09a01592cb42558565abb0"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "خطای سرور"
+          }
+        }
+      }
+    },
+    "/api/job-categories/main/{mainId}/jobs": {
+      "get": {
+        "summary": "دریافت آگهی‌های شغلی بر اساس دسته اصلی (فیلتر یکپارچه)",
+        "tags": ["JobCategories"],
+        "description": "این مسیر تمام آگهی‌هایی را برمی‌گرداند که زیردسته (مهارت) آنها به دسته اصلی مشخص شده تعلق دارد.\nبه این ترتیب نیازی نیست فرانت‌اند ابتدا زیردسته‌ها را و سپس آگهی‌ها را دریافت کند.\n",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mainId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "شناسه دسته اصلی (که از /main دریافت می‌شود)",
+            "example": "6a09a01592cb42558565abb0"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "موفق - لیست آگهی‌ها برگردانده شد",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "jobs": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "subCategory": {
+                            "type": "object"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "mainId ارائه نشده یا نامعتبر"
+          },
+          "500": {
+            "description": "خطای سرور"
+          }
+        }
+      }
+    },
+    "/api/admin/auth/setup-owner": {
+      "post": {
+        "tags": ["Admin-Auth"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["fullName", "username", "phone", "password"],
+                "properties": {
+                  "fullName": {
+                    "type": "string",
+                    "description": "نام کامل"
+                  },
+                  "username": {
+                    "type": "string",
+                    "description": "نام کاربری"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "شماره تماس"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "description": "رمز عبور (حداقل ۸ کاراکتر)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "موفق",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "fullName": {
+                          "type": "string"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "phone": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string",
+                          "example": "OWNER"
+                        },
+                        "status": {
+                          "type": "string",
+                          "example": "ACTIVE"
+                        },
+                        "platforms": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": ["SHOP", "EDUCATION", "CLUB", "MAIN"]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "خطای ورودی"
+          },
+          "403": {
+            "description": "فقط در محیط توسعه فعال است"
+          }
+        }
+      }
+    },
+    "/api/admin/auth/login": {
+      "post": {
+        "tags": ["Admin-Auth"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["username", "password"],
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "description": "نام کاربری ادمین",
+                    "example": "owner"
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "رمز عبور",
+                    "example": "Owner@123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ورود موفق",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "accessToken": {
+                          "type": "string"
+                        },
+                        "admin": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "firstName": {
+                              "type": "string"
+                            },
+                            "lastName": {
+                              "type": "string"
+                            },
+                            "username": {
+                              "type": "string"
+                            },
+                            "phone": {
+                              "type": "string"
+                            },
+                            "role": {
+                              "type": "string"
+                            },
+                            "status": {
+                              "type": "string"
+                            },
+                            "platforms": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "permissions": {
+                              "type": "object"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "خطا در ورودی"
+          },
+          "401": {
+            "description": "نام کاربری یا رمز عبور اشتباه است"
+          }
+        }
+      }
+    },
+    "/api/admin/auth/me": {
+      "get": {
+        "tags": ["Admin-Auth"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "موفق",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "fullName": {
+                          "type": "string"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "phone": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string"
+                        },
+                        "platforms": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "permissions": {
+                          "type": "object"
+                        },
+                        "lastLoginAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "createdBy": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "fullName": {
+                              "type": "string"
+                            },
+                            "username": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "احراز هویت نشده"
+          }
+        }
+      }
+    },
+    "/api/admin/admins": {
+      "post": {
+        "tags": ["Admin-Management"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "fullName",
+                  "phone",
+                  "password",
+                  "role",
+                  "platforms",
+                  "permissions"
+                ],
+                "properties": {
+                  "fullName": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": ["ADMIN", "SUPPORTER"]
+                  },
+                  "platforms": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": ["SHOP", "EDUCATION", "CLUB", "MAIN"]
+                    }
+                  },
+                  "permissions": {
+                    "type": "object",
+                    "properties": {
+                      "users": {
+                        "type": "boolean"
+                      },
+                      "ads": {
+                        "type": "boolean"
+                      },
+                      "stories": {
+                        "type": "boolean"
+                      },
+                      "tickets": {
+                        "type": "boolean"
+                      },
+                      "costs": {
+                        "type": "boolean"
+                      },
+                      "articles": {
+                        "type": "boolean"
+                      },
+                      "advertisements": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "موفق"
+          }
+        }
+      },
+      "get": {
+        "tags": ["Admin-Management"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "platform",
+            "schema": {
+              "type": "string",
+              "enum": ["SHOP", "EDUCATION", "CLUB", "MAIN"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "موفق"
+          }
+        }
+      }
+    },
+    "/api/admin/admins/{id}": {
+      "get": {
+        "tags": ["Admin-Management"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "موفق"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Admin-Management"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fullName": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": ["ADMIN", "SUPPORTER"]
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": ["PENDING", "ACTIVE", "INACTIVE"]
+                  },
+                  "platforms": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": ["SHOP", "EDUCATION", "CLUB", "MAIN"]
+                    }
+                  },
+                  "permissions": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "موفق"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Admin-Management"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "موفق"
+          }
+        }
+      }
     }
-  }
+  },
+  "tags": [
+    {
+      "name": "Wallet",
+      "description": "مدیریت کیف پول کاربر"
+    },
+    {
+      "name": "Users",
+      "description": "مدیریت کاربران"
+    },
+    {
+      "name": "Auth",
+      "description": "احراز هویت"
+    },
+    {
+      "name": "Upload",
+      "description": "آپلود فایل"
+    },
+    {
+      "name": "Ticket",
+      "description": "مدیریت تیکت‌ها"
+    },
+    {
+      "name": "Suggestions",
+      "description": "مدیریت پیشنهادات ویژه"
+    },
+    {
+      "name": "Stats",
+      "description": "مدیریت آمار بازدیدها"
+    },
+    {
+      "name": "SellerAds",
+      "description": "مدیریت آگهی‌های فروشنده"
+    },
+    {
+      "name": "Resume",
+      "description": "مدیریت رزومه‌ها"
+    },
+    {
+      "name": "ReportReason",
+      "description": "مدیریت دلایل گزارش (فقط ادمین)"
+    },
+    {
+      "name": "Report",
+      "description": "مدیریت گزارش‌ها"
+    },
+    {
+      "name": "RecentViews",
+      "description": "مدیریت بازدیدهای اخیر"
+    },
+    {
+      "name": "Province",
+      "description": "مدیریت استان‌ها و شهرها"
+    },
+    {
+      "name": "Pricing",
+      "description": "مدیریت قیمت‌ها"
+    },
+    {
+      "name": "OTP",
+      "description": "مدیریت OTP (ارسال و تایید)"
+    },
+    {
+      "name": "JobSeekerAds",
+      "description": "مدیریت آگهی‌های جوینده کار"
+    },
+    {
+      "name": "EmployerAds",
+      "description": "مدیریت آگهی‌های کارفرما"
+    },
+    {
+      "name": "DigitalAds",
+      "description": "مدیریت آگهی‌های دیجیتال"
+    },
+    {
+      "name": "Chat",
+      "description": "مدیریت چت و پیام‌رسانی"
+    },
+    {
+      "name": "AdCategory",
+      "description": "مدیریت دسته‌بندی‌های آگهی"
+    },
+    {
+      "name": "AdCategoryAttributes",
+      "description": "مدیریت ویژگی‌های دسته‌بندی آگهی‌ها (داده‌های استاتیک)"
+    },
+    {
+      "name": "Profile",
+      "description": "مدیریت پروفایل کاربر"
+    },
+    {
+      "name": "JobCategories",
+      "description": "مدیریت دسته‌های شغلی (مشترک بین کارفرما و کارجو) - شامل دسته‌های اصلی و مهارت‌ها"
+    }
+  ]
 }

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { imageUpload, upload } from "../utils/fileUploader";
 import converterController from "../controllers/converterCtrl";
+import { authenticateUser } from "../middleware/authMidleware";
 
 const router = Router();
 
@@ -46,6 +47,7 @@ const router = Router();
  */
 router.post(
   "/image",
+  authenticateUser,
   imageUpload.single("image"),
   converterController.convertAndCompressImage,
 );
@@ -80,6 +82,7 @@ router.post(
  */
 router.post(
   "/merge-pdf",
+  authenticateUser,
   upload.array("files", 10),
   converterController.mergePdfs,
 );
@@ -112,6 +115,7 @@ router.post(
  */
 router.post(
   "/compress-pdf",
+  authenticateUser,
   upload.single("pdf"),
   converterController.compressPdf,
 );
@@ -154,6 +158,7 @@ router.post(
  */
 router.post(
   "/extract-pages",
+  authenticateUser,
   upload.single("file"),
   converterController.extractPdfPages,
 );
@@ -194,6 +199,7 @@ router.post(
  */
 router.post(
   "/to-pdf",
+  authenticateUser,
   imageUpload.array("files", 10),
   converterController.convertToPdf,
 );

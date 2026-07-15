@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import * as jwt from "jsonwebtoken";
 import "dotenv/config";
 
+
 // ====== اضافه کردن تایپ به Express ======
 declare global {
   namespace Express {
@@ -101,37 +102,28 @@ export const authenticateUser = (
   }
 };
 
-/* =========================
-   ADMIN AUTH (FULL SAFE)
-========================= */
-export const authenticateAdmin = (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  const token =
-    req.cookies?.accessToken || req.headers.authorization?.split(" ")[1];
+// /* =========================
+//    ADMIN AUTH (FULL SAFE)
+// ========================= */
+export const authenticateAdmin = (req: Request, res: Response, next: NextFunction) => {
+  let token = req.cookies?.accessToken
+  if (!token && req.headers.authorization?.startsWith('Bearer ')) {
+    token = req.headers.authorization.split(' ')[1]
+  }
 
   if (!token) {
-    return res.status(401).json({
-      message: "دسترسی غیرمجاز: توکن ارسال نشده است.",
-    });
+    return res.status(401).json({ status: 'error', message: 'توکن ارائه نشده' })
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_ADMIN_SECRET) as any;
-
+    const decoded = jwt.verify(token, JWT_ADMIN_SECRET) as any
     req.admin = {
-      id: decoded.id,
-      role: decoded.role || "admin",
-      name: decoded.name || "",
-      email: decoded.email || "",
-    };
-
-    next();
-  } catch (err) {
-    return res.status(401).json({
-      message: "توکن نامعتبر یا منقضی شده است.",
-    });
+      id: decoded.sub || decoded.id,
+      username: decoded.username,
+      role: decoded.role,
+    }
+    next()
+  } catch {
+    return res.status(403).json({ status: 'error', message: 'توکن نامعتبر' })
   }
-};
+}
