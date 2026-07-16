@@ -81,7 +81,9 @@ interface SocketMessage {
 }
 
 const app: Application = express();
-// app.set('trust proxy', true);
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', true);
+}
 const server = http.createServer(app);
 
 const io = new Server(server, {
