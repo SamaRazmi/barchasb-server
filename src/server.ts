@@ -53,14 +53,9 @@ import checkoutRoutes from "./routes/CheckoutRoutes";
 import purchaseRoutes from "./routes/PurchaseRoutes";
 import paymentRoutes from "./routes/PaymentRoutes";
 
-// import SubAdmin from "./routes/admin/authentication/sub-admin";
-// import SubAdminRoutes from "./routes/admin/auth/sub-admin";
-// import SuperAdminRoutes from "./routes/admin/auth/super-admin";
-// import PublicAdCategoriesRoutes from "./routes/admin/public/ad-categories"; // ✅ کامنت شد
-// import AdminLoginRoutes from "./routes/admin/auth/login";
-
 import adminAuthRoutes from "./Admin/routes/AuthRoutes";
 import adminManagementRoutes from "./Admin/routes/AdminManagementRoutes";
+import adManagementRoutes from './Admin/routes/AdManagementRoutes'
 
 import SuggestionRoutes from "./routes/SuggestionRoutes";
 
@@ -70,6 +65,8 @@ import SuggestionRoutes from "./routes/SuggestionRoutes";
 import cron from "node-cron";
 import { cleanExpiredAds } from "./jobs/cleanExpiredAds";
 import { cleanPendingPaymentAds } from "./jobs/cleanPendingPaymentAds";
+import { executeLadders } from './jobs/executeLadders'
+
 import loadData from "./utils/dataLoader";
 import fs from "fs";
 import { join } from "path";
@@ -84,7 +81,7 @@ interface SocketMessage {
 }
 
 const app: Application = express();
-app.set('trust proxy', true);
+// app.set('trust proxy', true);
 const server = http.createServer(app);
 
 const io = new Server(server, {
@@ -299,15 +296,11 @@ app.use("/api/admin/extension", AdminExtensionsRoutes);
 
 // admin route
 app.use("/api/admin/auth", adminAuthRoutes);
-app.use("/api/admin", adminManagementRoutes);
-// app.use("/auth", SubAdminRoutes);
-// app.use("/auth", SuperAdminRoutes);
-// app.use("/", AdminLoginRoutes);
-// app.use("/public/ad-categories", PublicAdCategoriesRoutes); // ✅ کامنت شد
-// app.use('/auth', SubAdmin)
+app.use("/api/admin/admins", adminManagementRoutes);
+app.use('/api/admin/ads', adManagementRoutes);
 
 // ===== اضافه شده: مسیرهای مدیریت گزارش توسط ادمین =====
-// app.use("/api/admin", adminReportRoutes); // ✅ کامنت شد
+// app.use("/api/admin", adminReportRoutes); 
 
 /* =====================================================
    =============== GLOBAL ERROR HANDLING ===============
@@ -467,6 +460,9 @@ cron.schedule("*/5 * * * *", async () => {
   console.log("⏰ اجرای کرون جاب پاکسازی آگهی‌های pending_payment...");
   await cleanPendingPaymentAds();
 });
+cron.schedule('*/5 * * * *', async () => {
+  await executeLadders()
+})
 
 async function startServer() {
   try {
