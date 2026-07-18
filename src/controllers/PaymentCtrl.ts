@@ -7,6 +7,8 @@ interface AuthRequest extends Request {
 }
 
 const PaymentCtrl = {
+  // Create a new payment (Front calls this)
+  // ================================================================
   create: async (req: AuthRequest, res: Response) => {
     try {
       const userId = req.user?.id;
@@ -26,6 +28,7 @@ const PaymentCtrl = {
         metadata,
       } = req.body;
 
+      // validate
       if (!amount || amount <= 0) {
         return res.status(400).json({
           status: "error",
@@ -33,16 +36,14 @@ const PaymentCtrl = {
         });
       }
 
-      if (
-        !paymentMethod ||
-        !Object.values(PaymentMethod).includes(paymentMethod)
-      ) {
+      if (!paymentMethod || !Object.values(PaymentMethod).includes(paymentMethod)) {
         return res.status(400).json({
           status: "error",
           message: "روش پرداخت معتبر نیست",
         });
       }
 
+      // create payment
       const result = await PaymentGatewayService.createPayment({
         userId,
         amount,
@@ -51,13 +52,6 @@ const PaymentCtrl = {
         referenceId,
         referenceType,
         metadata,
-      });
-
-      // لاگ برای اطمینان از ایجاد پرداخت
-      console.log("✅ Payment created successfully:", {
-        paymentId: result.paymentId,
-        authority: result.authority,
-        paymentUrl: result.paymentUrl,
       });
 
       res.status(201).json({
@@ -69,7 +63,7 @@ const PaymentCtrl = {
         },
       });
     } catch (error: any) {
-      console.error("❌ Error in createPayment:", error);
+      console.error(error);
       res.status(500).json({
         status: "error",
         message: error.message || "خطا در ایجاد پرداخت",
@@ -77,78 +71,41 @@ const PaymentCtrl = {
     }
   },
 
+  // Payment confirmation (the gateway calls this as a Callback)
+  // ================================================================
   verify: async (req: Request, res: Response) => {
     try {
-      // 1. لاگ ورودی
-      console.log("🔍 verify called with query:", req.query);
       const { authority, status } = req.query;
 
       if (!authority) {
-        console.warn("⚠️ Authority missing in query");
         return res.status(400).json({
           status: "error",
           message: "کد Authority ارسال نشده است",
         });
       }
 
-      // 2. لاگ authority و status
-      console.log(
-        `🔑 Authority: ${authority}, Status from gateway: ${status || "N/A"}`,
-      );
-
-      // 3. فراخوانی سرویس تأیید
       const result = await PaymentGatewayService.verifyPayment({
         authority: authority as string,
         status: status as string,
       });
 
-      // 4. لاگ خروجی سرویس
-      console.log("📦 verifyPayment result:", {
-        success: result.success,
-        paymentId: result.paymentId,
-        refId: result.refId,
-        message: result.message,
-      });
+      // Redirect the user to the frontend with the result
+    const frontendUrl = process.env.RESULT_PAYMENT_FRONTEND_URL || "/api/payments/result";
+    const redirectUrl = result.success
+      ? `${frontendUrl}?status=success&paymentId=${result.paymentId}&refId=${result.refId}`
+      : `${frontendUrl}?status=failed&message=${encodeURIComponent(result.message)}`;
 
-      // 5. خواندن آدرس فرانت‌اند از محیط
-      const frontendUrl = process.env.RESULT_PAYMENT_FRONTEND_URL;
-      console.log(`🌐 frontendUrl from env: "${frontendUrl}"`);
-
-      // اگر frontendUrl تعریف نشده، از مقدار پیش‌فرض استفاده کن
-      const finalFrontendUrl =
-        frontendUrl || "http://localhost:3000/dashboard/payment-result";
-      if (!frontendUrl) {
-        console.warn(
-          "⚠️ RESULT_PAYMENT_FRONTEND_URL not set, using default:",
-          finalFrontendUrl,
-        );
-      }
-
-      // 6. ساخت آدرس نهایی
-      let redirectUrl: string;
-      if (result.success) {
-        redirectUrl = `${finalFrontendUrl}?status=success&paymentId=${result.paymentId}&refId=${result.refId}`;
-      } else {
-        redirectUrl = `${finalFrontendUrl}?status=failed&message=${encodeURIComponent(result.message)}`;
-      }
-
-      console.log(`➡️ Redirecting to: ${redirectUrl}`);
       return res.redirect(redirectUrl);
     } catch (error: any) {
-      // 7. لاگ خطا
-      console.error("❌ Error in verifyPayment catch block:", error);
-      console.error("Error stack:", error.stack);
-
-      // 8. ساخت آدرس برای حالت خطا (با استفاده از frontendUrl یا پیش‌فرض)
-      const frontendUrl =
-        process.env.RESULT_PAYMENT_FRONTEND_URL ||
-        "http://localhost:3000/dashboard/payment-result";
-      const redirectUrl = `${frontendUrl}?status=error&message=${encodeURIComponent(error.message)}`;
-      console.log(`⚠️ Redirecting to error page: ${redirectUrl}`);
+      console.error(error);
+      // In case of error, redirect the user to the error page
+      const redirectUrl = `${process.env.RESULT_PAYMENT_FRONTEND_URL || "http://localhost:3000"}/payment-result?status=error&message=${encodeURIComponent(error.message)}`;
       return res.redirect(redirectUrl);
     }
   },
 
+  // Mock Portal Page (for testing)
+  // ================================================================
   payMock: async (req: Request, res: Response) => {
     const { authority, amount } = req.query;
 
@@ -166,7 +123,7 @@ const PaymentCtrl = {
             body { font-family: sans-serif; max-width: 600px; margin: 100px auto; text-align: center; padding: 20px; background-color: #f8f9fa; }
             .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
             .info { background: #e8f4fd; color: #1d4ed8; padding: 15px; border-radius: 8px; margin: 20px 0; font-size: 15px; }
-            button { padding: 12px 30px; margin: 10px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.2s; }
+            .btn { display: inline-block; padding: 12px 30px; margin: 10px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; text-decoration: none; transition: 0.2s; }
             .btn-success { background: #16a34a; color: white; }
             .btn-success:hover { background: #15803d; }
             .btn-failed { background: #dc2626; color: white; }
@@ -182,24 +139,16 @@ const PaymentCtrl = {
             </div>
             <p>این یک شبیه‌سازی درگاه بانکی برای تست امکانات برنامه است.</p>
             <div style="margin-top: 30px;">
-              <button class="btn-success" onclick="paySuccess()">✅ پرداخت موفقیت‌آمیز</button>
-              <button class="btn-failed" onclick="payFailed()">❌ انصراف / خطای پرداخت</button>
+              <a href="/api/payments/verify?authority=${authority}&status=OK" class="btn btn-success">✅ پرداخت موفق</a>
+              <a href="/api/payments/verify?authority=${authority}&status=NOK" class="btn btn-failed">❌ انصراف</a>
             </div>
           </div>
-
-          <script>
-            function paySuccess() {
-              window.location.href = "/api/payments/verify?authority=${authority}&status=OK";
-            }
-            function payFailed() {
-              window.location.href = "/api/payments/verify?authority=${authority}&status=NOK";
-            }
-          </script>
         </body>
       </html>
     `);
   },
 
+  // Mock Result page (for testing)
   showResult: async (req: Request, res: Response) => {
     const { status, paymentId, refId, message } = req.query;
 
@@ -225,6 +174,7 @@ const PaymentCtrl = {
       description = `خطا: ${message || "خطای ناشناخته"}`;
     }
 
+    // صفحه HTML
     res.send(`
       <!DOCTYPE html>
       <html dir="rtl">

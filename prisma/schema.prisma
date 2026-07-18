@@ -331,6 +331,8 @@ model DigitalAd {
   // شماره تماس در صورت شخص دیگر
   phoneOther          String?
 
+  rejectionReason  String?
+
   ownerRelation User @relation(fields: [owner], references: [id])
 }
 
@@ -387,6 +389,8 @@ model EmployerAd {
   // شماره تماس در صورت شخص دیگر
   phoneOther          String?
 
+  rejectionReason  String?
+
   ownerRelation User @relation(fields: [owner], references: [id])
 }
 
@@ -439,6 +443,8 @@ model JobSeekerAd {
 
   // شماره تماس در صورت شخص دیگر
   phoneOther          String?
+
+  rejectionReason  String?
 
   ownerRelation User @relation(fields: [owner], references: [id])
 }
@@ -574,7 +580,8 @@ model SellerAd {
 
   // شماره تماس در صورت شخص دیگر
   phoneOther          String?
-
+  
+  rejectionReason  String?
   ownerRelation User @relation(fields: [owner], references: [id])
 }
 

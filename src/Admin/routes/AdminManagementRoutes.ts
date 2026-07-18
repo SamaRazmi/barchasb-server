@@ -39,7 +39,7 @@ router.use(authenticateAdmin)
  *     responses:
  *       201: { description: موفق }
  */
-router.post('/admins', AdminManagementCtrl.create)
+router.post('', AdminManagementCtrl.create)
 
 /**
  * @swagger
@@ -55,7 +55,7 @@ router.post('/admins', AdminManagementCtrl.create)
  *     responses:
  *       200: { description: موفق }
  */
-router.get('/admins', AdminManagementCtrl.list)
+router.get('', AdminManagementCtrl.list)
 
 /**
  * @swagger
@@ -72,7 +72,7 @@ router.get('/admins', AdminManagementCtrl.list)
  *     responses:
  *       200: { description: موفق }
  */
-router.get('/admins/:id', AdminManagementCtrl.getOne)
+router.get('/:id', AdminManagementCtrl.getOne)
 
 /**
  * @swagger
@@ -103,7 +103,7 @@ router.get('/admins/:id', AdminManagementCtrl.getOne)
  *     responses:
  *       200: { description: موفق }
  */
-router.put('/admins/:id', AdminManagementCtrl.update)
+router.put('/:id', AdminManagementCtrl.update)
 
 /**
  * @swagger
@@ -120,6 +120,6 @@ router.put('/admins/:id', AdminManagementCtrl.update)
  *     responses:
  *       200: { description: موفق }
  */
-router.delete('/admins/:id', AdminManagementCtrl.delete)
+router.delete('/:id', AdminManagementCtrl.delete)
 
 export default router
