@@ -53,7 +53,7 @@ const router = express.Router();
  *                 type: string
  *               requiredSkills:
  *                 type: string
- *                 description: JSON آرایه از مهارت‌ها [{name: "..."}]
+ *                 description: "JSON آرایه از مهارت‌ها (مثال: [{'name': 'برنامه‌نویسی'}])"
  *               person:
  *                 type: string
  *                 enum: [self, other]

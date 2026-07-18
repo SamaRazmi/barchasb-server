@@ -121,7 +121,7 @@ router.post(
  *         name: state
  *         schema:
  *           type: string
- *         description: نام استان (تک یا چند مقدار با کاما، مثال: تهران,البرز)
+ *         description: "نام استان (تک یا چند مقدار با کاما، مثال: تهران,البرز)"
  *       - in: query
  *         name: city
  *         schema:
