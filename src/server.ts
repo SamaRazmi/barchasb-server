@@ -56,6 +56,7 @@ import paymentRoutes from "./routes/PaymentRoutes";
 import adminAuthRoutes from "./Admin/routes/AuthRoutes";
 import adminManagementRoutes from "./Admin/routes/AdminManagementRoutes";
 import adManagementRoutes from './Admin/routes/AdManagementRoutes'
+import adminPricingRoutes from './Admin/routes/PricingManagementRoutes'
 
 import SuggestionRoutes from "./routes/SuggestionRoutes";
 
@@ -300,6 +301,7 @@ app.use("/api/admin/extension", AdminExtensionsRoutes);
 app.use("/api/admin/auth", adminAuthRoutes);
 app.use("/api/admin/admins", adminManagementRoutes);
 app.use('/api/admin/ads', adManagementRoutes);
+app.use('/api/admin/pricing', adminPricingRoutes)
 
 // ===== اضافه شده: مسیرهای مدیریت گزارش توسط ادمین =====
 // app.use("/api/admin", adminReportRoutes); 

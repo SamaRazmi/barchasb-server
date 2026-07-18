@@ -9,6 +9,11 @@ export const PRICING_KEYS = {
 
 export type PricingKey = typeof PRICING_KEYS[keyof typeof PRICING_KEYS];
 
+export const getAllPricing = async () => {
+  return prisma.pricing.findMany({
+    orderBy: { key: "asc" },
+  });
+};
 
 export const getPricingValue = async (key: PricingKey): Promise<number> => {
   const pricing = await prisma.pricing.findUnique({
@@ -20,48 +25,4 @@ export const getPricingValue = async (key: PricingKey): Promise<number> => {
   }
 
   return pricing.value;
-};
-
-export const getAllPricing = async () => {
-  return prisma.pricing.findMany({
-    orderBy: { key: "asc" },
-  });
-};
-
-export const updatePricing = async (key: string, value: number) => {
-  if (value < 0) {
-    throw new Error("مقدار قیمت نمی‌تواند منفی باشد");
-  }
-
-  const existing = await prisma.pricing.findUnique({
-    where: { key },
-  });
-
-  if (!existing) {
-    throw new Error(`قیمت با کلید "${key}" یافت نشد`);
-  }
-
-  return prisma.pricing.update({
-    where: { key },
-    data: { value },
-  });
-};
-
-export const upsertPricingBulk = async (
-  items: { key: string; value: number; description?: string }[]
-) => {
-  const results = [];
-  for (const item of items) {
-    const result = await prisma.pricing.upsert({
-      where: { key: item.key },
-      update: { value: item.value, description: item.description },
-      create: {
-        key: item.key,
-        value: item.value,
-        description: item.description || "",
-      },
-    });
-    results.push(result);
-  }
-  return results;
 };
