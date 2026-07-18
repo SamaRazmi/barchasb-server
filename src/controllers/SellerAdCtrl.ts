@@ -211,14 +211,109 @@ export const createSellerAd = async (req: Request, res: Response) => {
 // ==========================================
 // 📌 دریافت همه آگهی‌ها
 // ==========================================
+// در کنترلر SellerAdCtrl، تابع getAllSellerAds را به‌روز کنید
+
 export const getAllSellerAds = async (req: Request, res: Response) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const skip = (page - 1) * limit;
 
+    // ---------- ساخت where پویا ----------
+    const where: any = {
+      adStatus: "approved", // فقط آگهی‌های تأییدشده
+    };
+
+    // 1️⃣ جستجوی متن در عنوان و توضیحات
+    const search = req.query.q as string;
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: "insensitive" } },
+        { description: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
+    // 2️⃣ دسته‌بندی
+    if (req.query.category) {
+      where.category = req.query.category as string;
+    }
+
+    // 3️⃣ استان (تک یا چندتایی با کاما)
+    if (req.query.state) {
+      const states = (req.query.state as string).split(",").filter(Boolean);
+      if (states.length === 1) {
+        where.state = states[0];
+      } else if (states.length > 1) {
+        where.state = { in: states };
+      }
+    }
+
+    // 4️⃣ شهر (تک یا چندتایی با کاما)
+    if (req.query.city) {
+      const cities = (req.query.city as string).split(",").filter(Boolean);
+      if (cities.length === 1) {
+        where.city = cities[0];
+      } else if (cities.length > 1) {
+        where.city = { in: cities };
+      }
+    }
+
+    // 5️⃣ محدوده قیمت
+    const minPrice = req.query.minPrice
+      ? parseInt(req.query.minPrice as string)
+      : undefined;
+    const maxPrice = req.query.maxPrice
+      ? parseInt(req.query.maxPrice as string)
+      : undefined;
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      where.priceIRT = {};
+      if (minPrice !== undefined) where.priceIRT.gte = minPrice;
+      if (maxPrice !== undefined) where.priceIRT.lte = maxPrice;
+    }
+
+    // 6️⃣ فیلتر زمانی (امروز، این هفته، این ماه، امسال)
+    const timeFilter = req.query.timeFilter as string;
+    if (timeFilter) {
+      const now = new Date();
+      let startDate: Date | null = null;
+
+      switch (timeFilter) {
+        case "today":
+          startDate = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate(),
+          );
+          break;
+        case "thisWeek": {
+          // شروع هفته از دوشنبه (روز ۱=دوشنبه، ۰=یکشنبه)
+          const day = now.getDay(); // 0=یکشنبه
+          const diff = day === 0 ? 6 : day - 1; // فاصله تا دوشنبه
+          const monday = new Date(now);
+          monday.setDate(now.getDate() - diff);
+          monday.setHours(0, 0, 0, 0);
+          startDate = monday;
+          break;
+        }
+        case "thisMonth":
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+          break;
+        case "thisYear":
+          startDate = new Date(now.getFullYear(), 0, 1);
+          break;
+        default:
+          startDate = null;
+      }
+
+      if (startDate) {
+        where.createdAt = { gte: startDate };
+      }
+    }
+
+    // ---------- اجرای کوئری ----------
     const [ads, total] = await Promise.all([
       prisma.sellerAd.findMany({
+        where,
         skip,
         take: limit,
         orderBy: { createdAt: "desc" },
@@ -232,9 +327,10 @@ export const getAllSellerAds = async (req: Request, res: Response) => {
           },
         },
       }),
-      prisma.sellerAd.count(),
+      prisma.sellerAd.count({ where }),
     ]);
 
+    // ---------- فرمت کردن خروجی ----------
     const formattedAds = await Promise.all(
       (ads as any[]).map(async (ad) => {
         const enhancement = await getAdEnhancement(ad.id, AdType.SellerAd);

@@ -163,17 +163,54 @@ router.post(
 ======================= */
 /**
  * @swagger
- * /api/ads/jobseeker/owner/{ownerId}:
+ * /api/ads/jobseeker:
  *   get:
- *     summary: دریافت آگهی‌های یک کاربر خاص
+ *     summary: دریافت همه آگهی‌های جوینده کار (عمومی) با فیلترهای پیشرفته
  *     tags: [JobSeekerAds]
  *     parameters:
- *       - name: ownerId
- *         in: path
- *         required: true
+ *       - in: query
+ *         name: q
  *         schema:
  *           type: string
- *         description: شناسه کاربر
+ *         description: جستجو در نام، درباره‌ی من، دسته‌بندی و مهارت‌ها
+ *       - in: query
+ *         name: timeFilter
+ *         schema:
+ *           type: string
+ *           enum: [today, thisWeek, thisMonth, thisYear]
+ *         description: بازه زمانی انتشار آگهی
+ *       - in: query
+ *         name: state
+ *         schema:
+ *           type: string
+ *         description: استان (تک یا چند مقدار با کاما)
+ *       - in: query
+ *         name: city
+ *         schema:
+ *           type: string
+ *         description: شهر (تک یا چند مقدار با کاما)
+ *       - in: query
+ *         name: gender
+ *         schema:
+ *           type: string
+ *           enum: [male, female]
+ *         description: جنسیت
+ *       - in: query
+ *         name: maritalStatus
+ *         schema:
+ *           type: string
+ *           enum: [single, married]
+ *         description: وضعیت تأهل
+ *       - in: query
+ *         name: hasWorkExperience
+ *         schema:
+ *           type: boolean
+ *         description: آیا سابقه کار دارد؟ (true/false)
+ *       - in: query
+ *         name: jobCategory
+ *         schema:
+ *           type: string
+ *         description: دسته‌بندی شغلی (چند مقدار با کاما)
  *       - in: query
  *         name: page
  *         schema:
@@ -194,13 +231,10 @@ router.post(
  *             schema:
  *               type: object
  *               properties:
- *                 status:
- *                   type: string
- *                   example: success
  *                 data:
  *                   type: array
  *                   items:
- *                     type: object
+ *                     $ref: '#/components/schemas/JobSeekerAd'
  *                 pagination:
  *                   type: object
  *                   properties:
@@ -212,12 +246,10 @@ router.post(
  *                       type: integer
  *                     totalPages:
  *                       type: integer
- *       400:
- *         description: شناسه نامعتبر
  *       500:
  *         description: خطای سرور
  */
-router.get("/ads/jobseeker/owner/:ownerId", JobSeekerAdCtrl.getAdsByOwner);
+router.get("/ads/jobseeker", JobSeekerAdCtrl.getAllJobSeekerAds);
 
 /**
  * @swagger

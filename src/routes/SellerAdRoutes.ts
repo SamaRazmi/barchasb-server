@@ -81,15 +81,87 @@ router.post(
 /* =======================
    GET
 ======================= */
+/* =======================
+   GET
+======================= */
 /**
  * @swagger
  * /api/ads/seller:
  *   get:
- *     summary: دریافت همه آگهی‌های فروشنده (عمومی)
+ *     summary: دریافت همه آگهی‌های فروشنده (عمومی) با فیلترهای پیشرفته
  *     tags: [SellerAds]
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *         description: کلمه جستجو در عنوان و توضیحات (متن آزاد)
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *         description: دسته‌بندی آگهی (تک)
+ *       - in: query
+ *         name: minPrice
+ *         schema:
+ *           type: integer
+ *         description: حداقل قیمت (تومان)
+ *       - in: query
+ *         name: maxPrice
+ *         schema:
+ *           type: integer
+ *         description: حداکثر قیمت (تومان)
+ *       - in: query
+ *         name: timeFilter
+ *         schema:
+ *           type: string
+ *           enum: [today, thisWeek, thisMonth, thisYear]
+ *         description: بازه زمانی انتشار آگهی
+ *       - in: query
+ *         name: state
+ *         schema:
+ *           type: string
+ *         description: نام استان (تک یا چند مقدار با کاما، مثال: تهران,البرز)
+ *       - in: query
+ *         name: city
+ *         schema:
+ *           type: string
+ *         description: نام شهر (تک یا چند مقدار با کاما)
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: شماره صفحه
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: تعداد آیتم در هر صفحه
  *     responses:
  *       200:
  *         description: موفق
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/SellerAd'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     total:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
  *       500:
  *         description: خطای سرور
  */

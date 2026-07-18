@@ -1,4 +1,4 @@
-// src/controllers/UserProfileCtrl.ts
+// src/controllers/UserProfileCtrl.ts (اصلاح شده با منطق مشابه MongoDB)
 import { Request, Response } from "express";
 import prisma from "../config/prisma";
 import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
@@ -13,11 +13,16 @@ const s3 = new S3Client({
   },
 });
 
-// GET /api/profile?userId=...
+// GET /api/profile
 export const getProfile = async (req: Request, res: Response) => {
   try {
-    const userId = req.query.userId as string;
-    if (!userId) return res.status(400).json({ msg: "شناسه کاربر ارسال نشده" });
+    let userId = req.query.userId as string;
+    if (!userId) {
+      userId = (req as any).user?.id;
+    }
+    if (!userId) {
+      return res.status(400).json({ msg: "شناسه کاربر ارسال نشده" });
+    }
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -56,11 +61,22 @@ export const getProfile = async (req: Request, res: Response) => {
   }
 };
 
-// PUT /api/profile
+// PUT /api/profile (با منطق مشابه MongoDB)
 export const updateProfile = async (req: Request, res: Response) => {
   try {
-    const userId = req.body.userId as string;
-    if (!userId) return res.status(400).json({ msg: "شناسه کاربر ارسال نشده" });
+    // ===== دریافت userId (اولویت با توکن، سپس body) =====
+    let userId = (req as any).user?.id || req.body.userId;
+    if (!userId) {
+      return res.status(400).json({ msg: "شناسه کاربر ارسال نشده" });
+    }
+
+    // ===== بررسی وجود کاربر =====
+    const existingUser = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!existingUser) {
+      return res.status(404).json({ msg: "کاربر پیدا نشد" });
+    }
 
     const { user: userData, profile: profileData } = req.body;
 
@@ -82,6 +98,7 @@ export const updateProfile = async (req: Request, res: Response) => {
 
       const safeUserData: any = {};
       allowedUserFields.forEach((field) => {
+        // ✅ فقط فیلدهایی که تعریف شده و مقدار غیر خالی دارند را اضافه کن (مشابه MongoDB)
         if (userData[field] !== undefined && userData[field] !== "") {
           safeUserData[field] = userData[field];
         }
@@ -95,8 +112,24 @@ export const updateProfile = async (req: Request, res: Response) => {
             data: safeUserData,
           });
         } catch (error: any) {
-          if (error.code === "P2002" && error.meta?.target?.includes("username")) {
-            return res.status(400).json({ msg: "نام کاربری تکراری است" });
+          // ===== مدیریت خطای یکتایی (مشابه MongoDB) =====
+          if (error.code === "P2002") {
+            const target = error.meta?.target;
+            let fieldName = "مقدار وارد شده";
+            const fields = Array.isArray(target)
+              ? target
+              : target
+                ? [target]
+                : [];
+            if (fields.includes("username")) fieldName = "نام کاربری";
+            else if (fields.includes("phone")) fieldName = "شماره تلفن";
+            else if (fields.includes("email")) fieldName = "ایمیل";
+            else if (fields.includes("nationalCode")) fieldName = "کد ملی";
+
+            return res.status(400).json({
+              msg: `${fieldName} قبلاً توسط کاربر دیگری ثبت شده است`,
+              field: fields.length > 0 ? fields[0] : "unknown",
+            });
           }
           throw error;
         }
@@ -105,11 +138,31 @@ export const updateProfile = async (req: Request, res: Response) => {
 
     // ================= UPDATE PROFILE =================
     if (profileData) {
-      updatedProfile = await prisma.userProfile.upsert({
-        where: { user: userId },
-        update: profileData,
-        create: { user: userId, ...profileData },
+      const allowedProfileFields = [
+        "address",
+        "educationLevel",
+        "aboutMe",
+        "interests",
+        "skills",
+        "resumeFile",
+        "portfolioFiles",
+        "documents",
+      ];
+      const safeProfileData: any = {};
+      allowedProfileFields.forEach((field) => {
+        // فقط فیلدهای تعریف شده و غیر خالی را اضافه کن
+        if (profileData[field] !== undefined && profileData[field] !== "") {
+          safeProfileData[field] = profileData[field];
+        }
       });
+
+      if (Object.keys(safeProfileData).length > 0) {
+        updatedProfile = await prisma.userProfile.upsert({
+          where: { user: userId },
+          update: safeProfileData,
+          create: { user: userId, ...safeProfileData },
+        });
+      }
     }
 
     res.status(200).json({
@@ -126,10 +179,21 @@ export const updateProfile = async (req: Request, res: Response) => {
 // POST /api/profile/upload-photo
 export const uploadProfilePhoto = async (req: Request, res: Response) => {
   try {
-    const userId = req.body.userId as string;
-    if (!userId) return res.status(400).json({ msg: "شناسه کاربر ارسال نشده" });
-    if (!req.file || !(req.file as any).location)
+    let userId = (req as any).user?.id || req.body.userId;
+    if (!userId) {
+      return res.status(400).json({ msg: "شناسه کاربر ارسال نشده" });
+    }
+
+    if (!req.file || !(req.file as any).location) {
       return res.status(400).json({ msg: "عکس ارسال نشده است" });
+    }
+
+    const existingUser = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!existingUser) {
+      return res.status(404).json({ msg: "کاربر پیدا نشد" });
+    }
 
     const profile = await prisma.userProfile.findUnique({
       where: { user: userId },
@@ -142,7 +206,7 @@ export const uploadProfilePhoto = async (req: Request, res: Response) => {
           new DeleteObjectCommand({
             Bucket: process.env.LIARA_BUCKET_NAME!,
             Key: key,
-          })
+          }),
         );
         console.log("عکس قبلی حذف شد:", key);
       } catch (err) {
