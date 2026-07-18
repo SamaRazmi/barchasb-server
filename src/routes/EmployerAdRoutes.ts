@@ -142,14 +142,65 @@ router.post(
   EmployerAdCtrl.createEmployerAd,
 );
 
-/* ===================== GET ALL ===================== */
+/* ===================== GET ALL (با فیلترهای پیشرفته) ===================== */
 /**
  * @swagger
  * /api/ads/employer:
  *   get:
- *     summary: دریافت همه آگهی‌های کارفرما (عمومی)
+ *     summary: دریافت همه آگهی‌های کارفرما (عمومی) با فیلترهای پیشرفته
  *     tags: [EmployerAds]
  *     parameters:
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *         description: جستجو در عنوان، نام و نام شرکت
+ *       - in: query
+ *         name: timeFilter
+ *         schema:
+ *           type: string
+ *           enum: [today, thisWeek, thisMonth, thisYear]
+ *         description: بازه زمانی انتشار آگهی
+ *       - in: query
+ *         name: state
+ *         schema:
+ *           type: string
+ *         description: استان (تک یا چند مقدار با کاما)
+ *       - in: query
+ *         name: city
+ *         schema:
+ *           type: string
+ *         description: شهر (تک یا چند مقدار با کاما)
+ *       - in: query
+ *         name: cooperationType
+ *         schema:
+ *           type: string
+ *         description: نوع همکاری (مثلاً تمام‌وقت، پاره‌وقت)
+ *       - in: query
+ *         name: isRemote
+ *         schema:
+ *           type: boolean
+ *         description: دورکاری (true/false)
+ *       - in: query
+ *         name: gender
+ *         schema:
+ *           type: string
+ *         description: جنسیت مورد نیاز
+ *       - in: query
+ *         name: experience
+ *         schema:
+ *           type: string
+ *         description: سابقه کار مورد نیاز
+ *       - in: query
+ *         name: minSalary
+ *         schema:
+ *           type: string
+ *         description: حداقل حقوق (به صورت عددی، اما به دلیل ذخیره به صورت رشته، فعلاً پشتیبانی نمی‌شود)
+ *       - in: query
+ *         name: maxSalary
+ *         schema:
+ *           type: string
+ *         description: حداکثر حقوق (به صورت عددی، اما به دلیل ذخیره به صورت رشته، فعلاً پشتیبانی نمی‌شود)
  *       - in: query
  *         name: page
  *         schema:

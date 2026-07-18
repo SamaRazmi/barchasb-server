@@ -5,8 +5,90 @@ import {
   uploadProfilePhoto,
 } from "../controllers/UserProfileCtrl";
 import { imagesUpload } from "../middleware/upload";
+import { authenticateToken } from "../middleware/authMidleware";
 
 const router = express.Router();
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         name:
+ *           type: string
+ *         lastName:
+ *           type: string
+ *         username:
+ *           type: string
+ *         phone:
+ *           type: string
+ *         email:
+ *           type: string
+ *         birthDate:
+ *           type: string
+ *         province:
+ *           type: string
+ *         city:
+ *           type: string
+ *         nationalCode:
+ *           type: string
+ *         email_confirmed:
+ *           type: boolean
+ *         phone_confirmed:
+ *           type: boolean
+ *         role:
+ *           type: string
+ *           enum: [USER, EMPLOYER, JOB_SEEKER, SELLER]
+ *     UserProfile:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         user:
+ *           type: string
+ *         profileImage:
+ *           type: string
+ *         address:
+ *           type: string
+ *         educationLevel:
+ *           type: string
+ *         aboutMe:
+ *           type: string
+ *         interests:
+ *           type: array
+ *           items:
+ *             type: string
+ *         skills:
+ *           type: array
+ *           items:
+ *             type: string
+ *         resumeFile:
+ *           type: string
+ *         portfolioFiles:
+ *           type: array
+ *           items:
+ *             type: string
+ *         documents:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               file:
+ *                 type: string
+ *         completed:
+ *           type: boolean
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *         walletId:
+ *           type: string
+ */
 
 /**
  * @swagger
@@ -19,17 +101,17 @@ const router = express.Router();
  * @swagger
  * /api/profile:
  *   get:
- *     summary: دریافت پروفایل کاربر
+ *     summary: دریافت پروفایل کاربر (شناسه کاربر از توکن یا query)
  *     tags: [Profile]
  *     security:
  *       - BearerAuth: []
  *     parameters:
  *       - in: query
  *         name: userId
- *         required: true
+ *         required: false
  *         schema:
  *           type: string
- *         description: شناسه کاربر
+ *         description: (اختیاری) شناسه کاربر – در صورت عدم ارسال، از توکن استفاده می‌شود
  *     responses:
  *       200:
  *         description: اطلاعات پروفایل
@@ -47,18 +129,20 @@ const router = express.Router();
  *                   $ref: '#/components/schemas/UserProfile'
  *       400:
  *         description: شناسه کاربر ارسال نشده
+ *       401:
+ *         description: احراز هویت نشده
  *       404:
  *         description: کاربر پیدا نشد
  *       500:
  *         description: خطای سرور
  */
-router.get("/profile", getProfile);
+router.get("/profile", authenticateToken, getProfile);
 
 /**
  * @swagger
  * /api/profile:
  *   put:
- *     summary: بروزرسانی پروفایل کاربر
+ *     summary: بروزرسانی پروفایل کاربر (شناسه کاربر از توکن گرفته می‌شود)
  *     tags: [Profile]
  *     security:
  *       - BearerAuth: []
@@ -68,11 +152,7 @@ router.get("/profile", getProfile);
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - userId
  *             properties:
- *               userId:
- *                 type: string
  *               user:
  *                 type: object
  *                 properties:
@@ -141,16 +221,20 @@ router.get("/profile", getProfile);
  *                   $ref: '#/components/schemas/UserProfile'
  *       400:
  *         description: خطا در داده‌ها
+ *       401:
+ *         description: احراز هویت نشده
+ *       404:
+ *         description: کاربر پیدا نشد
  *       500:
  *         description: خطای سرور
  */
-router.put("/profile", updateProfile);
+router.put("/profile", authenticateToken, updateProfile);
 
 /**
  * @swagger
  * /api/profile/upload-photo:
  *   post:
- *     summary: آپلود عکس پروفایل
+ *     summary: آپلود عکس پروفایل (شناسه کاربر از توکن گرفته می‌شود)
  *     tags: [Profile]
  *     security:
  *       - BearerAuth: []
@@ -161,12 +245,8 @@ router.put("/profile", updateProfile);
  *           schema:
  *             type: object
  *             required:
- *               - userId
  *               - profileImage
  *             properties:
- *               userId:
- *                 type: string
- *                 description: شناسه کاربر
  *               profileImage:
  *                 type: string
  *                 format: binary
@@ -186,11 +266,14 @@ router.put("/profile", updateProfile);
  *                   $ref: '#/components/schemas/UserProfile'
  *       400:
  *         description: خطا در ارسال داده‌ها
+ *       401:
+ *         description: احراز هویت نشده
  *       500:
  *         description: خطای سرور
  */
 router.post(
   "/profile/upload-photo",
+  authenticateToken,
   imagesUpload.single("profileImage"),
   uploadProfilePhoto,
 );

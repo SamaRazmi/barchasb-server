@@ -52,6 +52,7 @@ import pricingRoutes from "./routes/PricingRoutes";
 import checkoutRoutes from "./routes/CheckoutRoutes";
 import purchaseRoutes from "./routes/PurchaseRoutes";
 import paymentRoutes from "./routes/PaymentRoutes";
+import searchRoutes from "./routes/SearchRoutes";
 
 // import SubAdmin from "./routes/admin/authentication/sub-admin";
 // import SubAdminRoutes from "./routes/admin/auth/sub-admin";
@@ -63,7 +64,7 @@ import adminAuthRoutes from "./Admin/routes/AuthRoutes";
 import adminManagementRoutes from "./Admin/routes/AdminManagementRoutes";
 
 import SuggestionRoutes from "./routes/SuggestionRoutes";
-
+import profileRoutes from "./routes/UserProfileRoutes"; // مسیر صحیح
 // ===== اضافه شده: مسیرهای مدیریت گزارش توسط ادمین =====
 // import adminReportRoutes from "./routes/admin/adminReportRoutes"; // ✅ کامنت شد
 
@@ -84,7 +85,7 @@ interface SocketMessage {
 }
 
 const app: Application = express();
-app.set('trust proxy', true);
+app.set("trust proxy", true);
 const server = http.createServer(app);
 
 const io = new Server(server, {
@@ -261,7 +262,7 @@ app.use(
 app.get("/", (req: Request, res: Response) => {
   res.status(200).json({ msg: "auth server main page" });
 });
-
+app.use("/api", searchRoutes);
 app.use("/api", reportReasonRoutes);
 app.use("/api", reportRoutes);
 app.use("/api", StatsRoutes);
@@ -270,6 +271,7 @@ app.use("/api", ProvinceRoutes);
 app.use("/api", ticketRoutes);
 app.use("/api", AdCategoryRoutes);
 app.use("/api", JobCategoryRoutes);
+app.use("/api", profileRoutes);
 app.use("/api", sessionRoutes);
 app.use("/api", AdCategoryAttributesRoutes);
 app.use("/api", OtpRoutes);
