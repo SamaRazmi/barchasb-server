@@ -947,4 +947,8 @@ model VipCodeUsage {
   user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   usedAt      DateTime   @default(now())
   expiresAt   DateTime? 
+  isRevoked   Boolean  @default(false)
+
+  @@index([userId])
+  @@index([vipCodeId])
 }
