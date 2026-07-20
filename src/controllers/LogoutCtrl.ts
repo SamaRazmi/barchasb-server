@@ -1,8 +1,33 @@
-// src/controllers/LogoutCtrl.ts
 import { Request, Response } from "express";
+import prisma from "../config/prisma"; // اضافه شد
 
 export const logoutUser = async (req: Request, res: Response) => {
   try {
+    const userId = (req as any).user?.id;
+    const sessionId = (req as any).user?.sessionId; // استخراج sessionId از توکن
+
+    // =============== تغییر مهم ===============
+    // غیرفعال کردن جلسه‌ی فعلی
+    if (sessionId && userId) {
+      await prisma.session.updateMany({
+        where: {
+          id: sessionId,
+          user: userId,
+          isActive: true,
+        },
+        data: { isActive: false },
+      });
+    } else {
+      // در صورت عدم وجود sessionId (به عنوان fallback) تمام جلسات کاربر را غیرفعال کن
+      if (userId) {
+        await prisma.session.updateMany({
+          where: { user: userId, isActive: true },
+          data: { isActive: false },
+        });
+      }
+    }
+    // =========================================
+
     const isProduction = process.env.NODE_ENV === "production";
 
     const cookieOptions = {
