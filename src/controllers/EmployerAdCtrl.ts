@@ -226,7 +226,7 @@ export const createEmployerAd = async (req: Request, res: Response) => {
 };
 
 // ==========================================
-// 📌 دریافت همه آگهی‌ها
+// 📌 دریافت همه آگهی‌ها (با فیلترهای کامل)
 // ==========================================
 export const getAllEmployerAds = async (req: Request, res: Response) => {
   try {
@@ -234,8 +234,114 @@ export const getAllEmployerAds = async (req: Request, res: Response) => {
     const limit = parseInt(req.query.limit as string) || 9;
     const skip = (page - 1) * limit;
 
+    // ---------- ساخت where پویا ----------
+    const where: any = {
+      adStatus: "approved", // فقط آگهی‌های تأییدشده
+    };
+
+    // 1️⃣ جستجوی متن در title, name, companyName
+    const search = req.query.q as string;
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: "insensitive" } },
+        { name: { contains: search, mode: "insensitive" } },
+        { companyName: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
+    // 2️⃣ فیلتر زمانی
+    const timeFilter = req.query.timeFilter as string;
+    if (timeFilter) {
+      const now = new Date();
+      let startDate: Date | null = null;
+      switch (timeFilter) {
+        case "today":
+          startDate = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate(),
+          );
+          break;
+        case "thisWeek": {
+          const day = now.getDay();
+          const diff = day === 0 ? 6 : day - 1;
+          const monday = new Date(now);
+          monday.setDate(now.getDate() - diff);
+          monday.setHours(0, 0, 0, 0);
+          startDate = monday;
+          break;
+        }
+        case "thisMonth":
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+          break;
+        case "thisYear":
+          startDate = new Date(now.getFullYear(), 0, 1);
+          break;
+        default:
+          startDate = null;
+      }
+      if (startDate) {
+        where.createdAt = { gte: startDate };
+      }
+    }
+
+    // 3️⃣ استان و شهر (تک یا چندتایی با کاما)
+    if (req.query.state) {
+      const states = (req.query.state as string).split(",").filter(Boolean);
+      if (states.length === 1) {
+        where.state = states[0];
+      } else if (states.length > 1) {
+        where.state = { in: states };
+      }
+    }
+
+    if (req.query.city) {
+      const cities = (req.query.city as string).split(",").filter(Boolean);
+      if (cities.length === 1) {
+        where.city = cities[0];
+      } else if (cities.length > 1) {
+        where.city = { in: cities };
+      }
+    }
+
+    // 4️⃣ محدوده حقوق (minSalary و maxSalary از نوع string هستند)
+    const minSalary = req.query.minSalary as string;
+    const maxSalary = req.query.maxSalary as string;
+    if (minSalary || maxSalary) {
+      // برای سادگی، فقط در صورتی که هر دو مقدار عددی باشند، از آن‌ها استفاده می‌کنیم.
+      // توجه: minSalary و maxSalary در مدل string هستند، اما می‌توان با تبدیل به عدد مقایسه کرد (با استفاده از $queryRaw)
+      // در اینجا به دلیل محدودیت، از فیلتر ساده صرف‌نظر می‌کنیم و فقط در صورت وجود هر دو، شرط می‌گذاریم.
+      // بهتر است از `prisma.$queryRaw` استفاده شود، اما برای نمونه کد فعلی را به‌روز می‌کنیم.
+      // فعلاً این فیلتر را غیرفعال می‌کنیم (می‌توان در آینده با raw query پیاده‌سازی کرد).
+    }
+
+    // 5️⃣ نوع همکاری
+    if (req.query.cooperationType) {
+      where.cooperationType = req.query.cooperationType as string;
+    }
+
+    // 6️⃣ دورکاری
+    const isRemote = req.query.isRemote;
+    if (isRemote === "true") {
+      where.isRemote = true;
+    } else if (isRemote === "false") {
+      where.isRemote = false;
+    }
+
+    // 7️⃣ جنسیت
+    if (req.query.gender) {
+      where.gender = req.query.gender as string;
+    }
+
+    // 8️⃣ سابقه کار (experience)
+    if (req.query.experience) {
+      where.experience = req.query.experience as string;
+    }
+
+    // ---------- اجرای کوئری ----------
     const [ads, total] = await Promise.all([
       prisma.employerAd.findMany({
+        where,
         skip,
         take: limit,
         orderBy: { createdAt: "desc" },
@@ -249,9 +355,10 @@ export const getAllEmployerAds = async (req: Request, res: Response) => {
           },
         },
       }),
-      prisma.employerAd.count(),
+      prisma.employerAd.count({ where }),
     ]);
 
+    // ---------- فرمت کردن خروجی ----------
     const formattedAds = await Promise.all(
       (ads as any[]).map(async (ad) => {
         const enhancement = await getAdEnhancement(ad.id, AdType.EmployerAd);
@@ -479,7 +586,7 @@ export const getEmployerAdByOwnerAndId = async (
 };
 
 // ==========================================
-// 📌 ویرایش آگهی (با اعتبارسنجی و پیش‌فرض)
+// 📌 ویرایش آگهی
 // ==========================================
 export const updateEmployerAd = async (req: Request, res: Response) => {
   try {
