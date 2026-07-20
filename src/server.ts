@@ -55,8 +55,9 @@ import paymentRoutes from "./routes/PaymentRoutes";
 
 import adminAuthRoutes from "./Admin/routes/AuthRoutes";
 import adminManagementRoutes from "./Admin/routes/AdminManagementRoutes";
-import adManagementRoutes from './Admin/routes/AdManagementRoutes'
-import adminPricingRoutes from './Admin/routes/PricingManagementRoutes'
+import adManagementRoutes from './Admin/routes/AdManagementRoutes';
+import adminPricingRoutes from './Admin/routes/PricingManagementRoutes';
+import adminVipRoutes from './Admin/routes/VipManagementRoutes';
 
 import SuggestionRoutes from "./routes/SuggestionRoutes";
 
@@ -296,6 +297,7 @@ app.use("/api/resume", ResumeRoutes);
 app.use("/api/converter", converterRoutes);
 app.use("/api/user", UserExtensionsRoutes);
 app.use("/api/admin/extension", AdminExtensionsRoutes);
+app.use('/api/admin/vip-codes', adminVipRoutes)
 
 // admin route
 app.use("/api/admin/auth", adminAuthRoutes);
