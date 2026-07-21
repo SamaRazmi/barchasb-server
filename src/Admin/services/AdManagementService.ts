@@ -81,7 +81,6 @@ export async function getAdsList(input: GetAdsListInput) {
 
     const ads = await model.findMany({
       where,
-      take: limit,
       skip,
       orderBy: { createdAt: 'desc' },
       include: {
@@ -121,6 +120,8 @@ export async function getAdsList(input: GetAdsListInput) {
       })
     }
   }
+  allAds.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  const paginatedData = allAds.slice(skip, skip + limit)
 
   let total = 0
   for (const adType of adTypes) {
@@ -139,7 +140,7 @@ export async function getAdsList(input: GetAdsListInput) {
   }
 
   return {
-    data: allAds,
+    data: paginatedData,
     pagination: {
       page,
       limit,
