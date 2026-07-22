@@ -1,6 +1,3 @@
--- CreateSchema
-CREATE SCHEMA IF NOT EXISTS "public";
-
 -- CreateEnum
 CREATE TYPE "AdType" AS ENUM ('EmployerAd', 'JobSeekerAd', 'SellerAd', 'DigitalAd');
 
@@ -11,7 +8,7 @@ CREATE TYPE "MarkType" AS ENUM ('favorite', 'suspicious', 'seen');
 CREATE TYPE "PersonType" AS ENUM ('self', 'other');
 
 -- CreateEnum
-CREATE TYPE "AdStatus" AS ENUM ('pending_payment', 'pending', 'approved', 'rejected', 'expired', 'updated');
+CREATE TYPE "AdStatus" AS ENUM ('pending', 'approved', 'rejected');
 
 -- CreateEnum
 CREATE TYPE "PaymentMethod" AS ENUM ('Subscription', 'Wallet', 'Bank_card');
@@ -52,9 +49,6 @@ CREATE TYPE "TransactionType" AS ENUM ('DEPOSIT', 'WITHDRAWAL', 'HOLD', 'REFUND'
 -- CreateEnum
 CREATE TYPE "TransactionStatus" AS ENUM ('PENDING', 'COMPLETED', 'FAILED', 'CANCELED');
 
--- CreateEnum
-CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'PAID', 'FAILED', 'CANCELED', 'VERIFYING');
-
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
@@ -84,7 +78,6 @@ CREATE TABLE "User" (
     "lastSeen" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "vipExpiresAt" TIMESTAMP(3),
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -184,7 +177,6 @@ CREATE TABLE "Conversation" (
     "adType" TEXT NOT NULL,
     "lastMessage" TEXT,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "isBlocked" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "Conversation_pkey" PRIMARY KEY ("id")
 );
@@ -212,12 +204,6 @@ CREATE TABLE "DigitalAd" (
     "durationUnit" "TimeUnit" DEFAULT 'day',
     "durationAmount" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "approvedAt" TIMESTAMP(3),
-    "expiresAt" TIMESTAMP(3),
-    "isPaid" BOOLEAN NOT NULL DEFAULT true,
-    "province" TEXT,
-    "city" TEXT,
-    "phoneOther" TEXT,
 
     CONSTRAINT "DigitalAd_pkey" PRIMARY KEY ("id")
 );
@@ -268,10 +254,6 @@ CREATE TABLE "EmployerAd" (
     "adPaymentMethod" "PaymentMethod" NOT NULL DEFAULT 'Bank_card',
     "adStatus" "AdStatus" NOT NULL DEFAULT 'pending',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "approvedAt" TIMESTAMP(3),
-    "expiresAt" TIMESTAMP(3),
-    "isPaid" BOOLEAN NOT NULL DEFAULT true,
-    "phoneOther" TEXT,
 
     CONSTRAINT "EmployerAd_pkey" PRIMARY KEY ("id")
 );
@@ -318,12 +300,22 @@ CREATE TABLE "JobSeekerAd" (
     "adStatus" "AdStatus" NOT NULL DEFAULT 'pending',
     "userDesc" TEXT NOT NULL DEFAULT '',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "approvedAt" TIMESTAMP(3),
-    "expiresAt" TIMESTAMP(3),
-    "isPaid" BOOLEAN NOT NULL DEFAULT false,
-    "phoneOther" TEXT,
 
     CONSTRAINT "JobSeekerAd_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Notification" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "fromUserId" TEXT NOT NULL,
+    "message" TEXT NOT NULL,
+    "adId" TEXT NOT NULL,
+    "adType" "AdType" NOT NULL,
+    "isRead" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -448,10 +440,6 @@ CREATE TABLE "SellerAd" (
     "adStatus" "AdStatus" NOT NULL DEFAULT 'pending',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "owner" TEXT NOT NULL,
-    "approvedAt" TIMESTAMP(3),
-    "expiresAt" TIMESTAMP(3),
-    "isPaid" BOOLEAN NOT NULL DEFAULT false,
-    "phoneOther" TEXT,
 
     CONSTRAINT "SellerAd_pkey" PRIMARY KEY ("id")
 );
@@ -461,6 +449,7 @@ CREATE TABLE "Session" (
     "id" TEXT NOT NULL,
     "user" TEXT NOT NULL,
     "deviceInfo" JSONB NOT NULL,
+    "refreshToken" TEXT NOT NULL,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "lastActiveAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "isRead" BOOLEAN NOT NULL DEFAULT false,
@@ -577,68 +566,6 @@ CREATE TABLE "Admin" (
 );
 
 -- CreateTable
-CREATE TABLE "SuggestionView" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "adId" TEXT NOT NULL,
-    "adType" "AdType" NOT NULL,
-    "viewedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "SuggestionView_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "UserSuggestionPreference" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "totalAllowed" INTEGER NOT NULL DEFAULT 100,
-    "resetPeriod" TEXT NOT NULL DEFAULT 'monthly',
-    "lastResetDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "preferredAdTypes" "AdType"[] DEFAULT ARRAY[]::"AdType"[],
-    "preferredCategories" TEXT[] DEFAULT ARRAY[]::TEXT[],
-    "filterWeights" JSONB NOT NULL DEFAULT '{}',
-    "isActive" BOOLEAN NOT NULL DEFAULT true,
-
-    CONSTRAINT "UserSuggestionPreference_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "SuggestionDailyLimit" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "countUsed" INTEGER NOT NULL DEFAULT 0,
-    "dailyLimit" INTEGER NOT NULL DEFAULT 20,
-
-    CONSTRAINT "SuggestionDailyLimit_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "AdSimilarityScore" (
-    "id" TEXT NOT NULL,
-    "adId1" TEXT NOT NULL,
-    "adType1" "AdType" NOT NULL,
-    "adId2" TEXT NOT NULL,
-    "adType2" "AdType" NOT NULL,
-    "similarityScore" DOUBLE PRECISION NOT NULL,
-    "calculatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "expiresAt" TIMESTAMP(3),
-
-    CONSTRAINT "AdSimilarityScore_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "CachedUserSuggestions" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "suggestionIds" JSONB NOT NULL,
-    "generatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "expiresAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "CachedUserSuggestions_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "Pricing" (
     "id" TEXT NOT NULL,
     "key" TEXT NOT NULL,
@@ -650,20 +577,6 @@ CREATE TABLE "Pricing" (
 );
 
 -- CreateTable
-CREATE TABLE "AdLadder" (
-    "id" TEXT NOT NULL,
-    "adEnhancementId" TEXT NOT NULL,
-    "option" TEXT,
-    "scheduledAt" TIMESTAMP(3),
-    "executedAt" TIMESTAMP(3),
-    "isExecuted" BOOLEAN NOT NULL DEFAULT false,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "AdLadder_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "AdEnhancement" (
     "id" TEXT NOT NULL,
     "adId" TEXT NOT NULL,
@@ -671,6 +584,8 @@ CREATE TABLE "AdEnhancement" (
     "isSpecial" BOOLEAN NOT NULL DEFAULT false,
     "specialStartDate" TIMESTAMP(3),
     "specialEndDate" TIMESTAMP(3),
+    "isStepped" BOOLEAN NOT NULL DEFAULT false,
+    "stepScheduledAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -704,53 +619,6 @@ CREATE TABLE "Transaction" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Transaction_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Payment" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "amount" INTEGER NOT NULL,
-    "authority" TEXT,
-    "refId" TEXT,
-    "status" "PaymentStatus" NOT NULL DEFAULT 'PENDING',
-    "paymentMethod" "PaymentMethod" NOT NULL,
-    "description" TEXT,
-    "referenceId" TEXT,
-    "referenceType" TEXT,
-    "metadata" JSONB,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Payment_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "VipCode" (
-    "id" TEXT NOT NULL,
-    "code" TEXT NOT NULL,
-    "title" TEXT NOT NULL,
-    "maxUses" INTEGER NOT NULL DEFAULT 1,
-    "usedCount" INTEGER NOT NULL DEFAULT 0,
-    "vipDuration" INTEGER NOT NULL DEFAULT 30,
-    "isActive" BOOLEAN NOT NULL DEFAULT true,
-    "isPublic" BOOLEAN NOT NULL DEFAULT false,
-    "targetUserId" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "VipCode_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "VipCodeUsage" (
-    "id" TEXT NOT NULL,
-    "vipCodeId" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "usedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "expiresAt" TIMESTAMP(3),
-
-    CONSTRAINT "VipCodeUsage_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -823,46 +691,10 @@ CREATE INDEX "ToolUsageLog_userId_createdAt_idx" ON "ToolUsageLog"("userId", "cr
 CREATE UNIQUE INDEX "Admin_phone_key" ON "Admin"("phone");
 
 -- CreateIndex
-CREATE INDEX "SuggestionView_userId_viewedAt_idx" ON "SuggestionView"("userId", "viewedAt");
-
--- CreateIndex
-CREATE INDEX "SuggestionView_adId_adType_idx" ON "SuggestionView"("adId", "adType");
-
--- CreateIndex
-CREATE UNIQUE INDEX "SuggestionView_userId_adId_adType_key" ON "SuggestionView"("userId", "adId", "adType");
-
--- CreateIndex
-CREATE UNIQUE INDEX "UserSuggestionPreference_userId_key" ON "UserSuggestionPreference"("userId");
-
--- CreateIndex
-CREATE INDEX "SuggestionDailyLimit_userId_date_idx" ON "SuggestionDailyLimit"("userId", "date");
-
--- CreateIndex
-CREATE UNIQUE INDEX "SuggestionDailyLimit_userId_date_key" ON "SuggestionDailyLimit"("userId", "date");
-
--- CreateIndex
-CREATE INDEX "AdSimilarityScore_adId1_adType1_idx" ON "AdSimilarityScore"("adId1", "adType1");
-
--- CreateIndex
-CREATE INDEX "AdSimilarityScore_adId2_adType2_idx" ON "AdSimilarityScore"("adId2", "adType2");
-
--- CreateIndex
-CREATE UNIQUE INDEX "AdSimilarityScore_adId1_adType1_adId2_adType2_key" ON "AdSimilarityScore"("adId1", "adType1", "adId2", "adType2");
-
--- CreateIndex
-CREATE UNIQUE INDEX "CachedUserSuggestions_userId_key" ON "CachedUserSuggestions"("userId");
-
--- CreateIndex
-CREATE INDEX "CachedUserSuggestions_expiresAt_idx" ON "CachedUserSuggestions"("expiresAt");
-
--- CreateIndex
 CREATE UNIQUE INDEX "Pricing_key_key" ON "Pricing"("key");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Wallet_userId_key" ON "Wallet"("userId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "VipCode_code_key" ON "VipCode"("code");
 
 -- AddForeignKey
 ALTER TABLE "UserProfile" ADD CONSTRAINT "UserProfile_walletId_fkey" FOREIGN KEY ("walletId") REFERENCES "Wallet"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -902,6 +734,12 @@ ALTER TABLE "JobCategory" ADD CONSTRAINT "JobCategory_parent_fkey" FOREIGN KEY (
 
 -- AddForeignKey
 ALTER TABLE "JobSeekerAd" ADD CONSTRAINT "JobSeekerAd_owner_fkey" FOREIGN KEY ("owner") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Notification" ADD CONSTRAINT "Notification_fromUserId_fkey" FOREIGN KEY ("fromUserId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Question" ADD CONSTRAINT "Question_typeId_fkey" FOREIGN KEY ("typeId") REFERENCES "TestType"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -946,35 +784,7 @@ ALTER TABLE "TicketReply" ADD CONSTRAINT "TicketReply_userId_fkey" FOREIGN KEY (
 ALTER TABLE "ToolUsageLog" ADD CONSTRAINT "ToolUsageLog_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "SuggestionView" ADD CONSTRAINT "SuggestionView_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "UserSuggestionPreference" ADD CONSTRAINT "UserSuggestionPreference_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "SuggestionDailyLimit" ADD CONSTRAINT "SuggestionDailyLimit_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "CachedUserSuggestions" ADD CONSTRAINT "CachedUserSuggestions_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "AdLadder" ADD CONSTRAINT "AdLadder_adEnhancementId_fkey" FOREIGN KEY ("adEnhancementId") REFERENCES "AdEnhancement"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "Wallet" ADD CONSTRAINT "Wallet_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_walletId_fkey" FOREIGN KEY ("walletId") REFERENCES "Wallet"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Payment" ADD CONSTRAINT "Payment_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "VipCode" ADD CONSTRAINT "VipCode_targetUserId_fkey" FOREIGN KEY ("targetUserId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "VipCodeUsage" ADD CONSTRAINT "VipCodeUsage_vipCodeId_fkey" FOREIGN KEY ("vipCodeId") REFERENCES "VipCode"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "VipCodeUsage" ADD CONSTRAINT "VipCodeUsage_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-

@@ -81,7 +81,6 @@ export async function getAdsList(input: GetAdsListInput) {
 
     const ads = await model.findMany({
       where,
-      take: limit,
       skip,
       orderBy: { createdAt: 'desc' },
       include: {
@@ -121,6 +120,8 @@ export async function getAdsList(input: GetAdsListInput) {
       })
     }
   }
+  allAds.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  const paginatedData = allAds.slice(skip, skip + limit)
 
   let total = 0
   for (const adType of adTypes) {
@@ -139,7 +140,7 @@ export async function getAdsList(input: GetAdsListInput) {
   }
 
   return {
-    data: allAds,
+    data: paginatedData,
     pagination: {
       page,
       limit,
@@ -248,42 +249,63 @@ export async function approveAd(adId: string, adType: AdType, adminId: string) {
   })
 
   if (!ad) throw new Error('آگهی یافت نشد')
-  if (ad.adStatus !== 'pending') {
-    throw new Error('فقط آگهی‌های در انتظار تایید قابل تایید هستند')
+
+  if (ad.adStatus !== 'pending' && ad.adStatus !== 'updated') {
+    throw new Error('فقط آگهی‌های در انتظار تایید یا ویرایش‌شده قابل تایید هستند')
   }
 
-  const transaction = await prisma.transaction.findFirst({
-    where: {
-      referenceId: adId,
-      status: TransactionStatus.PENDING,
-      type: 'HOLD',
-    },
-    orderBy: { createdAt: 'desc' },
-  })
+  if (ad.adStatus === 'pending') {
+    const transaction = await prisma.transaction.findFirst({
+      where: {
+        referenceId: adId,
+        status: TransactionStatus.PENDING,
+        type: 'HOLD',
+      },
+      orderBy: { createdAt: 'desc' },
+    })
 
-  if (transaction) {
-    await WalletService.releaseHold(transaction.id, { approvedBy: adminId })
+    if (transaction) {
+      await WalletService.releaseHold(transaction.id, { approvedBy: adminId })
+    }
+
+    const now = new Date()
+    const expiresAt = new Date(now)
+    expiresAt.setDate(expiresAt.getDate() + 30)
+
+    await model.update({
+      where: { id: adId },
+      data: {
+        adStatus: 'approved',
+        approvedAt: now,
+        expiresAt: expiresAt,
+      },
+    })
+
+    await applyEnhancements(adId, adType, now)
+
+    return {
+      message: 'آگهی با موفقیت تایید شد',
+      approvedAt: toJalali(now),
+      expiresAt: toJalali(expiresAt),
+    }
   }
 
-  const now = new Date()
-  const expiresAt = new Date(now)
-  expiresAt.setDate(expiresAt.getDate() + 30)
+  if (ad.adStatus === 'updated') {
+    const now = new Date()
+    await model.update({
+      where: { id: adId },
+      data: {
+        adStatus: 'approved',
+        approvedAt: now,
+        expiresAt: ad.expiresAt,
+      },
+    })
 
-  const updated = await model.update({
-    where: { id: adId },
-    data: {
-      adStatus: 'approved',
-      approvedAt: now,
-      expiresAt: expiresAt,
-    },
-  })
-
-  await applyEnhancements(adId, adType, now)
-
-  return {
-    message: 'آگهی با موفقیت تایید شد',
-    approvedAt: toJalali(now),
-    expiresAt: toJalali(expiresAt),
+    return {
+      message: 'آگهی ویرایش‌شده با موفقیت تایید شد',
+      approvedAt: toJalali(now),
+      expiresAt: toJalali(ad.expiresAt),
+    }
   }
 }
 
@@ -306,24 +328,26 @@ export async function rejectAd(
   })
 
   if (!ad) throw new Error('آگهی یافت نشد')
-  if (ad.adStatus !== 'pending') {
-    throw new Error('فقط آگهی‌های در انتظار تایید قابل رد هستند')
+
+  if (!['pending', 'approved', 'updated'].includes(ad.adStatus)) {
+    throw new Error('فقط آگهی‌های در انتظار، تایید شده یا ویرایش‌شده قابل رد هستند')
+  }
+  if (ad.adStatus === 'pending') {
+    const transaction = await prisma.transaction.findFirst({
+      where: {
+        referenceId: adId,
+        status: TransactionStatus.PENDING,
+        type: 'HOLD',
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+
+    if (transaction) {
+      await WalletService.refundHold(transaction.id, reason, { rejectedBy: adminId })
+    }
   }
 
-  const transaction = await prisma.transaction.findFirst({
-    where: {
-      referenceId: adId,
-      status: TransactionStatus.PENDING,
-      type: 'HOLD',
-    },
-    orderBy: { createdAt: 'desc' },
-  })
-
-  if (transaction) {
-    await WalletService.refundHold(transaction.id, reason, { rejectedBy: adminId })
-  }
-
-  const updated = await model.update({
+  await model.update({
     where: { id: adId },
     data: {
       adStatus: 'rejected',
