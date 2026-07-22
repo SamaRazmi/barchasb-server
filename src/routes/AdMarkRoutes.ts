@@ -1,9 +1,9 @@
 import express from "express";
 
-// import controllers (همانند require قبلی به صورت namespace)
+// import controllers
 import * as AdMarkCtrl from "../controllers/AdMarkCtrl";
-// middleware (اگر قرار است استفاده شود، ولی در مسیرها اعمال نشده)
-// import { authenticateToken } from "../middleware/authMidleware";
+// فعال‌سازی middleware احراز هویت
+import { authenticateToken } from "../middleware/authMidleware";
 
 const router = express.Router();
 
@@ -46,22 +46,14 @@ const router = express.Router();
  *     responses:
  *       200:
  *         description: عملیات با موفقیت انجام شد
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 msg:
- *                   type: string
- *                   example: مارک اضافه/حذف شد
- *                 marked:
- *                   type: boolean
  *       400:
  *         description: خطا در داده‌ها
+ *       401:
+ *         description: احراز هویت نشده
  *       500:
  *         description: خطای سرور
  */
-router.post("/ads/:adId/mark", AdMarkCtrl.toggleMark);
+router.post("/ads/:adId/mark", authenticateToken, AdMarkCtrl.toggleMark);
 
 /**
  * @swagger
@@ -87,19 +79,12 @@ router.post("/ads/:adId/mark", AdMarkCtrl.toggleMark);
  *     responses:
  *       200:
  *         description: نتیجه بررسی
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 marked:
- *                   type: boolean
- *       400:
- *         description: پارامترهای لازم ارسال نشده
+ *       401:
+ *         description: احراز هویت نشده
  *       500:
  *         description: خطای سرور
  */
-router.get("/ads/:id/is-marked", AdMarkCtrl.isAdMarked);
+router.get("/ads/:id/is-marked", authenticateToken, AdMarkCtrl.isAdMarked);
 
 /**
  * @swagger
@@ -121,23 +106,20 @@ router.get("/ads/:id/is-marked", AdMarkCtrl.isAdMarked);
  *         required: true
  *         schema:
  *           type: string
- *         description: نوع آگهی (مثلاً 'job' یا 'service')
+ *         description: نوع آگهی
  *     responses:
  *       200:
  *         description: لیست آگهی‌های نشان‌شده
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 ads:
- *                   type: array
- *                   items:
- *                     type: object
+ *       401:
+ *         description: احراز هویت نشده
  *       500:
  *         description: خطای سرور
  */
-router.get("/users/:userId/marked-ads/:adType", AdMarkCtrl.getMarkedAds);
+router.get(
+  "/users/:userId/marked-ads/:adType",
+  authenticateToken,
+  AdMarkCtrl.getMarkedAds,
+);
 
 /**
  * @swagger
@@ -157,18 +139,68 @@ router.get("/users/:userId/marked-ads/:adType", AdMarkCtrl.getMarkedAds);
  *     responses:
  *       200:
  *         description: لیست کامل آگهی‌های نشان‌شده
+ *       401:
+ *         description: احراز هویت نشده
+ *       500:
+ *         description: خطای سرور
+ */
+router.get("/marks/:userId/all", authenticateToken, AdMarkCtrl.getAllMarkedAds);
+
+// ======================== BATCH ENDPOINT WITH AUTH ========================
+/**
+ * @swagger
+ * /api/ads/batch-is-marked:
+ *   post:
+ *     summary: بررسی گروهی نشان‌گذاری آگهی‌ها برای کاربر جاری
+ *     tags: [AdMarks]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - items
+ *             properties:
+ *               items:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     adId:
+ *                       type: string
+ *                     adType:
+ *                       type: string
+ *     responses:
+ *       200:
+ *         description: نتیجه بررسی برای هر آیتم
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 ads:
+ *                 results:
  *                   type: array
  *                   items:
  *                     type: object
+ *                     properties:
+ *                       adId:
+ *                         type: string
+ *                       marked:
+ *                         type: boolean
+ *       400:
+ *         description: پارامترهای لازم ارسال نشده
+ *       401:
+ *         description: احراز هویت نشده
  *       500:
  *         description: خطای سرور
  */
-router.get("/marks/:userId/all", AdMarkCtrl.getAllMarkedAds);
+router.post(
+  "/ads/batch-is-marked",
+  authenticateToken,
+  AdMarkCtrl.batchIsMarked,
+);
 
 export default router;

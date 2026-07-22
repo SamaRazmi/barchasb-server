@@ -36,20 +36,18 @@ export const loginUser = async (req: Request, res: Response) => {
       console.error("❌ Wallet error (ignored):", walletError);
     }
 
-    // 4️⃣ ساخت JWT
-    const payload = {
-      id: user.id,
-      name: user.name,
-      lastName: user.lastName,
-      phone: user.phone,
-      role: user.role,
-    };
-
-    const token = jwt.sign(payload, process.env.JWT_SECRET as string, {
-      expiresIn: "7d",
+    // =============== تغییر مهم ===============
+    // غیرفعال کردن تمام جلسات فعال قبلی کاربر (Single Session)
+    await prisma.session.updateMany({
+      where: {
+        user: user.id,
+        isActive: true,
+      },
+      data: { isActive: false },
     });
+    // =========================================
 
-    // 5️⃣ اطلاعات دستگاه
+    // 4️⃣ اطلاعات دستگاه
     const userAgent = req.headers["user-agent"] || "";
     const parser = new UAParser(userAgent);
     const result = parser.getResult();
@@ -76,20 +74,18 @@ export const loginUser = async (req: Request, res: Response) => {
 
     const os = result.os?.name || "";
 
-    // 6️⃣ ساخت deviceInfo (حداقل یک کلید داشته باشد)
+    // 5️⃣ ساخت deviceInfo
     const deviceInfo: any = {};
     if (userAgent) deviceInfo.userAgent = userAgent;
     if (ip) deviceInfo.ip = ip;
     if (deviceType) deviceInfo.deviceType = deviceType;
     if (browser) deviceInfo.browser = browser;
     if (os) deviceInfo.os = os;
-
-    // اگر آبجکت خالی بود، یک کلید پیش‌فرض اضافه کن
     if (Object.keys(deviceInfo).length === 0) {
       deviceInfo._empty = true;
     }
 
-    // 7️⃣ ساخت Session (بدون refreshToken)
+    // 6️⃣ ساخت Session جدید
     const session = await prisma.session.create({
       data: {
         user: user.id,
@@ -99,7 +95,7 @@ export const loginUser = async (req: Request, res: Response) => {
       },
     });
 
-    // 8️⃣ اتصال session به user
+    // 7️⃣ اتصال session به user
     await prisma.user.update({
       where: { id: user.id },
       data: {
@@ -107,6 +103,20 @@ export const loginUser = async (req: Request, res: Response) => {
           connect: { id: session.id },
         },
       },
+    });
+
+    // 8️⃣ ساخت JWT با اضافه کردن sessionId به payload
+    const payload = {
+      id: user.id,
+      name: user.name,
+      lastName: user.lastName,
+      phone: user.phone,
+      role: user.role,
+      sessionId: session.id, // <-- اضافه شد
+    };
+
+    const token = jwt.sign(payload, process.env.JWT_SECRET as string, {
+      expiresIn: "7d",
     });
 
     // 9️⃣ تنظیم کوکی
