@@ -307,21 +307,24 @@ export async function rejectAd(
   })
 
   if (!ad) throw new Error('آگهی یافت نشد')
-  if (ad.adStatus !== 'pending') {
-    throw new Error('فقط آگهی‌های در انتظار تایید قابل رد هستند')
+
+  if (ad.adStatus !== 'pending' && ad.adStatus !== 'approved') {
+    throw new Error('فقط آگهی‌های در انتظار تایید یا تایید شده قابل رد هستند')
   }
 
-  const transaction = await prisma.transaction.findFirst({
-    where: {
-      referenceId: adId,
-      status: TransactionStatus.PENDING,
-      type: 'HOLD',
-    },
-    orderBy: { createdAt: 'desc' },
-  })
+  if (ad.adStatus === 'pending') {
+    const transaction = await prisma.transaction.findFirst({
+      where: {
+        referenceId: adId,
+        status: TransactionStatus.PENDING,
+        type: 'HOLD',
+      },
+      orderBy: { createdAt: 'desc' },
+    })
 
-  if (transaction) {
-    await WalletService.refundHold(transaction.id, reason, { rejectedBy: adminId })
+    if (transaction) {
+      await WalletService.refundHold(transaction.id, reason, { rejectedBy: adminId })
+    }
   }
 
   const updated = await model.update({
