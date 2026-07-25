@@ -557,7 +557,7 @@ model SellerAd {
   application   String?
   status        String?
   images        Json[] // [{url: String, isMain: Boolean}]
-  priceIRT      Int           @default(0)
+  priceIRT      BigInt        @default(0)
   isFixedPrice  Boolean       @default(false)
   isNegotiable  Boolean       @default(false)
   hasWarranty   Boolean       @default(false)
@@ -825,7 +825,7 @@ enum TransactionStatus {
 model Pricing {
   id          String   @id @default(uuid())
   key         String   @unique //  "base_ad_price", "special_price", "ladder_price", "renewal_price"
-  value       Int // IRT
+  value       BigInt // IRT
   description String?
   updatedAt   DateTime @updatedAt
 }
@@ -866,8 +866,8 @@ model Wallet {
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  balance     Int @default(1000000)
-  heldBalance Int @default(0)
+  balance     BigInt @default(1000000)
+  heldBalance BigInt @default(0)
 
   transactions Transaction[]
   createdAt    DateTime      @default(now())
@@ -880,7 +880,7 @@ model Transaction {
   walletId String
   wallet   Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
 
-  amount        Int
+  amount        BigInt
   type          TransactionType
   status        TransactionStatus @default(PENDING)
   description   String
@@ -896,7 +896,7 @@ model Payment {
   id              String    @id @default(uuid())
   userId          String
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  amount          Int       // IRT
+  amount          BigInt    // IRT
   authority       String?   // کد ارجاع درگاه (Authority)
   refId           String?   // کد پیگیری درگاه (Reference ID)
   status          PaymentStatus @default(PENDING)
