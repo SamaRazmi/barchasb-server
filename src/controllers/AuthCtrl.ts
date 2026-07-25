@@ -29,30 +29,30 @@ export const getMe = async (req: Request, res: Response) => {
         joinedAt: true,
         email_confirmed: true,
         phone_confirmed: true,
-        // password حذف شده
         vipExpiresAt: true,
       },
     });
 
     if (!user) return res.status(404).json({ message: "کاربر یافت نشد" });
 
-    let balance = 0;
+    // استفاده از bigint
+    let balance = 0n;
     try {
       const balanceData = await WalletService.getAvailableBalance(userId);
-      balance = balanceData.available;
+      balance = BigInt(balanceData.available); // تبدیل number به bigint
     } catch (error) {
-      balance = 0;
+      balance = 0n;
     }
     const isVip = await isUserVip(userId);
 
-    res.json({ ...user, isVip, balance});
+    // تبدیل balance به string برای JSON
+    res.json({ ...user, isVip, balance: balance.toString() });
   } catch (err) {
     console.error("GetMe error:", err);
     res.status(500).json({ message: "خطا در دریافت اطلاعات کاربر" });
   }
 };
 
-// =================== export default ===================
 const AuthCtrl = {
   getMe,
 };

@@ -8,7 +8,6 @@ interface AuthRequest extends Request {
 
 const PaymentCtrl = {
   // Create a new payment (Front calls this)
-  // ================================================================
   create: async (req: AuthRequest, res: Response) => {
     try {
       const userId = req.user?.id;
@@ -28,7 +27,6 @@ const PaymentCtrl = {
         metadata,
       } = req.body;
 
-      // validate
       if (!amount || amount <= 0) {
         return res.status(400).json({
           status: "error",
@@ -36,14 +34,16 @@ const PaymentCtrl = {
         });
       }
 
-      if (!paymentMethod || !Object.values(PaymentMethod).includes(paymentMethod)) {
+      if (
+        !paymentMethod ||
+        !Object.values(PaymentMethod).includes(paymentMethod)
+      ) {
         return res.status(400).json({
           status: "error",
           message: "روش پرداخت معتبر نیست",
         });
       }
 
-      // create payment
       const result = await PaymentGatewayService.createPayment({
         userId,
         amount,
@@ -71,8 +71,6 @@ const PaymentCtrl = {
     }
   },
 
-  // Payment confirmation (the gateway calls this as a Callback)
-  // ================================================================
   verify: async (req: Request, res: Response) => {
     try {
       const { authority, status } = req.query;
@@ -89,23 +87,20 @@ const PaymentCtrl = {
         status: status as string,
       });
 
-      // Redirect the user to the frontend with the result
-    const frontendUrl = process.env.RESULT_PAYMENT_FRONTEND_URL || "/api/payments/result";
-    const redirectUrl = result.success
-      ? `${frontendUrl}?status=success&paymentId=${result.paymentId}&refId=${result.refId}`
-      : `${frontendUrl}?status=failed&message=${encodeURIComponent(result.message)}`;
+      const frontendUrl =
+        process.env.RESULT_PAYMENT_FRONTEND_URL || "/api/payments/result";
+      const redirectUrl = result.success
+        ? `${frontendUrl}?status=success&paymentId=${result.paymentId}&refId=${result.refId}`
+        : `${frontendUrl}?status=failed&message=${encodeURIComponent(result.message)}`;
 
       return res.redirect(redirectUrl);
     } catch (error: any) {
       console.error(error);
-      // In case of error, redirect the user to the error page
       const redirectUrl = `${process.env.RESULT_PAYMENT_FRONTEND_URL || "http://localhost:3000"}/payment-result?status=error&message=${encodeURIComponent(error.message)}`;
       return res.redirect(redirectUrl);
     }
   },
 
-  // Mock Portal Page (for testing)
-  // ================================================================
   payMock: async (req: Request, res: Response) => {
     const { authority, amount } = req.query;
 
@@ -148,7 +143,6 @@ const PaymentCtrl = {
     `);
   },
 
-  // Mock Result page (for testing)
   showResult: async (req: Request, res: Response) => {
     const { status, paymentId, refId, message } = req.query;
 
@@ -174,7 +168,6 @@ const PaymentCtrl = {
       description = `خطا: ${message || "خطای ناشناخته"}`;
     }
 
-    // صفحه HTML
     res.send(`
       <!DOCTYPE html>
       <html dir="rtl">
