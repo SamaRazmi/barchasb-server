@@ -44,3 +44,17 @@ export function checkCostPermission(admin: AdminWithPermissions): void {
     throw new Error('شما دسترسی لازم برای مدیریت قیمت‌ها را ندارید')
   }
 }
+
+export function hasArticlePermission(admin: AdminWithPermissions): boolean {
+  if (admin.role === 'OWNER') return true
+  if (admin.role === 'ADMIN' || admin.role === 'SUPPORTER') {
+    return admin.permissions?.articles === true || admin.permissions?.all === true
+  }
+  return false
+}
+
+export function checkArticlePermission(admin: AdminWithPermissions): void {
+  if (!hasArticlePermission(admin)) {
+    throw new Error('شما دسترسی لازم برای مدیریت مقالات را ندارید')
+  }
+}
