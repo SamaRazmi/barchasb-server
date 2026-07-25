@@ -60,6 +60,7 @@ import adManagementRoutes from './Admin/routes/AdManagementRoutes';
 import adminPricingRoutes from './Admin/routes/PricingManagementRoutes';
 import adminVipRoutes from './Admin/routes/VipManagementRoutes';
 import articleCategoryRoutes from "./Admin/routes/ArticleCategoryRoutes";
+import articlesRoutes from "./Admin/routes/ArticleManagementRoutes";
 
 import SuggestionRoutes from "./routes/SuggestionRoutes";
 import profileRoutes from "./routes/UserProfileRoutes"; // مسیر صحیح
@@ -309,6 +310,7 @@ app.use("/api/admin/admins", adminManagementRoutes);
 app.use('/api/admin/ads', adManagementRoutes);
 app.use('/api/admin/pricing', adminPricingRoutes)
 app.use("/api/admin/article/categories", articleCategoryRoutes);
+app.use("/api/admin/articles", articlesRoutes);
 
 // ===== اضافه شده: مسیرهای مدیریت گزارش توسط ادمین =====
 // app.use("/api/admin", adminReportRoutes); 
