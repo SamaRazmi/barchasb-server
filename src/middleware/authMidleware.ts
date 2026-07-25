@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import * as jwt from "jsonwebtoken";
 import "dotenv/config";
+import prisma from "../config/prisma";
 
 
 // ====== اضافه کردن تایپ به Express ======
@@ -105,7 +106,7 @@ export const authenticateUser = (
 // /* =========================
 //    ADMIN AUTH (FULL SAFE)
 // ========================= */
-export const authenticateAdmin = (req: Request, res: Response, next: NextFunction) => {
+export const authenticateAdmin = async (req: Request, res: Response, next: NextFunction) => {
   let token = req.cookies?.accessToken
   if (!token && req.headers.authorization?.startsWith('Bearer ')) {
     token = req.headers.authorization.split(' ')[1]
@@ -117,10 +118,29 @@ export const authenticateAdmin = (req: Request, res: Response, next: NextFunctio
 
   try {
     const decoded = jwt.verify(token, JWT_ADMIN_SECRET) as any
+
+    const admin = await prisma.admin.findUnique({
+      where: { id: decoded.sub || decoded.id },
+      select: {
+        id: true,
+        username: true,
+        role: true,
+        permissions: true,
+      },
+    });
+
+    if (!admin) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'ادمین یافت نشد',
+      });
+    }
+
     req.admin = {
-      id: decoded.sub || decoded.id,
-      username: decoded.username,
-      role: decoded.role,
+      id: admin.id,
+      username: admin.username,
+      role: admin.role,
+      permissions: admin.permissions as any,
     }
     next()
   } catch {
