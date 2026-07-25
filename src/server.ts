@@ -56,9 +56,9 @@ import searchRoutes from "./routes/SearchRoutes";
 
 import adminAuthRoutes from "./Admin/routes/AuthRoutes";
 import adminManagementRoutes from "./Admin/routes/AdminManagementRoutes";
-import adManagementRoutes from './Admin/routes/AdManagementRoutes';
-import adminPricingRoutes from './Admin/routes/PricingManagementRoutes';
-import adminVipRoutes from './Admin/routes/VipManagementRoutes';
+import adManagementRoutes from "./Admin/routes/AdManagementRoutes";
+import adminPricingRoutes from "./Admin/routes/PricingManagementRoutes";
+import adminVipRoutes from "./Admin/routes/VipManagementRoutes";
 
 import SuggestionRoutes from "./routes/SuggestionRoutes";
 import profileRoutes from "./routes/UserProfileRoutes"; // مسیر صحیح
@@ -68,12 +68,26 @@ import profileRoutes from "./routes/UserProfileRoutes"; // مسیر صحیح
 import cron from "node-cron";
 import { cleanExpiredAds } from "./jobs/cleanExpiredAds";
 import { cleanPendingPaymentAds } from "./jobs/cleanPendingPaymentAds";
-import { executeLadders } from './jobs/executeLadders'
+import { executeLadders } from "./jobs/executeLadders";
 
 import loadData from "./utils/dataLoader";
 import fs from "fs";
 import { join } from "path";
-
+// ========== رفع خطای سریالایز BigInt ==========
+const originalStringify = JSON.stringify;
+JSON.stringify = function (value: any, replacer?: any, space?: any) {
+  return originalStringify.call(
+    this,
+    value,
+    (key: string, val: any) => {
+      if (typeof val === "bigint") {
+        return val.toString();
+      }
+      return val;
+    },
+    space,
+  );
+};
 interface CustomSocket extends Socket {
   userId?: string;
 }
@@ -84,8 +98,8 @@ interface SocketMessage {
 }
 
 const app: Application = express();
-if (process.env.NODE_ENV === 'production') {
-  app.set('trust proxy', true);
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", true);
 }
 app.set("trust proxy", true);
 const server = http.createServer(app);
@@ -300,16 +314,16 @@ app.use("/api/resume", ResumeRoutes);
 app.use("/api/converter", converterRoutes);
 app.use("/api/user", UserExtensionsRoutes);
 app.use("/api/admin/extension", AdminExtensionsRoutes);
-app.use('/api/admin/vip-codes', adminVipRoutes)
+app.use("/api/admin/vip-codes", adminVipRoutes);
 
 // admin route
 app.use("/api/admin/auth", adminAuthRoutes);
 app.use("/api/admin/admins", adminManagementRoutes);
-app.use('/api/admin/ads', adManagementRoutes);
-app.use('/api/admin/pricing', adminPricingRoutes)
+app.use("/api/admin/ads", adManagementRoutes);
+app.use("/api/admin/pricing", adminPricingRoutes);
 
 // ===== اضافه شده: مسیرهای مدیریت گزارش توسط ادمین =====
-// app.use("/api/admin", adminReportRoutes); 
+// app.use("/api/admin", adminReportRoutes);
 
 /* =====================================================
    =============== GLOBAL ERROR HANDLING ===============
@@ -469,9 +483,9 @@ cron.schedule("*/5 * * * *", async () => {
   console.log("⏰ اجرای کرون جاب پاکسازی آگهی‌های pending_payment...");
   await cleanPendingPaymentAds();
 });
-cron.schedule('*/5 * * * *', async () => {
-  await executeLadders()
-})
+cron.schedule("*/5 * * * *", async () => {
+  await executeLadders();
+});
 
 async function startServer() {
   try {
