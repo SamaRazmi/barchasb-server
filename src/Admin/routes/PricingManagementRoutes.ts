@@ -1,15 +1,16 @@
-import { Router } from "express";
-import PricingCtrl from "../controllers/PricingCtrl";
-import { authenticateToken } from "../middleware/authMidleware";
+import { Router } from 'express'
+import AdminPricingCtrl from '../controllers/PricingManagementCtrl'
+import { authenticateAdmin } from '../../middleware/authMidleware'
 
-const router = Router();
+const router = Router()
 
 /**
  * @swagger
- * /api/pricing:
+ * /api/admin/pricing:
  *   get:
- *     summary: دریافت همه قیمت‌ها
- *     tags: [Pricing]
+ *     tags: [Admin-Pricing]
+ *     security:
+ *       - BearerAuth: []
  *     responses:
  *       200:
  *         description: موفق
@@ -39,44 +40,46 @@ const router = Router();
  *       500:
  *         description: خطای سرور
  */
-router.get("/pricing", authenticateToken, PricingCtrl.getAll);
+router.get("", authenticateAdmin, AdminPricingCtrl.getAll);
 
 /**
  * @swagger
- * /api/pricing/{key}:
- *   get:
- *     summary: دریافت یک قیمت با کلید
- *     tags: [Pricing]
+ * /api/admin/pricing/{key}:
+ *   put:
+ *     tags: [Admin-Pricing]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: key
  *         required: true
  *         schema:
  *           type: string
- *         description: Pricing Key (base_ad_price, special_price, ladder_price, renewal_price)
+ *         description: Price Key(base_ad_price, special_price, ladder_price, renewal_price)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - value
+ *             properties:
+ *               value:
+ *                 type: number
+ *                 example: 120000
  *     responses:
  *       200:
  *         description: موفق
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 data:
- *                   type: object
- *                   properties:
- *                     key:
- *                       type: string
- *                     value:
- *                       type: number
+ *       400:
+ *         description: مقدار نامعتبر
+ *       403:
+ *         description: دسترسی غیرمجاز 
  *       404:
  *         description: قیمت یافت نشد
  *       500:
  *         description: خطای سرور
  */
-router.get("/pricing/:key", authenticateToken, PricingCtrl.getByKey);
+router.put('/:key', authenticateAdmin, AdminPricingCtrl.update)
 
-export default router;
+export default router

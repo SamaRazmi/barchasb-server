@@ -27,3 +27,17 @@ export function checkAdPermission(admin: AdminWithPermissions): void {
     throw new Error('شما دسترسی لازم برای مدیریت آگهی‌ها را ندارید')
   }
 }
+
+export function hasCostPermission(admin: AdminWithPermissions): boolean {
+  if (admin.role === 'OWNER') return true
+  if (admin.role === 'ADMIN' || admin.role === 'SUPPORTER') {
+    return admin.permissions?.costs === true
+  }
+  return false
+}
+
+export function checkCostPermission(admin: AdminWithPermissions): void {
+  if (!hasCostPermission(admin)) {
+    throw new Error('شما دسترسی لازم برای مدیریت قیمت‌ها را ندارید')
+  }
+} 
