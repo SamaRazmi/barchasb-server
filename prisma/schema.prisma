@@ -952,4 +952,3 @@ model VipCodeUsage {
   @@index([userId])
   @@index([vipCodeId])
 }
-}
