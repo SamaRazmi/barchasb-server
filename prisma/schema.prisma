@@ -332,6 +332,8 @@ model DigitalAd {
   phoneOther          String?
 
   rejectionReason  String?
+  approvedBy         String?
+  rejectedBy         String?
 
   ownerRelation User @relation(fields: [owner], references: [id])
 }
@@ -390,6 +392,8 @@ model EmployerAd {
   phoneOther          String?
 
   rejectionReason  String?
+  approvedBy         String?
+  rejectedBy         String?
 
   ownerRelation User @relation(fields: [owner], references: [id])
 }
@@ -445,6 +449,8 @@ model JobSeekerAd {
   phoneOther          String?
 
   rejectionReason  String?
+  approvedBy         String?
+  rejectedBy         String?
 
   ownerRelation User @relation(fields: [owner], references: [id])
 }
@@ -582,6 +588,8 @@ model SellerAd {
   phoneOther          String?
   
   rejectionReason  String?
+  approvedBy         String?
+  rejectedBy         String?
   ownerRelation User @relation(fields: [owner], references: [id])
 }
 
