@@ -1,13 +1,13 @@
 import prisma from "../config/prisma";
 
 export const PRICING_KEYS = {
-  BASE_AD_PRICE: "base_ad_price", 
-  SPECIAL_PRICE: "special_price", 
-  LADDER_PRICE: "ladder_price",       
-  RENEWAL_PRICE: "renewal_price", 
+  BASE_AD_PRICE: "base_ad_price",
+  SPECIAL_PRICE: "special_price",
+  LADDER_PRICE: "ladder_price",
+  RENEWAL_PRICE: "renewal_price",
 } as const;
 
-export type PricingKey = typeof PRICING_KEYS[keyof typeof PRICING_KEYS];
+export type PricingKey = (typeof PRICING_KEYS)[keyof typeof PRICING_KEYS];
 
 export const getAllPricing = async () => {
   return prisma.pricing.findMany({
@@ -15,7 +15,7 @@ export const getAllPricing = async () => {
   });
 };
 
-export const getPricingValue = async (key: PricingKey): Promise<number> => {
+export const getPricingValue = async (key: PricingKey): Promise<bigint> => {
   const pricing = await prisma.pricing.findUnique({
     where: { key },
   });
@@ -24,5 +24,6 @@ export const getPricingValue = async (key: PricingKey): Promise<number> => {
     throw new Error(`قیمت با کلید "${key}" یافت نشد`);
   }
 
-  return pricing.value;
+  // تبدیل صریح به bigint برای اطمینان از تطابق نوع
+  return BigInt(pricing.value);
 };

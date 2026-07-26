@@ -1,108 +1,123 @@
-import { Request, Response } from 'express'
-import * as AdminPricingService from '../services/PricingManagementService'
-import { checkCostPermission } from '../utils/permissionCheck'
+import { Request, Response } from "express";
+import * as AdminPricingService from "../services/PricingManagementService";
+import { checkCostPermission } from "../utils/permissionCheck";
 
 const toStr = (value: string | string[] | undefined): string => {
-  if (typeof value === 'string') return value
-  if (Array.isArray(value) && value.length > 0) return value[0]
-  return ''
-}
+  if (typeof value === "string") return value;
+  if (Array.isArray(value) && value.length > 0) return value[0];
+  return "";
+};
 
 interface AuthRequest extends Request {
   admin?: {
-    id: string
-    role: string
-    permissions?: any
-  }
+    id: string;
+    role: string;
+    permissions?: any;
+  };
 }
 
 const AdminPricingCtrl = {
   getAll: async (req: AuthRequest, res: Response) => {
     try {
-      const admin = req.admin
+      const admin = req.admin;
       if (!admin) {
         return res.status(401).json({
-          status: 'error',
-          message: 'احراز هویت نشده',
-        })
+          status: "error",
+          message: "احراز هویت نشده",
+        });
       }
 
       checkCostPermission({
         id: admin.id,
         role: admin.role as any,
         permissions: admin.permissions,
-      })
+      });
 
-      const pricing = await AdminPricingService.getAllPricing()
+      const pricing = await AdminPricingService.getAllPricing();
 
+      // تبدیل bigint به string برای JSON
       const pricingWithoutUpdatedAt = pricing.map((item: any) => {
-        const { updatedAt, ...rest } = item
-        return rest
-      })
+        const { updatedAt, ...rest } = item;
+        return {
+          ...rest,
+          value: item.value?.toString ? item.value.toString() : item.value,
+        };
+      });
 
       res.status(200).json({
-        status: 'success',
+        status: "success",
         data: pricingWithoutUpdatedAt,
-      })
+      });
     } catch (error: any) {
-      console.error(error)
-      const status = error.message?.includes('دسترسی') ? 403 : 500
+      console.error(error);
+      const status = error.message?.includes("دسترسی") ? 403 : 500;
       res.status(status).json({
-        status: 'error',
-        message: error.message || 'خطا در دریافت قیمت‌ها',
-      })
+        status: "error",
+        message: error.message || "خطا در دریافت قیمت‌ها",
+      });
     }
   },
 
   update: async (req: AuthRequest, res: Response) => {
     try {
-      const admin = req.admin
+      const admin = req.admin;
       if (!admin) {
         return res.status(401).json({
-          status: 'error',
-          message: 'احراز هویت نشده',
-        })
+          status: "error",
+          message: "احراز هویت نشده",
+        });
       }
 
       checkCostPermission({
         id: admin.id,
         role: admin.role as any,
         permissions: admin.permissions,
-      })
+      });
 
-      const key = toStr(req.params.key)
+      const key = toStr(req.params.key);
       if (!key) {
         return res.status(400).json({
-          status: 'error',
-          message: 'کلید قیمت معتبر نیست',
-        })
+          status: "error",
+          message: "کلید قیمت معتبر نیست",
+        });
       }
 
-      const { value } = req.body
+      const { value } = req.body;
       if (value === undefined || value === null || value < 0) {
         return res.status(400).json({
-          status: 'error',
-          message: 'مقدار قیمت معتبر نیست (باید عددی مثبت باشد)',
-        })
+          status: "error",
+          message: "مقدار قیمت معتبر نیست (باید عددی مثبت باشد)",
+        });
       }
 
-      const updated = await AdminPricingService.updatePricing(key, value)
+      // تغییر: استفاده از Number به جای BigInt (چون تابع سرویس number قبول می‌کند)
+      const updated = await AdminPricingService.updatePricing(
+        key,
+        Number(value),
+      );
+
+      // تبدیل bigint به string در پاسخ (اگر مقدار برگشتی bigint باشد)
+      const responseData = {
+        ...updated,
+        value: updated.value?.toString
+          ? updated.value.toString()
+          : updated.value,
+      };
 
       res.status(200).json({
-        status: 'success',
-        message: 'قیمت با موفقیت به‌روزرسانی شد',
-        data: updated,
-      })
+        status: "success",
+        message: "قیمت با موفقیت به‌روزرسانی شد",
+        data: responseData,
+      });
     } catch (error: any) {
-      console.error(error)
-      const status = error.message?.includes('دسترسی') ? 403 : 500
+      console.error(error);
+      const status = error.message?.includes("دسترسی") ? 403 : 500;
       res.status(status).json({
-        status: 'error',
-        message: error.message || 'خطا در به‌روزرسانی قیمت',
-      })
+        status: "error",
+        message: error.message || "خطا در به‌روزرسانی قیمت",
+      });
     }
   },
-}
+};
 
-
-export default AdminPricingCtrl
+export default AdminPricingCtrl;

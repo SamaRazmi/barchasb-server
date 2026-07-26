@@ -79,10 +79,7 @@ router.post(
 );
 
 /* =======================
-   GET
-======================= */
-/* =======================
-   GET
+   GET ALL (عمومی، بدون محدودیت کاربر)
 ======================= */
 /**
  * @swagger
@@ -167,11 +164,109 @@ router.post(
  */
 router.get("/ads/seller", SellerAdCtrl.getAllSellerAds);
 
+/* =======================
+   GET BY OWNER WITH FILTERS (جدید!)
+======================= */
+/**
+ * @swagger
+ * /api/ads/seller/owner/{ownerId}/filter:
+ *   get:
+ *     summary: دریافت آگهی‌های یک کاربر خاص با فیلترهای پیشرفته
+ *     tags: [SellerAds]
+ *     parameters:
+ *       - name: ownerId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: شناسه کاربر
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *         description: جستجو در عنوان و توضیحات
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *         description: دسته‌بندی آگهی
+ *       - in: query
+ *         name: minPrice
+ *         schema:
+ *           type: integer
+ *         description: حداقل قیمت
+ *       - in: query
+ *         name: maxPrice
+ *         schema:
+ *           type: integer
+ *         description: حداکثر قیمت
+ *       - in: query
+ *         name: timeFilter
+ *         schema:
+ *           type: string
+ *           enum: [today, thisWeek, thisMonth, thisYear]
+ *         description: بازه زمانی انتشار
+ *       - in: query
+ *         name: state
+ *         schema:
+ *           type: string
+ *         description: استان (تک یا چند مقدار با کاما)
+ *       - in: query
+ *         name: city
+ *         schema:
+ *           type: string
+ *         description: شهر (تک یا چند مقدار با کاما)
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: موفق
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/SellerAd'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     total:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ *       400:
+ *         description: شناسه کاربر نامعتبر
+ *       500:
+ *         description: خطای سرور
+ */
+router.get(
+  "/ads/seller/owner/:ownerId/filter",
+  SellerAdCtrl.getSellerAdsByOwnerWithFilters,
+);
+
+/* =======================
+   GET BY OWNER (بدون فیلترهای پیشرفته)
+======================= */
 /**
  * @swagger
  * /api/ads/seller/owner/{ownerId}:
  *   get:
- *     summary: دریافت همه آگهی‌های یک کاربر خاص (عمومی)
+ *     summary: دریافت همه آگهی‌های یک کاربر خاص (عمومی) – بدون فیلترهای پیشرفته
  *     tags: [SellerAds]
  *     parameters:
  *       - name: ownerId
@@ -187,9 +282,12 @@ router.get("/ads/seller", SellerAdCtrl.getAllSellerAds);
  */
 router.get("/ads/seller/owner/:ownerId", SellerAdCtrl.getAdsByOwner);
 
+/* =======================
+   GET SINGLE AD
+======================= */
 /**
  * @swagger
- * /api/ads/seller/:id:
+ * /api/ads/seller/{id}:
  *   get:
  *     summary: دریافت یک آگهی تک فروشنده (عمومی)
  *     tags: [SellerAds]
@@ -209,6 +307,9 @@ router.get("/ads/seller/owner/:ownerId", SellerAdCtrl.getAdsByOwner);
  */
 router.get("/ads/seller/:id", SellerAdCtrl.getSellerAdById);
 
+/* =======================
+   GET SINGLE AD BY OWNER
+======================= */
 /**
  * @swagger
  * /api/ads/seller/owner/{ownerId}/{adId}:

@@ -17,14 +17,8 @@ const CheckoutCtrl = {
         });
       }
 
-      const {
-        adType,
-        isNewAd,
-        isSpecial,
-        isLadder,
-        isRenewal,
-        paymentMethod,
-      } = req.body;
+      const { adType, isNewAd, isSpecial, isLadder, isRenewal, paymentMethod } =
+        req.body;
 
       // validate inputs
       if (!adType || !Object.values(AdType).includes(adType)) {
@@ -34,7 +28,10 @@ const CheckoutCtrl = {
         });
       }
 
-      if (!paymentMethod || !Object.values(PaymentMethod).includes(paymentMethod)) {
+      if (
+        !paymentMethod ||
+        !Object.values(PaymentMethod).includes(paymentMethod)
+      ) {
         return res.status(400).json({
           status: "error",
           message: "روش پرداخت معتبر نیست",
@@ -43,7 +40,7 @@ const CheckoutCtrl = {
 
       const result = await CostCalculator.calculateCost({
         adType,
-        isNewAd: isNewAd ?? true, 
+        isNewAd: isNewAd ?? true,
         isSpecial: isSpecial ?? false,
         isLadder: isLadder ?? false,
         isRenewal: isRenewal ?? false,

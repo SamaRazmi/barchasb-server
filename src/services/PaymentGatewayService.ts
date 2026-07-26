@@ -1,13 +1,23 @@
 import prisma from "../config/prisma";
-import { PaymentMethod, PaymentStatus, AdType, TransactionStatus, TransactionType } from "@prisma/client";
-import {getAdById, updateAdStatus, createAdEnhancement,} from "./PurchaseService";
+import {
+  PaymentMethod,
+  PaymentStatus,
+  AdType,
+  TransactionStatus,
+  TransactionType,
+} from "@prisma/client";
+import {
+  getAdById,
+  updateAdStatus,
+  createAdEnhancement,
+} from "./PurchaseService";
 interface CreatePaymentInput {
   userId: string;
   amount: number;
   paymentMethod: PaymentMethod;
   description?: string;
   referenceId: string;
-  referenceType: "AD" | "ENHANCEMENT" |"WALLET_DEPOSIT";
+  referenceType: "AD" | "ENHANCEMENT" | "WALLET_DEPOSIT";
   metadata?: any;
 }
 
@@ -17,8 +27,18 @@ interface CreatePaymentOutput {
   paymentUrl: string;
 }
 
-export async function createPayment(input: CreatePaymentInput): Promise<CreatePaymentOutput> {
-  const { userId, amount, paymentMethod, description, referenceId, referenceType, metadata } = input;
+export async function createPayment(
+  input: CreatePaymentInput,
+): Promise<CreatePaymentOutput> {
+  const {
+    userId,
+    amount,
+    paymentMethod,
+    description,
+    referenceId,
+    referenceType,
+    metadata,
+  } = input;
 
   const payment = await prisma.payment.create({
     data: {
@@ -63,7 +83,9 @@ interface VerifyPaymentOutput {
   paymentId?: string;
 }
 
-export async function verifyPayment(input: VerifyPaymentInput): Promise<VerifyPaymentOutput> {
+export async function verifyPayment(
+  input: VerifyPaymentInput,
+): Promise<VerifyPaymentOutput> {
   const { authority, status } = input;
 
   const payment = await prisma.payment.findFirst({
@@ -88,12 +110,17 @@ export async function verifyPayment(input: VerifyPaymentInput): Promise<VerifyPa
       where: { id: payment.id },
       data: { status: PaymentStatus.CANCELED },
     });
-    return { success: false, message: "پرداخت توسط کاربر لغو شد", paymentId: payment.id };
+    return {
+      success: false,
+      message: "پرداخت توسط کاربر لغو شد",
+      paymentId: payment.id,
+    };
   }
 
+  // تغییر فقط در این خط: تبدیل bigint به number با Number()
   const verifyResult = await verifyWithGateway({
     authority,
-    amount: payment.amount,
+    amount: Number(payment.amount),
   });
 
   if (!verifyResult.success) {
@@ -103,7 +130,7 @@ export async function verifyPayment(input: VerifyPaymentInput): Promise<VerifyPa
     });
     return {
       success: false,
-      message: verifyResult.message, 
+      message: verifyResult.message,
     };
   }
 
@@ -129,13 +156,20 @@ export async function verifyPayment(input: VerifyPaymentInput): Promise<VerifyPa
   };
 }
 
-async function requestGateway(params: { amount: number; description: string; callbackUrl: string }) {
+async function requestGateway(params: {
+  amount: number;
+  description: string;
+  callbackUrl: string;
+}) {
   const authority = `A${Date.now()}${Math.floor(Math.random() * 10000)}`;
   const paymentUrl = `${process.env.APP_URL || "http://localhost:5000"}/api/payments/pay-mock?authority=${authority}&amount=${params.amount}`;
   return { authority, paymentUrl };
 }
 
-async function verifyWithGateway(params: { authority: string; amount: number }): Promise<{ success: boolean; refId: string; message: string }> {
+async function verifyWithGateway(params: {
+  authority: string;
+  amount: number;
+}): Promise<{ success: boolean; refId: string; message: string }> {
   return {
     success: true,
     refId: `REF${Date.now()}${Math.floor(Math.random() * 10000)}`,
@@ -181,7 +215,7 @@ async function handleSuccessfulPayment(tx: any, payment: any): Promise<void> {
       },
     });
 
-    return; 
+    return;
   }
   if (referenceType === "AD") {
     const { adType, adId, isSpecial, isLadder, ladderOption } = meta; // ← ladderOption به جای ladderSchedule
@@ -193,11 +227,20 @@ async function handleSuccessfulPayment(tx: any, payment: any): Promise<void> {
     }
 
     if (ad.adStatus !== "pending_payment") {
-      throw new Error(`وضعیت آگهی باید pending_payment باشد (وضعیت فعلی: ${ad.adStatus})`);
+      throw new Error(
+        `وضعیت آگهی باید pending_payment باشد (وضعیت فعلی: ${ad.adStatus})`,
+      );
     }
 
-    // create AdEnhancement and AdLadder 
-    await createAdEnhancement(tx, adId, adType, isSpecial, isLadder, ladderOption);
+    // create AdEnhancement and AdLadder
+    await createAdEnhancement(
+      tx,
+      adId,
+      adType,
+      isSpecial,
+      isLadder,
+      ladderOption,
+    );
 
     await updateAdStatus(tx, adId, adType, "pending");
 
@@ -221,19 +264,23 @@ async function handleSuccessfulPayment(tx: any, payment: any): Promise<void> {
         },
       });
     }
-  } 
-  else if (referenceType === "ENHANCEMENT") {
-    const { enhancementType, adId, adType, ladderSchedule, ladderOption } = meta;
+  } else if (referenceType === "ENHANCEMENT") {
+    const { enhancementType, adId, adType, ladderSchedule, ladderOption } =
+      meta;
 
     const ad = await getAdById(adId, adType);
     if (!ad) {
       throw new Error("آگهی یافت نشد");
     }
     if (ad.adStatus !== "approved") {
-      throw new Error(`امکان خرید افزونه فقط برای آگهی‌های تایید شده وجود دارد. وضعیت فعلی: ${ad.adStatus}`);
+      throw new Error(
+        `امکان خرید افزونه فقط برای آگهی‌های تایید شده وجود دارد. وضعیت فعلی: ${ad.adStatus}`,
+      );
     }
     if (enhancementType === "SPECIAL") {
-      const existing = await tx.adEnhancement.findFirst({ where: { adId, adType } });
+      const existing = await tx.adEnhancement.findFirst({
+        where: { adId, adType },
+      });
       if (existing) {
         await tx.adEnhancement.update({
           where: { id: existing.id },
@@ -254,8 +301,7 @@ async function handleSuccessfulPayment(tx: any, payment: any): Promise<void> {
           },
         });
       }
-    } 
-    else if (enhancementType === "LADDER") {
+    } else if (enhancementType === "LADDER") {
       let finalScheduledAt: Date;
 
       // ====== گزینه "now" یا گزینه‌های زمانی ======
@@ -273,9 +319,13 @@ async function handleSuccessfulPayment(tx: any, payment: any): Promise<void> {
         throw new Error("زمان پله مشخص نشده است");
       }
 
-      let enhancement = await tx.adEnhancement.findFirst({ where: { adId, adType } });
+      let enhancement = await tx.adEnhancement.findFirst({
+        where: { adId, adType },
+      });
       if (!enhancement) {
-        enhancement = await tx.adEnhancement.create({ data: { adId, adType, isSpecial: false } });
+        enhancement = await tx.adEnhancement.create({
+          data: { adId, adType, isSpecial: false },
+        });
       }
       await tx.adLadder.create({
         data: {
@@ -285,8 +335,7 @@ async function handleSuccessfulPayment(tx: any, payment: any): Promise<void> {
           option: ladderOption || null,
         },
       });
-    }
-    else if (enhancementType === "RENEWAL") {
+    } else if (enhancementType === "RENEWAL") {
       const modelMap: Record<string, string> = {
         [AdType.EmployerAd]: "employerAd",
         [AdType.DigitalAd]: "digitalAd",
@@ -295,7 +344,9 @@ async function handleSuccessfulPayment(tx: any, payment: any): Promise<void> {
       };
       const targetModel = modelMap[adType];
       if (targetModel) {
-        const currentAd = await tx[targetModel].findUnique({ where: { id: adId } });
+        const currentAd = await tx[targetModel].findUnique({
+          where: { id: adId },
+        });
         if (currentAd) {
           const currentExpire = currentAd.expiresAt || new Date();
           const newExpireAt = new Date(currentExpire);

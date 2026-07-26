@@ -12,11 +12,11 @@ export function isAdTypePaid(adType: AdType): boolean {
 
 interface CalculateCostInput {
   adType: AdType;
-  isNewAd: boolean; 
+  isNewAd: boolean;
   isSpecial: boolean;
   isLadder: boolean;
   isRenewal: boolean;
-  paymentMethod: PaymentMethod; 
+  paymentMethod: PaymentMethod;
   userId: string;
 }
 
@@ -32,7 +32,7 @@ interface CalculateCostOutput {
 }
 
 export async function calculateCost(
-  input: CalculateCostInput
+  input: CalculateCostInput,
 ): Promise<CalculateCostOutput> {
   const {
     adType,
@@ -58,33 +58,33 @@ export async function calculateCost(
     };
   }
 
-  // get price from db
-  const [basePrice, specialPrice, ladderPrice, renewalPrice] = await Promise.all([
-    getPricingValue(PRICING_KEYS.BASE_AD_PRICE),
-    getPricingValue(PRICING_KEYS.SPECIAL_PRICE),
-    getPricingValue(PRICING_KEYS.LADDER_PRICE),
-    getPricingValue(PRICING_KEYS.RENEWAL_PRICE),
-  ]);
+  // دریافت قیمت‌ها از دیتابیس (همگی bigint هستند)
+  const [basePrice, specialPrice, ladderPrice, renewalPrice] =
+    await Promise.all([
+      getPricingValue(PRICING_KEYS.BASE_AD_PRICE),
+      getPricingValue(PRICING_KEYS.SPECIAL_PRICE),
+      getPricingValue(PRICING_KEYS.LADDER_PRICE),
+      getPricingValue(PRICING_KEYS.RENEWAL_PRICE),
+    ]);
 
-  // calculate cost
+  // محاسبه هزینه‌ها (تبدیل bigint به number با Number())
   let baseCost = 0;
-  const specialCost = isSpecial ? specialPrice : 0;
-  const ladderCost = isLadder ? ladderPrice : 0;
-  const renewalCost = isRenewal ? renewalPrice : 0;
+  const specialCost = isSpecial ? Number(specialPrice) : 0;
+  const ladderCost = isLadder ? Number(ladderPrice) : 0;
+  const renewalCost = isRenewal ? Number(renewalPrice) : 0;
 
-  // is paid Ads
+  // اگر آگهی جدید و از نوع پولی باشد
   if (isNewAd && isAdTypePaid(adType)) {
-    baseCost = basePrice;
+    baseCost = Number(basePrice);
   }
 
   const totalCost = baseCost + specialCost + ladderCost + renewalCost;
 
-  // can afford?
+  // بررسی توانایی پرداخت از کیف پول
   let canAfford = true;
   let message: string | undefined = undefined;
 
   if (paymentMethod === PaymentMethod.Wallet) {
-    // get user wallet
     const wallet = await prisma.wallet.findUnique({
       where: { userId },
       select: { balance: true, heldBalance: true },
@@ -94,7 +94,8 @@ export async function calculateCost(
       throw new Error("کیف پول کاربر یافت نشد");
     }
 
-    const availableBalance = wallet.balance - wallet.heldBalance;
+    // تبدیل bigint به number برای مقایسه
+    const availableBalance = Number(wallet.balance - wallet.heldBalance);
 
     if (availableBalance < totalCost) {
       canAfford = false;
@@ -102,7 +103,6 @@ export async function calculateCost(
     }
   }
 
-  // final result
   return {
     baseCost,
     specialCost,
