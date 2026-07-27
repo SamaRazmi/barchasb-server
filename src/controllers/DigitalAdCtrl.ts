@@ -1,3 +1,4 @@
+// controllers/DigitalAdCtrl.ts
 import { Request, Response } from "express";
 import prisma from "../config/prisma";
 import { transformFileUrls } from "../middleware/upload";
@@ -316,6 +317,7 @@ export const getAllDigitalAds = async (req: Request, res: Response) => {
         include: {
           ownerRelation: {
             select: {
+              id: true, // ✅ اضافه شد
               name: true,
               lastName: true,
               phone: true,
@@ -337,6 +339,7 @@ export const getAllDigitalAds = async (req: Request, res: Response) => {
           ...ad,
           owner: ad.ownerRelation
             ? {
+                id: ad.ownerRelation.id, // ✅ اضافه شد
                 fullName:
                   `${ad.ownerRelation.name || ""} ${ad.ownerRelation.lastName || ""}`.trim(),
                 phoneNumber: ad.ownerRelation.phone,
@@ -390,6 +393,7 @@ export const getDigitalAdById = async (req: Request, res: Response) => {
       include: {
         ownerRelation: {
           select: {
+            id: true, // ✅ اضافه شد
             name: true,
             lastName: true,
             phone: true,
@@ -408,6 +412,7 @@ export const getDigitalAdById = async (req: Request, res: Response) => {
       ...(ad as any),
       owner: (ad as any).ownerRelation
         ? {
+            id: (ad as any).ownerRelation.id, // ✅ اضافه شد
             fullName:
               `${(ad as any).ownerRelation.name || ""} ${(ad as any).ownerRelation.lastName || ""}`.trim(),
             phoneNumber: (ad as any).ownerRelation.phone,

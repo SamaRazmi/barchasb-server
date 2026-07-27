@@ -348,6 +348,7 @@ export const getAllEmployerAds = async (req: Request, res: Response) => {
         include: {
           ownerRelation: {
             select: {
+              id: true, // ✅ اضافه شد
               name: true,
               lastName: true,
               phone: true,
@@ -367,6 +368,7 @@ export const getAllEmployerAds = async (req: Request, res: Response) => {
           ...ad,
           owner: ad.ownerRelation
             ? {
+                id: ad.ownerRelation.id, // ✅ اضافه شد
                 fullName:
                   `${ad.ownerRelation.name || ""} ${ad.ownerRelation.lastName || ""}`.trim(),
                 phoneNumber: ad.ownerRelation.phone,
@@ -412,6 +414,7 @@ export const getEmployerAdById = async (req: Request, res: Response) => {
       include: {
         ownerRelation: {
           select: {
+            id: true, // ✅ اضافه شد
             name: true,
             lastName: true,
             phone: true,
@@ -428,6 +431,7 @@ export const getEmployerAdById = async (req: Request, res: Response) => {
       ...(ad as any),
       owner: (ad as any).ownerRelation
         ? {
+            id: (ad as any).ownerRelation.id, // ✅ اضافه شد
             fullName:
               `${(ad as any).ownerRelation.name || ""} ${(ad as any).ownerRelation.lastName || ""}`.trim(),
             phoneNumber: (ad as any).ownerRelation.phone,
@@ -473,6 +477,7 @@ export const getAdsByOwner = async (req: Request, res: Response) => {
         include: {
           ownerRelation: {
             select: {
+              id: true, // ✅ اضافه شد
               name: true,
               lastName: true,
               phone: true,
@@ -491,6 +496,7 @@ export const getAdsByOwner = async (req: Request, res: Response) => {
           ...ad,
           owner: ad.ownerRelation
             ? {
+                id: ad.ownerRelation.id, // ✅ اضافه شد
                 fullName:
                   `${ad.ownerRelation.name || ""} ${ad.ownerRelation.lastName || ""}`.trim(),
                 phoneNumber: ad.ownerRelation.phone,
@@ -547,6 +553,7 @@ export const getEmployerAdByOwnerAndId = async (
       include: {
         ownerRelation: {
           select: {
+            id: true, // ✅ اضافه شد
             name: true,
             lastName: true,
             phone: true,
@@ -563,6 +570,7 @@ export const getEmployerAdByOwnerAndId = async (
       ...(ad as any),
       owner: (ad as any).ownerRelation
         ? {
+            id: (ad as any).ownerRelation.id, // ✅ اضافه شد
             fullName:
               `${(ad as any).ownerRelation.name || ""} ${(ad as any).ownerRelation.lastName || ""}`.trim(),
             phoneNumber: (ad as any).ownerRelation.phone,
