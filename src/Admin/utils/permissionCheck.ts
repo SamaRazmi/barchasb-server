@@ -11,13 +11,15 @@ export interface AdminWithPermissions {
     costs?: boolean
     articles?: boolean
     advertisements?: boolean
+    all?: boolean
   }
 }
 
 export function hasAdPermission(admin: AdminWithPermissions): boolean {
   if (admin.role === 'OWNER') return true
+
   if (admin.role === 'ADMIN' || admin.role === 'SUPPORTER') {
-    return admin.permissions?.ads === true
+    return admin.permissions?.ads === true || admin.permissions?.all === true
   }
   return false
 }
@@ -30,8 +32,9 @@ export function checkAdPermission(admin: AdminWithPermissions): void {
 
 export function hasCostPermission(admin: AdminWithPermissions): boolean {
   if (admin.role === 'OWNER') return true
+
   if (admin.role === 'ADMIN' || admin.role === 'SUPPORTER') {
-    return admin.permissions?.costs === true
+    return admin.permissions?.costs === true || admin.permissions?.all === true
   }
   return false
 }
@@ -40,4 +43,18 @@ export function checkCostPermission(admin: AdminWithPermissions): void {
   if (!hasCostPermission(admin)) {
     throw new Error('شما دسترسی لازم برای مدیریت قیمت‌ها را ندارید')
   }
-} 
+}
+
+export function hasArticlePermission(admin: AdminWithPermissions): boolean {
+  if (admin.role === 'OWNER') return true
+  if (admin.role === 'ADMIN' || admin.role === 'SUPPORTER') {
+    return admin.permissions?.articles === true || admin.permissions?.all === true
+  }
+  return false
+}
+
+export function checkArticlePermission(admin: AdminWithPermissions): void {
+  if (!hasArticlePermission(admin)) {
+    throw new Error('شما دسترسی لازم برای مدیریت مقالات را ندارید')
+  }
+}

@@ -86,18 +86,29 @@ const PaymentCtrl = {
         authority: authority as string,
         status: status as string,
       });
+      const params = new URLSearchParams();
+      if (result.success) {
+        params.set('status', 'success');
+        params.set('paymentId', result.paymentId || '');
+        params.set('refId', result.refId || '');
+      } else {
+        params.set('status', 'failed');
+        params.set('message', result.message);
+      }
 
-      const frontendUrl =
-        process.env.RESULT_PAYMENT_FRONTEND_URL || "/api/payments/result";
-      const redirectUrl = result.success
-        ? `${frontendUrl}?status=success&paymentId=${result.paymentId}&refId=${result.refId}`
-        : `${frontendUrl}?status=failed&message=${encodeURIComponent(result.message)}`;
+      const baseUrl = process.env.RESULT_PAYMENT_FRONTEND_URL;
+      const redirectUrl = `${baseUrl}?${params.toString()}`;
 
       return res.redirect(redirectUrl);
+
     } catch (error: any) {
       console.error(error);
-      const redirectUrl = `${process.env.RESULT_PAYMENT_FRONTEND_URL || "http://localhost:3000"}/payment-result?status=error&message=${encodeURIComponent(error.message)}`;
-      return res.redirect(redirectUrl);
+      const baseUrl = process.env.RESULT_PAYMENT_FRONTEND_URL;
+      const params = new URLSearchParams({
+        status: 'error',
+        message: error.message,
+      });
+      return res.redirect(`${baseUrl}?${params.toString()}`);
     }
   },
 

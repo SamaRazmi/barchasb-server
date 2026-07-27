@@ -332,6 +332,8 @@ model DigitalAd {
   phoneOther          String?
 
   rejectionReason  String?
+  approvedBy         String?
+  rejectedBy         String?
 
   ownerRelation User @relation(fields: [owner], references: [id])
 }
@@ -390,6 +392,8 @@ model EmployerAd {
   phoneOther          String?
 
   rejectionReason  String?
+  approvedBy         String?
+  rejectedBy         String?
 
   ownerRelation User @relation(fields: [owner], references: [id])
 }
@@ -445,6 +449,8 @@ model JobSeekerAd {
   phoneOther          String?
 
   rejectionReason  String?
+  approvedBy         String?
+  rejectedBy         String?
 
   ownerRelation User @relation(fields: [owner], references: [id])
 }
@@ -582,6 +588,8 @@ model SellerAd {
   phoneOther          String?
   
   rejectionReason  String?
+  approvedBy         String?
+  rejectedBy         String?
   ownerRelation User @relation(fields: [owner], references: [id])
 }
 
@@ -706,6 +714,7 @@ model Admin {
   lastLoginAt  DateTime?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+  articles     Article[]
 }
 
 // ============================================
@@ -952,3 +961,42 @@ model VipCodeUsage {
   @@index([userId])
   @@index([vipCodeId])
 }
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model ArticleCategory {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  articles    Article[]
+}
+
+model Article {
+  id            String         @id @default(uuid())
+  title         String
+  slug          String         @unique
+  categoryId    String
+  category      ArticleCategory @relation(fields: [categoryId], references: [id])
+  featuredImage String?         
+  content       Json           
+  plaintext     String?        
+  status        ArticleStatus  @default(DRAFT)
+  authorId      String
+  author        Admin          @relation(fields: [authorId], references: [id])
+  viewCount     Int            @default(0)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  publishedAt   DateTime?
+
+  @@index([categoryId])
+  @@index([slug])
+  @@index([status])
+}
+

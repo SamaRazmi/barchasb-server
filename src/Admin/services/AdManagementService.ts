@@ -179,6 +179,44 @@ export async function getAdDetails(adId: string, adType: AdType) {
     throw new Error('آگهی یافت نشد')
   }
 
+  let approvedByAdmin = null
+  if (ad.approvedBy) {
+    const admin = await prisma.admin.findUnique({
+      where: { id: ad.approvedBy },
+      select: {
+        id: true,
+        fullName: true,
+        phone: true,
+      },
+    })
+    if (admin) {
+      approvedByAdmin = {
+        id: admin.id,
+        fullName: admin.fullName,
+        phone: admin.phone,
+      }
+    }
+  }
+
+  let rejectedByAdmin = null
+  if (ad.rejectedBy) {
+    const admin = await prisma.admin.findUnique({
+      where: { id: ad.rejectedBy },
+      select: {
+        id: true,
+        fullName: true,
+        phone: true,
+      },
+    })
+    if (admin) {
+      rejectedByAdmin = {
+        id: admin.id,
+        fullName: admin.fullName,
+        phone: admin.phone,
+      }
+    }
+  }
+
   const enhancement = await getAdEnhancement(ad.id, adType)
 
   const transaction = await prisma.transaction.findFirst({
@@ -232,6 +270,8 @@ export async function getAdDetails(adId: string, adType: AdType) {
           available: wallet.balance - wallet.heldBalance,
         }
       : null,
+    approvedBy: approvedByAdmin,
+    rejectedBy: rejectedByAdmin,
   }
 }
 
@@ -278,6 +318,7 @@ export async function approveAd(adId: string, adType: AdType, adminId: string) {
         adStatus: 'approved',
         approvedAt: now,
         expiresAt: expiresAt,
+        approvedBy: adminId,
       },
     })
 
@@ -298,6 +339,7 @@ export async function approveAd(adId: string, adType: AdType, adminId: string) {
         adStatus: 'approved',
         approvedAt: now,
         expiresAt: ad.expiresAt,
+        approvedBy: adminId,
       },
     })
 
@@ -352,6 +394,7 @@ export async function rejectAd(
     data: {
       adStatus: 'rejected',
       rejectionReason: reason,
+      rejectedBy: adminId,  
     },
   })
 

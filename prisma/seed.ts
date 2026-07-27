@@ -34,6 +34,12 @@ async function main() {
     await seedPricing();
     console.log("[5/5] Pricing seeded!\n");
 
+    // 6. دسته بندی مقالات
+    console.log("[6/6] Seeding article categories...");
+    const { seedCategories } = await import("./seedArticleCategories");
+    await seedCategories();
+    console.log("[6/6] Article categories seeded!\n");
+
     console.log("🌱 ====== ALL SEEDS COMPLETED SUCCESSFULLY! ======");
   } catch (error) {
     console.error("❌ Seeding failed:", error);
