@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import prisma from "../config/prisma";
 import * as WalletService from "../services/WalletService";
+import {toJalali} from "../utils/dateFormatter";
 
 // ========== تابع تبدیل میلادی به شمسی (با ساعت و دقیقه) ==========
 function toPersianDateWithTime(date: Date): string {
@@ -130,7 +131,8 @@ export const registerUser = async (req: Request, res: Response) => {
 
     // ========== تولید زمان ثبت‌نام شمسی دقیق ==========
     const now = new Date();
-    const persianJoinedAt = toPersianDateWithTime(now);
+    // const persianJoinedAt = toPersianDateWithTime(now);
+    const persianJoinedAt = toJalali(now);
     // =================================================
 
     // ایجاد کاربر جدید با Prisma
