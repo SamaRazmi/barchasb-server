@@ -61,6 +61,7 @@ import adminPricingRoutes from "./Admin/routes/PricingManagementRoutes";
 import adminVipRoutes from "./Admin/routes/VipManagementRoutes";
 import articleCategoryRoutes from "./Admin/routes/ArticleCategoryRoutes";
 import articlesRoutes from "./Admin/routes/ArticleManagementRoutes";
+import userManagementRoutes from "./Admin/routes/UserManagementRoutes";
 
 import SuggestionRoutes from "./routes/SuggestionRoutes";
 import profileRoutes from "./routes/UserProfileRoutes"; // مسیر صحیح
@@ -103,7 +104,7 @@ const app: Application = express();
 if (process.env.NODE_ENV === "production") {
   app.set("trust proxy", true);
 }
-app.set("trust proxy", true);
+// app.set("trust proxy", true);
 const server = http.createServer(app);
 
 const io = new Server(server, {
@@ -325,6 +326,7 @@ app.use('/api/admin/ads', adManagementRoutes);
 app.use('/api/admin/pricing', adminPricingRoutes)
 app.use("/api/admin/article/categories", articleCategoryRoutes);
 app.use("/api/admin/articles", articlesRoutes);
+app.use("/api/admin/users", userManagementRoutes);
 
 // ===== اضافه شده: مسیرهای مدیریت گزارش توسط ادمین =====
 // app.use("/api/admin", adminReportRoutes);
@@ -404,7 +406,7 @@ const lastSeenMap = new Map<string, Date>();
 io.on("connection", (socket: CustomSocket) => {
   console.log("User connected:", socket.id);
 
-  socket.on("join", ({ userId }: { userId: string }) => {
+  socket.on("join", async ({ userId }: { userId: string }) => {
     if (!userId) return;
     socket.userId = userId;
 
@@ -412,6 +414,17 @@ io.on("connection", (socket: CustomSocket) => {
     onlineUsers.get(userId)!.add(socket.id);
 
     socket.join(userId);
+    try {
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          online: true,
+          lastSeen: new Date(),
+        },
+      });
+    } catch (error) {
+      console.error("Failed to update user online status in DB:", error);
+    }
     console.log(`✅ User ${userId} joined room ${userId}`);
     console.log("Online users:", Array.from(onlineUsers.keys()));
 
@@ -452,7 +465,7 @@ io.on("connection", (socket: CustomSocket) => {
     },
   );
 
-  socket.on("disconnect", () => {
+  socket.on("disconnect", async () => {
     const userId = socket.userId;
     if (userId && onlineUsers.has(userId)) {
       onlineUsers.get(userId)!.delete(socket.id);
@@ -460,6 +473,17 @@ io.on("connection", (socket: CustomSocket) => {
         onlineUsers.delete(userId);
         const now = new Date();
         lastSeenMap.set(userId, now);
+        try {
+          await prisma.user.update({
+            where: { id: userId },
+            data: {
+              online: false,
+              lastSeen: now,
+            },
+          });
+        } catch (error) {
+          console.error("Failed to update user offline status in DB:", error);
+        }
         console.log(`❌ User ${userId} is now offline (lastSeen: ${now})`);
 
         io.emit("userStatus", {
