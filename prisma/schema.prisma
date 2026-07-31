@@ -999,4 +999,3 @@ model Article {
   @@index([slug])
   @@index([status])
 }
-

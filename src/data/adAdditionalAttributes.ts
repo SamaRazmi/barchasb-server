@@ -669,6 +669,45 @@ const additionalAdCategoriesData = [
     ],
   },
 
+  // ===== زیردسته‌های منتقل‌شده از «تجهیزات صنعتی» به «تجهیزات و صنعتی» =====
+  {
+    id: 105,
+    name: "ماشین‌آلات",
+    parent: 9, // تغییر از 104 به 9
+    fields: [
+      { name: "type", label: "نوع ماشین‌آلات", type: "text" },
+      { name: "brand", label: "برند", type: "text" },
+      { name: "capacity", label: "ظرفیت", type: "text" },
+    ],
+  },
+  {
+    id: 106,
+    name: "ابزار و تجهیزات",
+    parent: 9, // تغییر از 104 به 9
+    fields: [
+      { name: "type", label: "نوع ابزار", type: "text" },
+      { name: "brand", label: "برند", type: "text" },
+    ],
+  },
+  {
+    id: 107,
+    name: "قطعات و مواد اولیه",
+    parent: 9, // تغییر از 104 به 9
+    fields: [
+      { name: "name", label: "نام قطعه یا ماده", type: "text" },
+      { name: "brand", label: "برند", type: "text" },
+    ],
+  },
+  {
+    id: 108,
+    name: "تجهیزات ایمنی و حفاظت",
+    parent: 9, // تغییر از 104 به 9
+    fields: [
+      { name: "type", label: "نوع تجهیزات ایمنی", type: "text" },
+      { name: "brand", label: "برند", type: "text" },
+    ],
+  },
+
   // ----- استخدام و کاریابی -----
   {
     id: 71,
@@ -985,49 +1024,10 @@ const additionalAdCategoriesData = [
       { name: "brand", label: "برند", type: "text" },
     ],
   },
-  {
-    id: 104,
-    name: "تجهیزات صنعتی",
-    parent: null,
-    fields: [],
-  },
-  {
-    id: 105,
-    name: "ماشین‌آلات",
-    parent: 104,
-    fields: [
-      { name: "type", label: "نوع ماشین‌آلات", type: "text" },
-      { name: "brand", label: "برند", type: "text" },
-      { name: "capacity", label: "ظرفیت", type: "text" },
-    ],
-  },
-  {
-    id: 106,
-    name: "ابزار و تجهیزات",
-    parent: 104,
-    fields: [
-      { name: "type", label: "نوع ابزار", type: "text" },
-      { name: "brand", label: "برند", type: "text" },
-    ],
-  },
-  {
-    id: 107,
-    name: "قطعات و مواد اولیه",
-    parent: 104,
-    fields: [
-      { name: "name", label: "نام قطعه یا ماده", type: "text" },
-      { name: "brand", label: "برند", type: "text" },
-    ],
-  },
-  {
-    id: 108,
-    name: "تجهیزات ایمنی و حفاظت",
-    parent: 104,
-    fields: [
-      { name: "type", label: "نوع تجهیزات ایمنی", type: "text" },
-      { name: "brand", label: "برند", type: "text" },
-    ],
-  },
+  // آیتم id:104 حذف شده است (دسته‌ی اصلی «تجهیزات صنعتی» دیگر وجود ندارد)
+
+  // زیردسته‌های قبلی id:105 تا 108 اکنون به parent:9 منتقل شده‌اند و در بخش بالایی (پس از id:70) قرار گرفته‌اند
+
   {
     id: 109,
     name: "ورزش و بازی",
@@ -1063,4 +1063,4 @@ const defaultFields = [
   { name: "description", label: "توضیحات", type: "textarea" },
 ];
 
-export default additionalAdCategoriesData
+export default additionalAdCategoriesData;

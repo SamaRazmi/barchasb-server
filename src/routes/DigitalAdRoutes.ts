@@ -259,4 +259,308 @@ router.get("/ads/digital", DigitalAdCtrl.getAllDigitalAds);
  */
 router.get("/ads/digital/:id", DigitalAdCtrl.getDigitalAdById);
 
+/* =======================
+   دریافت آگهی‌های یک کاربر خاص (مالک)
+======================= */
+/**
+ * @swagger
+ * /api/ads/digital/owner/{ownerId}:
+ *   get:
+ *     summary: دریافت لیست آگهی‌های دیجیتال یک کاربر خاص (مالک)
+ *     tags: [DigitalAds]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: ownerId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: موفق
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       title:
+ *                         type: string
+ *                       description:
+ *                         type: string
+ *                       owner:
+ *                         type: object
+ *                         properties:
+ *                           fullName:
+ *                             type: string
+ *                           phoneNumber:
+ *                             type: string
+ *                       enhancements:
+ *                         type: object
+ *                         properties:
+ *                           isSpecial:
+ *                             type: boolean
+ *                           ladders:
+ *                             type: array
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     total:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ *       401:
+ *         description: توکن معتبر نیست
+ *       404:
+ *         description: کاربر یافت نشد
+ *       500:
+ *         description: خطای سرور
+ */
+router.get(
+  "/ads/digital/owner/:ownerId",
+  authenticateToken,
+  DigitalAdCtrl.getDigitalAdsByOwner,
+);
+
+/* =======================
+   دریافت یک آگهی خاص از یک کاربر
+======================= */
+/**
+ * @swagger
+ * /api/ads/digital/owner/{ownerId}/{adId}:
+ *   get:
+ *     summary: دریافت یک آگهی دیجیتال مشخص از یک کاربر مشخص
+ *     tags: [DigitalAds]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: ownerId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - name: adId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: موفق
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 ad:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     title:
+ *                       type: string
+ *                     description:
+ *                       type: string
+ *                     owner:
+ *                       type: object
+ *                       properties:
+ *                         fullName:
+ *                           type: string
+ *                         phoneNumber:
+ *                           type: string
+ *                     enhancements:
+ *                       type: object
+ *       401:
+ *         description: توکن معتبر نیست
+ *       404:
+ *         description: آگهی یافت نشد
+ *       500:
+ *         description: خطای سرور
+ */
+router.get(
+  "/ads/digital/owner/:ownerId/:adId",
+  authenticateToken,
+  DigitalAdCtrl.getDigitalAdByOwnerAndId,
+);
+
+/* =======================
+   ویرایش آگهی
+======================= */
+/**
+ * @swagger
+ * /api/ads/digital/owner/{ownerId}/{adId}:
+ *   put:
+ *     summary: ویرایش آگهی دیجیتال (فقط مالک)
+ *     tags: [DigitalAds]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: ownerId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - name: adId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               images:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *               imagesFromApi:
+ *                 type: string
+ *                 description: JSON آرایه از تصاویر موجود (با فیلدهای url و isMain)
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               digitalTotalDesc:
+ *                 type: string
+ *               projectNames:
+ *                 type: string
+ *                 description: JSON آرایه از نام پروژه‌ها
+ *               projectDescriptions:
+ *                 type: string
+ *                 description: JSON آرایه از توضیحات پروژه‌ها
+ *               minBudget:
+ *                 type: string
+ *               maxBudget:
+ *                 type: string
+ *               requiredSkills:
+ *                 type: string
+ *                 description: "JSON آرایه از مهارت‌ها"
+ *               person:
+ *                 type: string
+ *                 enum: [self, other]
+ *               remote:
+ *                 type: boolean
+ *               thursdayHalf:
+ *                 type: boolean
+ *               paymentMethod:
+ *                 type: string
+ *                 enum: [Subscription, Wallet, Bank_card]
+ *               requestType:
+ *                 type: string
+ *                 enum: [requester, provider]
+ *               durationUnit:
+ *                 type: string
+ *                 enum: [minute, hour, day, month, year]
+ *               durationAmount:
+ *                 type: string
+ *               province:
+ *                 type: string
+ *               city:
+ *                 type: string
+ *               phoneOther:
+ *                 type: string
+ *               adStatus:
+ *                 type: string
+ *                 enum: [pending, approved, rejected, expired, pending_payment, updated]
+ *     responses:
+ *       200:
+ *         description: بروزرسانی موفق
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 updatedAd:
+ *                   type: object
+ *       400:
+ *         description: خطای اعتبارسنجی
+ *       401:
+ *         description: توکن معتبر نیست
+ *       404:
+ *         description: آگهی یافت نشد
+ *       500:
+ *         description: خطای سرور
+ */
+router.put(
+  "/ads/digital/owner/:ownerId/:adId",
+  authenticateToken,
+  imagesUpload.array("images", 9),
+  DigitalAdCtrl.updateDigitalAd,
+);
+
+/* =======================
+   حذف آگهی
+======================= */
+/**
+ * @swagger
+ * /api/ads/digital/{adId}:
+ *   delete:
+ *     summary: حذف آگهی دیجیتال (فقط مالک)
+ *     tags: [DigitalAds]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: adId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: حذف موفق
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: آگهی دیجیتال با موفقیت حذف شد.
+ *       401:
+ *         description: توکن معتبر نیست یا احراز هویت نشده
+ *       404:
+ *         description: آگهی یافت نشد یا دسترسی ندارید
+ *       500:
+ *         description: خطای سرور
+ */
+router.delete(
+  "/ads/digital/:adId",
+  authenticateToken,
+  DigitalAdCtrl.deleteDigitalAd,
+);
+
 export default router;

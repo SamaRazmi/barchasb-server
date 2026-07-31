@@ -48,7 +48,7 @@ const ensureUserExists = async (userId: string, userData: any) => {
 };
 
 // ============================================================
-// 1. دریافت لیست پیشنهادات ویژه (نسخه نهایی)
+// 1. دریافت لیست پیشنهادات ویژه (نسخه نهایی با حداکثر نتایج)
 // ============================================================
 export const getSuggestions = async (req: Request, res: Response) => {
   console.log("\n🚀 getSuggestions START");
@@ -67,12 +67,13 @@ export const getSuggestions = async (req: Request, res: Response) => {
     console.log("📥 پارامترها:", { search, count, adTypesParam });
 
     // ---- ۳. پردازش adTypes ----
+    const isAll = !adTypesParam || adTypesParam === "all";
     let requestedAdTypes: AdType[] = [];
-    if (adTypesParam) {
+    if (!isAll) {
       const types = adTypesParam.split(",").map((t) => t.trim() as AdType);
       requestedAdTypes = types.filter((t) => getAllAdTypes().includes(t));
     }
-    console.log("🔍 نوع‌های درخواستی:", requestedAdTypes);
+    console.log("🔍 نوع‌های درخواستی (پس از پردازش):", requestedAdTypes);
 
     // ---- ۴. دریافت اطلاعات کاربر ----
     const user = await prisma.user.findUnique({
@@ -155,18 +156,24 @@ export const getSuggestions = async (req: Request, res: Response) => {
       targetAdTypes = getAllAdTypes();
     }
 
-    // اعمال فیلتر نوع‌های درخواستی
-    if (requestedAdTypes.length > 0) {
+    // ---- اصلاح: اگر isAll (adTypes خالی یا "all")، همه نوع‌ها را جستجو کن ----
+    if (isAll) {
+      targetAdTypes = getAllAdTypes();
+    } else if (requestedAdTypes.length > 0) {
       targetAdTypes = targetAdTypes.filter((t) => requestedAdTypes.includes(t));
+      if (targetAdTypes.length === 0) {
+        targetAdTypes = getAllAdTypes();
+      }
     }
+
     console.log("🎯 نوع‌های نهایی:", targetAdTypes);
 
-    // ---- ۷. تولید پیشنهادات ----
+    // ---- ۷. تولید پیشنهادات با فیلتر مکانی پله‌ای و بدون فیلتر سخت ----
     const suggestions: any[] = [];
     const remaining = Math.min(count, totalAllowed - totalViews);
-    const perType = Math.ceil(remaining / targetAdTypes.length);
+    const perType = Math.max(1, Math.ceil(remaining / targetAdTypes.length));
 
-    // تابع شرط جستجوی پیشرفته (فقط فیلدهای معتبر)
+    // تابع شرط جستجوی پیشرفته
     const buildSearchCondition = (adType: AdType, term: string) => {
       if (!term) return {};
       const or: any[] = [];
@@ -202,139 +209,166 @@ export const getSuggestions = async (req: Request, res: Response) => {
       return or.length ? { OR: or } : {};
     };
 
-    for (const adType of targetAdTypes) {
-      // base where
-      const where: any = {
-        adStatus: "approved",
-        expiresAt: { gt: new Date() },
-      };
-
-      // جستجو
-      const searchCond = buildSearchCondition(adType, search);
-      if (searchCond.OR) {
-        where.OR = searchCond.OR;
-      }
-
-      // فیلتر مکانی (به جز DigitalAd)
-      if (adType !== AdType.DigitalAd) {
-        const locationOr = [
-          { city: preferredCity },
-          { state: preferredProvince },
-        ];
-        if (where.OR) {
-          where.AND = [{ OR: locationOr }];
+    // تابع کمکی برای دریافت آگهی‌های یک نوع با شرط مکانی مشخص
+    const fetchAdsForType = async (
+      adType: AdType,
+      baseWhere: any,
+      locationCondition: any,
+      take: number,
+    ): Promise<any[]> => {
+      let whereClause = { ...baseWhere };
+      if (locationCondition) {
+        if (whereClause.OR) {
+          whereClause = {
+            AND: [{ OR: whereClause.OR }, { OR: locationCondition }],
+          };
         } else {
-          where.OR = locationOr;
+          whereClause.OR = locationCondition;
         }
       }
 
-      // فیلتر دسته‌بندی (برای SellerAd)
-      if (
-        hasAnyAd &&
-        adType === AdType.SellerAd &&
-        preferredCategories.length > 0
-      ) {
-        where.category = { in: preferredCategories };
-      }
-
-      const takeCount = perType * 4;
-      let items: any[] = [];
+      const includeOptions: any = {
+        ownerRelation: { select: { province: true, city: true } },
+      };
 
       switch (adType) {
         case AdType.EmployerAd:
-          items = await prisma.employerAd.findMany({
-            where,
-            take: takeCount,
+          return (await prisma.employerAd.findMany({
+            where: whereClause,
+            take,
             orderBy: { createdAt: "desc" },
-            include: {
-              ownerRelation: { select: { province: true, city: true } },
-            },
-          });
-          break;
+            include: includeOptions,
+          })) as any[];
         case AdType.JobSeekerAd:
-          items = await prisma.jobSeekerAd.findMany({
-            where,
-            take: takeCount,
+          return (await prisma.jobSeekerAd.findMany({
+            where: whereClause,
+            take,
             orderBy: { createdAt: "desc" },
-            include: {
-              ownerRelation: { select: { province: true, city: true } },
-            },
-          });
-          break;
+            include: includeOptions,
+          })) as any[];
         case AdType.SellerAd:
-          items = await prisma.sellerAd.findMany({
-            where,
-            take: takeCount,
+          return (await prisma.sellerAd.findMany({
+            where: whereClause,
+            take,
             orderBy: { createdAt: "desc" },
-            include: {
-              ownerRelation: { select: { province: true, city: true } },
-            },
-          });
-          break;
+            include: includeOptions,
+          })) as any[];
         case AdType.DigitalAd:
-          items = await prisma.digitalAd.findMany({
-            where,
-            take: takeCount,
+          return (await prisma.digitalAd.findMany({
+            where: whereClause,
+            take,
             orderBy: { createdAt: "desc" },
-            include: {
-              ownerRelation: { select: { province: true, city: true } },
-            },
-          });
-          break;
+            include: includeOptions,
+          })) as any[];
+        default:
+          return [];
       }
+    };
 
-      // فیلتر owner (به‌صورت دستی)
-      items = items.filter((item) => item.owner !== userId);
-
-      // جستجوی مهارت‌ها (برای JobSeekerAd و DigitalAd)
-      if (search) {
-        if (adType === AdType.JobSeekerAd) {
-          items = items.filter((ad) =>
-            ad.skills?.some((s: string) => s.includes(search)),
-          );
-        }
-        if (adType === AdType.DigitalAd) {
-          items = items.filter((ad) => {
-            const skills = (ad.requiredSkills as any[]) || [];
-            return skills.some((s: any) => s.name?.includes(search));
-          });
-        }
+    // تابع کمکی برای اعمال فیلترهای اضافی - فقط جستجوی متنی
+    const applySearchFilter = (
+      items: any[],
+      adType: AdType,
+      searchTerm: string,
+    ): any[] => {
+      if (!searchTerm) return items;
+      let filtered = items;
+      if (adType === AdType.JobSeekerAd) {
+        filtered = filtered.filter((ad) =>
+          ad.skills?.some((s: string) => s.includes(searchTerm)),
+        );
       }
-
-      // فیلتر شباهت (مهارت‌های ترجیحی)
-      if (hasAnyAd && preferredSkills.length > 0) {
-        if (adType === AdType.JobSeekerAd) {
-          items = items.filter((ad) =>
-            ad.skills?.some((s: string) => preferredSkills.includes(s)),
-          );
-        }
-        if (adType === AdType.DigitalAd) {
-          items = items.filter((ad) => {
-            const skills = (ad.requiredSkills as any[]) || [];
-            return skills.some((s: any) => preferredSkills.includes(s.name));
-          });
-        }
-      }
-
-      // فیلتر دسته‌بندی (برای EmployerAd)
-      if (
-        hasAnyAd &&
-        adType === AdType.EmployerAd &&
-        preferredCategories.length > 0
-      ) {
-        items = items.filter((ad) => {
-          const cats = (ad.categories as any[]) || [];
-          return cats.some((c: any) => preferredCategories.includes(c.name));
+      if (adType === AdType.DigitalAd) {
+        filtered = filtered.filter((ad) => {
+          const skills = (ad.requiredSkills as any[]) || [];
+          return skills.some((s: any) => s.name?.includes(searchTerm));
         });
       }
+      return filtered;
+    };
 
-      // امتیازدهی
-      const scored = items.map((ad) => {
+    // حلقه اصلی برای هر نوع آگهی
+    for (const adType of targetAdTypes) {
+      const baseWhere: any = {
+        adStatus: "approved",
+        expiresAt: { gt: new Date() },
+        owner: { not: userId },
+      };
+
+      const searchCond = buildSearchCondition(adType, search);
+      if (searchCond.OR) {
+        baseWhere.OR = searchCond.OR;
+      }
+
+      let items: any[] = [];
+      const needed = perType;
+
+      // ---- مرحله ۱: فیلتر شهر ----
+      if (adType !== AdType.DigitalAd) {
+        const cityCondition = [{ city: preferredCity }];
+        let cityItems = await fetchAdsForType(
+          adType,
+          baseWhere,
+          cityCondition,
+          needed * 3,
+        );
+        cityItems = applySearchFilter(cityItems, adType, search);
+        items = items.concat(cityItems);
+        console.log(`🏙️ ${adType}: ${cityItems.length} مورد در شهر`);
+      } else {
+        let digitalItems = await fetchAdsForType(
+          adType,
+          baseWhere,
+          null,
+          needed * 3,
+        );
+        digitalItems = applySearchFilter(digitalItems, adType, search);
+        items = items.concat(digitalItems);
+        console.log(`🌐 ${adType}: ${digitalItems.length} مورد (دیجیتال)`);
+      }
+
+      // ---- مرحله ۲: اگر کم بود، استان ----
+      if (items.length < needed && adType !== AdType.DigitalAd) {
+        const provinceCondition = [{ state: preferredProvince }];
+        let provinceItems = await fetchAdsForType(
+          adType,
+          baseWhere,
+          provinceCondition,
+          (needed - items.length) * 3,
+        );
+        provinceItems = applySearchFilter(provinceItems, adType, search);
+        const existingIds = new Set(items.map((i) => i.id));
+        provinceItems = provinceItems.filter(
+          (item) => !existingIds.has(item.id),
+        );
+        items = items.concat(provinceItems);
+        console.log(`🏛️ ${adType}: ${provinceItems.length} مورد در استان`);
+      }
+
+      // ---- مرحله ۳: اگر باز هم کم بود، کل کشور ----
+      if (items.length < needed && adType !== AdType.DigitalAd) {
+        let countryItems = await fetchAdsForType(
+          adType,
+          baseWhere,
+          null,
+          (needed - items.length) * 3,
+        );
+        countryItems = applySearchFilter(countryItems, adType, search);
+        const existingIds = new Set(items.map((i) => i.id));
+        countryItems = countryItems.filter((item) => !existingIds.has(item.id));
+        items = items.concat(countryItems);
+        console.log(`🌍 ${adType}: ${countryItems.length} مورد در کل کشور`);
+      }
+
+      // برش به تعداد مورد نیاز و امتیازدهی (با اولویت‌بندی بر اساس تطابق)
+      const scored = items.slice(0, needed * 2).map((ad) => {
         let score = 0;
+        // امتیاز مکان
         if (adType !== AdType.DigitalAd) {
           if (ad.city === preferredCity) score += 10;
           else if (ad.state === preferredProvince) score += 5;
         }
+        // امتیاز مهارت‌ها
         if (
           adType === AdType.JobSeekerAd &&
           ad.skills &&
@@ -356,6 +390,7 @@ export const getSuggestions = async (req: Request, res: Response) => {
           ).length;
           score += common * 3;
         }
+        // امتیاز دسته‌بندی
         if (
           adType === AdType.SellerAd &&
           ad.category &&
@@ -387,7 +422,7 @@ export const getSuggestions = async (req: Request, res: Response) => {
     suggestions.sort((a, b) => (b.score || 0) - (a.score || 0));
     const finalSuggestions = suggestions.slice(0, remaining);
 
-    // ---- ۸. ثبت نمایش‌ها (با حلقه و مدیریت خطا) ----
+    // ---- ۸. ثبت نمایش‌ها ----
     let addedCount = 0;
     for (const s of finalSuggestions) {
       try {
@@ -400,30 +435,51 @@ export const getSuggestions = async (req: Request, res: Response) => {
         });
         addedCount++;
       } catch (e) {
-        // اگر تکراری باشد، نادیده می‌گیریم
         console.log(`⏭️ آگهی ${s.id} قبلاً ثبت شده بود`);
       }
     }
     console.log(`✅ ${addedCount} آگهی جدید ثبت شد`);
 
-    // ---- ۹. دریافت دوباره آمار واقعی (برای دقت) ----
+    // ---- ۹. آمار نهایی ----
     const newTotalViews = await prisma.suggestionView.count({
       where: { userId },
     });
     const newRemaining = totalAllowed - newTotalViews;
 
-    // ---- ۱۰. نرمالایز کردن خروجی مطابق با SuggestionItem ----
-    const normalized = finalSuggestions.map((item) => ({
-      id: item.id,
-      title: item.title || item.name || "بدون عنوان",
-      name: item.name,
-      adType: item.adType,
-      rating:
-        typeof item.rating === "object" ? item.rating?.average : item.rating,
-      skills: item.skills || item.requiredSkills?.map((s: any) => s.name) || [],
-      image: item.images?.[0]?.url,
-      createdAt: item.createdAt,
-    }));
+    // ---- ۱۰. نرمالایز با استخراج تصویر ----
+    const normalized = finalSuggestions.map((item) => {
+      let image: string | undefined = undefined;
+
+      if (item.images && Array.isArray(item.images) && item.images.length > 0) {
+        const firstImage = item.images[0];
+        if (typeof firstImage === "string") {
+          image = firstImage;
+        } else if (firstImage && typeof firstImage === "object") {
+          image =
+            firstImage.url || firstImage.path || firstImage.secure_url || null;
+        }
+      }
+      if (!image && item.profileImage) {
+        image = item.profileImage;
+      } else if (!image && item.logo) {
+        image = item.logo;
+      } else if (!image && item.image) {
+        image = item.image;
+      }
+
+      return {
+        id: item.id,
+        title: item.title || item.name || "بدون عنوان",
+        name: item.name,
+        adType: item.adType,
+        rating:
+          typeof item.rating === "object" ? item.rating?.average : item.rating,
+        skills:
+          item.skills || item.requiredSkills?.map((s: any) => s.name) || [],
+        image: image || null,
+        createdAt: item.createdAt,
+      };
+    });
 
     console.log(`✅ ${normalized.length} پیشنهاد برگردانده شد`);
     return res.json({
