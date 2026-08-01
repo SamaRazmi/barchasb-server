@@ -1,5 +1,5 @@
 import prisma from "../../config/prisma";
-import { toJalaliShort, toJalali } from "../../utils/dateFormatter";
+import { toJalaliShort, toJalali, toJalaliDate } from "../../utils/dateFormatter";
 import { Prisma } from "@prisma/client";
 
 type AdModel = typeof prisma.digitalAd |
@@ -377,4 +377,51 @@ export async function getUserAds(userId: string) {
   const result = all.map(({ _createdAt, ...rest }) => rest);
 
   return result;
+}
+
+export async function getUserFinancialInfo(userId: string) {
+  const wallet = await prisma.wallet.findUnique({
+    where: { userId },
+    include: {
+      transactions: {
+        orderBy: { createdAt: 'desc' },
+      },
+    },
+  });
+
+  if (!wallet) {
+    throw new Error('کیف پول کاربر یافت نشد');
+  }
+
+  const transactions = wallet.transactions.map((tx) => {
+    let sign = '';
+    if (tx.type === 'DEPOSIT' || tx.type === 'REFUND') {
+      sign = '+';
+    } else if (tx.type === 'WITHDRAWAL' || tx.type === 'HOLD') {
+      sign = '-';
+    }
+
+    const isSuccessful = tx.status === 'COMPLETED';
+
+    return {
+      id: tx.id,
+      title: tx.description || 'تراکنش',
+      date: toJalaliDate(tx.createdAt), 
+      amount: `${sign}${tx.amount.toString()}`,
+      type: tx.type, // DEPOSIT, WITHDRAWAL, HOLD, REFUND
+      status: tx.status, // PENDING, COMPLETED, FAILED, CANCELED
+      isSuccessful,
+      paymentMethod: tx.paymentMethod,
+      referenceId: tx.referenceId,
+    };
+  });
+
+  return {
+    wallet: {
+      balance: wallet.balance.toString(),
+      heldBalance: wallet.heldBalance.toString(),
+      availableBalance: (wallet.balance - wallet.heldBalance).toString(),
+    },
+    transactions,
+  };
 }

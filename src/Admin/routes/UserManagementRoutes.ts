@@ -277,4 +277,76 @@ router.get("/:id/profile", UserManagementCtrl.profile);
  */
 router.get("/:id/ads", UserManagementCtrl.ads);
 
+/**
+ * @swagger
+ * /api/admin/users/{id}/financial:
+ *   get:
+ *     tags: [Admin-Users]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: UserId
+ *     responses:
+ *       200:
+ *         description: موفق
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     wallet:
+ *                       type: object
+ *                       properties:
+ *                         balance:
+ *                           type: string
+ *                         heldBalance:
+ *                           type: string
+ *                         availableBalance:
+ *                           type: string
+ *                     transactions:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           title:
+ *                             type: string
+ *                           date:
+ *                             type: string
+ *                           amount:
+ *                             type: string
+ *                           type:
+ *                             type: string
+ *                           status:
+ *                             type: string
+ *                           isSuccessful:
+ *                             type: boolean
+ *                           paymentMethod:
+ *                             type: string
+ *                           referenceId:
+ *                             type: string
+ *                             nullable: true
+ *       401:
+ *         description: احراز هویت نشده
+ *       403:
+ *         description: دسترسی غیرمجاز
+ *       404:
+ *         description: کاربر یا کیف پول یافت نشد
+ *       500:
+ *         description: خطای سرور
+ */
+router.get("/:id/financial", UserManagementCtrl.financial);
+
 export default router;

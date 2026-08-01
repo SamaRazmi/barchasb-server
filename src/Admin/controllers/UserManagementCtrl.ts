@@ -117,6 +117,30 @@ const UserManagementCtrl = {
       res.status(500).json({ status: "error", message: error.message });
     }
   },
+
+  financial: async (req: AuthRequest, res: Response) => {
+    try {
+      const admin = req.admin;
+      if (!admin) {
+        return res.status(401).json({ status: "error", message: "احراز هویت نشده" });
+      }
+      checkUserPermission(admin);
+
+      const userId = toStr(req.params.id);
+      if (!userId) {
+        return res.status(400).json({ status: "error", message: "شناسه کاربر ارسال نشده" });
+      }
+
+      const financialInfo = await UserManagementService.getUserFinancialInfo(userId);
+      res.status(200).json({
+        status: "success",
+        data: financialInfo,
+      });
+    } catch (error: any) {
+      console.error("Error fetching user financial info:", error);
+      res.status(500).json({ status: "error", message: error.message });
+    }
+  },
 };
 
 export default UserManagementCtrl;
