@@ -141,6 +141,30 @@ const UserManagementCtrl = {
       res.status(500).json({ status: "error", message: error.message });
     }
   },
+
+  sessions: async (req: AuthRequest, res: Response) => {
+    try {
+      const admin = req.admin;
+      if (!admin) {
+        return res.status(401).json({ status: "error", message: "احراز هویت نشده" });
+      }
+      checkUserPermission(admin);
+
+      const userId = toStr(req.params.id);
+      if (!userId) {
+        return res.status(400).json({ status: "error", message: "شناسه کاربر ارسال نشده" });
+      }
+
+      const sessions = await UserManagementService.getUserSessions(userId);
+      res.status(200).json({
+        status: "success",
+        data: sessions,
+      });
+    } catch (error: any) {
+      console.error("Error fetching user sessions:", error);
+      res.status(500).json({ status: "error", message: error.message });
+    }
+  },
 };
 
 export default UserManagementCtrl;

@@ -425,3 +425,59 @@ export async function getUserFinancialInfo(userId: string) {
     transactions,
   };
 }
+
+export async function getUserSessions(userId: string) {
+  const sessions = await prisma.session.findMany({
+    where: {
+      user: userId,
+    },
+    orderBy: {
+      lastActiveAt: 'desc',
+    },
+    select: {
+      id: true,
+      deviceInfo: true,
+      createdAt: true,
+      lastActiveAt: true,
+      isActive: true,
+    },
+  });
+
+  return sessions.map((session) => {
+    const deviceInfo = session.deviceInfo as any;
+    
+    let deviceName = 'دستگاه ناشناخته';
+    if (deviceInfo) {
+      const parts = [];
+      if (deviceInfo.deviceType) {
+        const typeMap: Record<string, string> = {
+          mobile: 'موبایل',
+          tablet: 'تبلت',
+          desktop: 'دسکتاپ',
+        };
+        parts.push(typeMap[deviceInfo.deviceType] || deviceInfo.deviceType);
+      }
+      if (deviceInfo.browser) {
+        parts.push(deviceInfo.browser);
+      }
+      if (deviceInfo.os) {
+        parts.push(deviceInfo.os);
+      }
+      if (parts.length > 0) {
+        deviceName = parts.join(' - ');
+      }
+    }
+
+    return {
+      id: session.id,
+      deviceName,
+      ip: deviceInfo?.ip || 'نامشخص',
+      browser: deviceInfo?.browser || 'نامشخص',
+      os: deviceInfo?.os || 'نامشخص',
+      deviceType: deviceInfo?.deviceType || 'نامشخص',
+      createdAt: toJalali(session.createdAt),
+      lastActiveAt: toJalali(session.lastActiveAt),
+      isActive: session.isActive,
+    };
+  });
+}

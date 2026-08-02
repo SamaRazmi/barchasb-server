@@ -349,4 +349,63 @@ router.get("/:id/ads", UserManagementCtrl.ads);
  */
 router.get("/:id/financial", UserManagementCtrl.financial);
 
+/**
+ * @swagger
+ * /api/admin/users/{id}/sessions:
+ *   get:
+ *     tags: [Admin-Users]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: UserID
+ *     responses:
+ *       200:
+ *         description: موفق
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       deviceName:
+ *                         type: string
+ *                       ip:
+ *                         type: string
+ *                       browser:
+ *                         type: string
+ *                       os:
+ *                         type: string
+ *                       deviceType:
+ *                         type: string
+ *                       createdAt:
+ *                         type: string
+ *                       lastActiveAt:
+ *                         type: string
+ *                       isActive:
+ *                         type: boolean
+ *       401:
+ *         description: احراز هویت نشده
+ *       403:
+ *         description: دسترسی غیرمجاز
+ *       404:
+ *         description: کاربر یافت نشد
+ *       500:
+ *         description: خطای سرور
+ */
+router.get("/:id/sessions", UserManagementCtrl.sessions);
+
 export default router;
