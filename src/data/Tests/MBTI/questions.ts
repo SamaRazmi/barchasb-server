@@ -1,4 +1,5 @@
 import prisma from "../../../config/prisma";
+import { randomUUID } from 'crypto';
 
 const MBTIQuestions = async (typeId: string) => {
   const rawQuestions = [
@@ -718,6 +719,7 @@ const MBTIQuestions = async (typeId: string) => {
     dimension: q.dim,
     questionText: q.text,
     options: q.opts.map((opt) => ({
+      _id: randomUUID(),
       text: opt.text,
       trait: opt.trait,
       value: 1,

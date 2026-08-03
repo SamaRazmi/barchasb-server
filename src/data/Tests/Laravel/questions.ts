@@ -1,4 +1,5 @@
 import prisma from "../../../config/prisma";
+import { randomUUID } from 'crypto';
 
 const LaravelQuestions = async (typeId: string) => {
   const rawQuestions = [
@@ -935,6 +936,7 @@ const LaravelQuestions = async (typeId: string) => {
     level: q.level,
     questionText: q.text,
     options: q.opts.map((opt, index) => ({
+      _id: randomUUID(),
       text: opt,
       value: index,
       isCorrect: index === q.ans,

@@ -1,4 +1,5 @@
 import prisma from "../../../config/prisma";
+import { randomUUID } from 'crypto';
 
 const BarOnQuestions = async (typeId: string) => {
   const options = [
@@ -518,7 +519,11 @@ const BarOnQuestions = async (typeId: string) => {
     questionText: q.text,
     dimension: q.dim,
     isReverseScored: q.reverse,
-    options: options,
+    options: options.map((opt) => ({
+      _id: randomUUID(),
+      text: opt.text,
+      value: opt.value,
+    })),
   }));
 
   try {

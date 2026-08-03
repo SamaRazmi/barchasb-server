@@ -1,4 +1,5 @@
 import prisma from "../../../config/prisma";
+import { randomUUID } from 'crypto';
 
 const GardnerQuestions = async (typeId: string) => {
   const likertOptions = [
@@ -10,6 +11,7 @@ const GardnerQuestions = async (typeId: string) => {
   ];
 
   const dbOptions = likertOptions.map((opt) => ({
+    _id: randomUUID(),
     text: opt.text,
     value: opt.value,
     isCorrect: false,

@@ -1,4 +1,5 @@
 import prisma from "../../../config/prisma";
+import { randomUUID } from 'crypto';
 
 const NEOQuestions = async (typeId: string) => {
   const options = [
@@ -10,6 +11,7 @@ const NEOQuestions = async (typeId: string) => {
   ];
 
   const dbOptions = options.map((opt) => ({
+    _id: randomUUID(),
     text: opt.text,
     value: opt.value,
     isCorrect: false,
