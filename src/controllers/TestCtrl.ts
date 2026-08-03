@@ -111,7 +111,7 @@ export const submitTest = async (req: Request, res: Response) => {
         finishedAt: true,
         quickResult: true,
         detailedResult: true,
-        type: {
+        testType: {
           select: {
             id: true,
             name: true,
@@ -148,78 +148,136 @@ export const submitTest = async (req: Request, res: Response) => {
     const categoryName = testType?.category?.name || "";
     const method = testType?.scoringMethod;
     const testName = testType?.name || "";
+
+    const allQuestions = await prisma.question.findMany({
+      where: { typeId: testType.id },
+    });
+    const questionMap = new Map(allQuestions.map(q => [q.id, q]));
+
+    const fullQuestions = session.questions.map((sq: any) => {
+      const fullQ = questionMap.get(sq.questionId);
+      if (!fullQ) {
+        throw new Error(`سوال با شناسه ${sq.questionId} یافت نشد`);
+      }
+      return {
+        ...sq,
+        questionId: {
+          ...fullQ,
+          _id: fullQ.id,
+          options: fullQ.options.map((opt: any) => ({
+            ...opt,
+            _id: opt._id,
+          })),
+        },
+      };
+    });
+
+    const modifiedSession = { ...session, questions: fullQuestions };
+
     let calculatedData: any;
 
     if (method === "likert_sum" && testName.includes("گاردنر")) {
-      calculatedData = ScoringLogic.processGardner(session, answers);
+      calculatedData = ScoringLogic.processGardner(modifiedSession, answers);
     } else if (method === "likert_sum" && testName.includes("هالند")) {
-      calculatedData = ScoringLogic.processHolland(session, answers);
+      calculatedData = ScoringLogic.processHolland(modifiedSession, answers);
     } else if (method === "mbti_polar") {
-      calculatedData = ScoringLogic.processMBTI(session, answers);
+      calculatedData = ScoringLogic.processMBTI(modifiedSession, answers);
     } else if (method === "trait_accumulation") {
       if (testName.toUpperCase().includes("NEO")) {
-        calculatedData = ScoringLogic.processNEO(session, answers);
+        calculatedData = ScoringLogic.processNEO(modifiedSession, answers);
       } else {
-        calculatedData = ScoringLogic.processPsych(session, answers);
+        calculatedData = ScoringLogic.processPsych(modifiedSession, answers);
       }
     } else if (method === "weighted_level") {
       if (categoryName === "زبان‌های خارجه") {
-        calculatedData = ScoringLogic.processLanguage(
-          session,
-          answers,
-          testType,
-        );
-        (session as any).assignedLevel = getCEFRLevel(
-          calculatedData.totalScore,
-        );
+        calculatedData = ScoringLogic.processLanguage(modifiedSession, answers, testType);
+        (session as any).assignedLevel = getCEFRLevel(calculatedData.totalScore);
       } else {
-        calculatedData = ScoringLogic.processTechnical(
-          session,
-          answers,
-          testType,
-        );
+        calculatedData = ScoringLogic.processTechnical(modifiedSession, answers, testType);
         (session as any).assignedLevel =
           `${calculatedData.summary.levelFa} (${calculatedData.summary.levelEn})`;
       }
     }
 
-    const questionsToSave = calculatedData.questions.map((q: any) => {
-      const originalQuestion = (session.questions as any[]).find(
-        (sq: any) =>
-          sq.questionId.id?.toString() ===
-          (q.questionId._id || q.questionId).toString(),
-      );
-
+    const questionsToSave = session.questions.map((sq: any) => {
+      const questionId = sq.questionId;
+      const processed = calculatedData.questions.find((q: any) => {
+        const qId = typeof q.questionId === 'object' ? q.questionId?._id : q.questionId;
+        return qId === questionId;
+      });
       return {
-        questionId: q.questionId._id || q.questionId,
-        userAnswer: q.userAnswer,
-        isCorrect: q.isCorrect,
-        pointsEarned: q.pointsEarned,
-        dimension: q.dimension,
-        subject:
-          q.subject ||
-          q.questionId?.subject ||
-          originalQuestion?.subject ||
-          "General",
-        level:
-          q.level ||
-          q.questionId?.level ||
-          originalQuestion?.level ||
-          "Unknown",
+        questionId: questionId,
+        userAnswer: processed?.userAnswer ?? null,
+        isCorrect: processed?.isCorrect ?? false,
+        pointsEarned: processed?.pointsEarned ?? 0,
+        dimension: processed?.dimension ?? null,
+        subject: processed?.subject || sq.subject || "General",
+        level: processed?.level || sq.level || "Unknown",
       };
     });
 
-    const quickResult = generateQuickResult(
-      session,
-      testType,
-      calculatedData.levelResults,
-    );
+    const questionsWithAnswers = calculatedData.questions.map((q: any) => ({
+      ...q,
+      subject: q.subject || "General",
+    }));
 
-    const { detailData } = generateDetailData(
-      session,
-      testType,
-      calculatedData.levelResults,
-    );
+    const total = questionsWithAnswers.length;
+    const correct = questionsWithAnswers.filter((q: any) => q.isCorrect).length;
+    const wrong = questionsWithAnswers.filter((q: any) => q.userAnswer !== null && !q.isCorrect).length;
+    const unanswered = questionsWithAnswers.filter((q: any) => q.userAnswer === null).length;
+
+    const topicMap: Record<string, { total: number; correct: number }> = {};
+    questionsWithAnswers.forEach((q: any) => {
+      const topic = q.subject || "General";
+      if (!topicMap[topic]) {
+        topicMap[topic] = { total: 0, correct: 0 };
+      }
+      topicMap[topic].total += 1;
+      if (q.isCorrect) {
+        topicMap[topic].correct += 1;
+      }
+    });
+
+    const topicAnalysis = Object.keys(topicMap).map((topic) => ({
+      topic,
+      total: topicMap[topic].total,
+      correct: topicMap[topic].correct,
+      percentage: topicMap[topic].total > 0
+        ? ((topicMap[topic].correct / topicMap[topic].total) * 100).toFixed(0)
+        : "0",
+    }));
+
+    // درصد بالای ۶۰ = قوت، پایین ۴۰ = ضعف
+    const strengths: string[] = [];
+    const weaknesses: string[] = [];
+    topicAnalysis.forEach((item) => {
+      const pct = parseFloat(item.percentage);
+      if (pct >= 60) strengths.push(item.topic);
+      else if (pct < 40) weaknesses.push(item.topic);
+    });
+
+    const detailedResult = {
+      baseInfo: {
+        testName: testType?.name || "نامشخص",
+        date: dateFormatter.toJalali(new Date()),
+        stats: {
+          total,
+          correct,
+          wrong,
+          unanswered,
+        },
+      },
+      analysis: {
+        strengths,
+        weaknesses,
+        topicAnalysis,
+      },
+    };
+
+    const quickResult = {
+      summary: `تعداد پاسخ‌های صحیح: ${correct} از ${total}`,
+      score: ((correct / total) * 100).toFixed(1) + '%',
+    };
 
     const updatedSession = await prisma.testSession.update({
       where: { id: sessionId },
@@ -229,7 +287,7 @@ export const submitTest = async (req: Request, res: Response) => {
         status: "completed",
         finishedAt: new Date(),
         quickResult: quickResult,
-        detailedResult: detailData,
+        detailedResult: detailedResult,
         assignedLevel: (session as any).assignedLevel,
         questions: questionsToSave,
       },
@@ -390,7 +448,7 @@ export const getUserTestsSummary = async (req: Request, res: Response) => {
         score: true,
         quickResult: true,
         finishedAt: true,
-        type: {
+        testType: {
           select: {
             name: true,
             category: {
@@ -406,8 +464,8 @@ export const getUserTestsSummary = async (req: Request, res: Response) => {
 
     const summary = sessions.map((s) => ({
       sessionId: s.id,
-      testName: (s as any).type?.name,
-      category: (s as any).type?.category?.name,
+      testName: (s as any).testType?.name,
+      category: (s as any).testType?.category?.name,
       date: dateFormatter.toJalali(s.finishedAt),
       result: s.quickResult || "مشاهده جزئیات",
       score: s.score?.toFixed(1),
@@ -442,7 +500,7 @@ export const getTestResultDetail = async (req: Request, res: Response) => {
         finishedAt: true,
         quickResult: true,
         detailedResult: true,
-        type: {
+        testType: {
           select: {
             id: true,
             name: true,
@@ -468,7 +526,7 @@ export const getTestResultDetail = async (req: Request, res: Response) => {
       finishedAt: dateFormatter.toJalali(session.finishedAt),
     };
 
-    const testType = (session as any).type;
+    const testType = (session as any).testType;
     const method = testType?.scoringMethod;
 
     if (session.detailedResult) {
@@ -616,7 +674,7 @@ export const getAllTestSessionsInfo = async (req: Request, res: Response) => {
         userId: true,
         status: true,
         startedAt: true,
-        type: {
+        testType: {
           select: {
             name: true,
             tags: true,
@@ -631,8 +689,8 @@ export const getAllTestSessionsInfo = async (req: Request, res: Response) => {
       userId: session.userId,
       status: session.status,
       startedAt: dateFormatter.toJalali(session.startedAt),
-      testName: (session as any).type?.name || "نامشخص",
-      testTags: (session as any).type?.tags || [],
+      testName: (session as any).testType?.name || "نامشخص",
+      testTags: (session as any).testType?.tags || [],
     }));
 
     res.status(200).json(formattedSessions);
@@ -656,7 +714,7 @@ export const getMyTestsSummary = async (req: Request, res: Response) => {
         score: true,
         quickResult: true,
         finishedAt: true,
-        type: {
+        testType: {
           select: {
             name: true,
             category: {
@@ -672,8 +730,8 @@ export const getMyTestsSummary = async (req: Request, res: Response) => {
 
     const summary = sessions.map((s) => ({
       sessionId: s.id,
-      testName: (s as any).type?.name || "نامشخص",
-      category: (s as any).type?.category?.name || "بدون دسته‌بندی",
+      testName: (s as any).testType?.name || "نامشخص",
+      category: (s as any).testType?.category?.name || "بدون دسته‌بندی",
       date: dateFormatter.toJalali(s.finishedAt),
       result: s.quickResult || "مشاهده جزئیات",
       score: s.score?.toFixed(1),
@@ -714,7 +772,7 @@ export const getMyTestDetail = async (req: Request, res: Response) => {
         finishedAt: true,
         quickResult: true,
         detailedResult: true,
-        type: {
+        testType: {
           select: {
             id: true,
             name: true,
@@ -746,7 +804,7 @@ export const getMyTestDetail = async (req: Request, res: Response) => {
       finishedAt: dateFormatter.toJalali(session.finishedAt),
     };
 
-    const testType = (session as any).type;
+    const testType = (session as any).testType;
     const method = testType?.scoringMethod;
 
     if (session.detailedResult) {
