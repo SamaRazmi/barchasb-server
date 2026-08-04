@@ -61,9 +61,9 @@ import adminPricingRoutes from "./Admin/routes/PricingManagementRoutes";
 import adminVipRoutes from "./Admin/routes/VipManagementRoutes";
 import articleCategoryRoutes from "./Admin/routes/ArticleCategoryRoutes";
 import articlesRoutes from "./Admin/routes/ArticleManagementRoutes";
-
 import SuggestionRoutes from "./routes/SuggestionRoutes";
 import profileRoutes from "./routes/UserProfileRoutes"; // مسیر صحیح
+import AdsRouter from "./routes/AdsRouter";
 // ===== اضافه شده: مسیرهای مدیریت گزارش توسط ادمین =====
 // import adminReportRoutes from "./routes/admin/adminReportRoutes"; // ✅ کامنت شد
 
@@ -296,6 +296,7 @@ app.use("/api", OtpRoutes);
 app.use("/api", EmployerAdRoutes);
 app.use("/api", SellerAdRoutes);
 app.use("/api", JobSeekerAdRoutes);
+app.use("/api", AdsRouter);
 app.use("/api", DigitalAdRoutes);
 app.use("/api", AdMarkRoutes);
 app.use("/api", RecentViewRoutes);
