@@ -142,6 +142,12 @@ export const createSellerAd = async (req: Request, res: Response) => {
       }
       if (!updateData.images) updateData.images = [];
       if (!updateData.extraFeatures) updateData.extraFeatures = {};
+
+      // ✅ اضافه کردن تبدیل priceIRT به عدد (مانند بخش multipart)
+      if (updateData.priceIRT !== undefined) {
+        const priceStr = String(updateData.priceIRT).replace(/,/g, "");
+        updateData.priceIRT = parseInt(priceStr) || 0;
+      }
     }
 
     // ─── اعتبارسنجی فیلدهای اجباری ───

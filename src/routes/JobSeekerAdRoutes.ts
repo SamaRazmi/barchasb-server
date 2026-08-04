@@ -159,7 +159,7 @@ router.post(
 );
 
 /* =======================
-   GET
+   GET (عمومی)
 ======================= */
 /**
  * @swagger
@@ -251,117 +251,14 @@ router.post(
  */
 router.get("/ads/jobseeker", JobSeekerAdCtrl.getAllJobSeekerAds);
 
-/**
- * @swagger
- * /api/ads/jobseeker/{ownerId}/{adId}:
- *   get:
- *     summary: دریافت یک آگهی مشخص از یک کاربر مشخص
- *     tags: [JobSeekerAds]
- *     parameters:
- *       - name: ownerId
- *         in: path
- *         required: true
- *       - name: adId
- *         in: path
- *         required: true
- *     responses:
- *       200:
- *         description: موفق
- *       404:
- *         description: آگهی یافت نشد
- */
-router.get(
-  "/ads/jobseeker/:ownerId/:adId",
-  JobSeekerAdCtrl.getJobSeekerAdByOwnerAndId,
-);
-
-/**
- * @swagger
- * /api/ads/jobseeker:
- *   get:
- *     summary: دریافت همه آگهی‌های جوینده کار (عمومی)
- *     tags: [JobSeekerAds]
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *         description: شماره صفحه
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 9
- *         description: تعداد آیتم در هر صفحه
- *     responses:
- *       200:
- *         description: موفق
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: string
- *                       owner:
- *                         type: object
- *                         properties:
- *                           fullName:
- *                             type: string
- *                           phoneNumber:
- *                             type: string
- *                       enhancements:
- *                         type: object
- *                         properties:
- *                           isSpecial:
- *                             type: boolean
- *                           specialStartDate:
- *                             type: string
- *                             format: date-time
- *                           specialEndDate:
- *                             type: string
- *                             format: date-time
- *                           isLadder:
- *                             type: boolean
- *                           ladders:
- *                             type: array
- *                             items:
- *                               type: object
- *                               properties:
- *                                 id:
- *                                   type: string
- *                                 scheduledAt:
- *                                   type: string
- *                                   format: date-time
- *                                 isExecuted:
- *                                   type: boolean
- *                 pagination:
- *                   type: object
- *                   properties:
- *                     page:
- *                       type: integer
- *                     limit:
- *                       type: integer
- *                     total:
- *                       type: integer
- *                     totalPages:
- *                       type: integer
- *       500:
- *         description: خطای سرور
- */
-router.get("/ads/jobseeker", JobSeekerAdCtrl.getAllJobSeekerAds);
-
+/* =======================
+   GET یک آگهی تکی (عمومی)
+======================= */
 /**
  * @swagger
  * /api/ads/jobseeker/{id}:
  *   get:
- *     summary: دریافت آگهی تکی
+ *     summary: دریافت آگهی تکی (عمومی)
  *     tags: [JobSeekerAds]
  *     parameters:
  *       - name: id
@@ -378,13 +275,13 @@ router.get("/ads/jobseeker", JobSeekerAdCtrl.getAllJobSeekerAds);
 router.get("/ads/jobseeker/:id", JobSeekerAdCtrl.getJobSeekerAdById);
 
 /* =======================
-   UPDATE
+   GET آگهی‌های یک کاربر خاص (مالک) + احراز هویت
 ======================= */
 /**
  * @swagger
- * /api/ads/jobseeker/{ownerId}/{adId}:
- *   put:
- *     summary: ویرایش آگهی جوینده کار
+ * /api/ads/jobseeker/owner/{ownerId}:
+ *   get:
+ *     summary: دریافت لیست آگهی‌های جوینده کار یک کاربر خاص (مالک)
  *     tags: [JobSeekerAds]
  *     security:
  *       - BearerAuth: []
@@ -392,9 +289,164 @@ router.get("/ads/jobseeker/:id", JobSeekerAdCtrl.getJobSeekerAdById);
  *       - name: ownerId
  *         in: path
  *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: موفق
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *                       aboutMe:
+ *                         type: string
+ *                       owner:
+ *                         type: object
+ *                         properties:
+ *                           fullName:
+ *                             type: string
+ *                           phoneNumber:
+ *                             type: string
+ *                       enhancements:
+ *                         type: object
+ *                         properties:
+ *                           isSpecial:
+ *                             type: boolean
+ *                           ladders:
+ *                             type: array
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     total:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ *       401:
+ *         description: توکن معتبر نیست
+ *       404:
+ *         description: کاربر یافت نشد
+ *       500:
+ *         description: خطای سرور
+ */
+router.get(
+  "/ads/jobseeker/owner/:ownerId",
+  authenticateToken,
+  JobSeekerAdCtrl.getAdsByOwner,
+);
+
+/* =======================
+   GET یک آگهی خاص از یک کاربر مشخص (مالک) + احراز هویت
+======================= */
+/**
+ * @swagger
+ * /api/ads/jobseeker/owner/{ownerId}/{adId}:
+ *   get:
+ *     summary: دریافت یک آگهی جوینده کار مشخص از یک کاربر مشخص (مالک)
+ *     tags: [JobSeekerAds]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: ownerId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
  *       - name: adId
  *         in: path
  *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: موفق
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 ad:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     aboutMe:
+ *                       type: string
+ *                     owner:
+ *                       type: object
+ *                       properties:
+ *                         fullName:
+ *                           type: string
+ *                         phoneNumber:
+ *                           type: string
+ *                     enhancements:
+ *                       type: object
+ *       401:
+ *         description: توکن معتبر نیست
+ *       404:
+ *         description: آگهی یافت نشد
+ *       500:
+ *         description: خطای سرور
+ */
+router.get(
+  "/ads/jobseeker/owner/:ownerId/:adId",
+  authenticateToken,
+  JobSeekerAdCtrl.getJobSeekerAdByOwnerAndId,
+);
+
+/* =======================
+   UPDATE (ویرایش)
+======================= */
+/**
+ * @swagger
+ * /api/ads/jobseeker/{ownerId}/{adId}:
+ *   put:
+ *     summary: ویرایش آگهی جوینده کار (فقط مالک)
+ *     tags: [JobSeekerAds]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: ownerId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - name: adId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
  *     requestBody:
  *       required: true
  *       content:
@@ -407,13 +459,66 @@ router.get("/ads/jobseeker/:id", JobSeekerAdCtrl.getJobSeekerAdById);
  *                 items:
  *                   type: string
  *                   format: binary
+ *               imagesFromApi:
+ *                 type: string
+ *                 description: JSON آرایه از تصاویر موجود (با فیلدهای url و isMain)
+ *               name:
+ *                 type: string
+ *               age:
+ *                 type: string
+ *               gender:
+ *                 type: string
+ *               maritalStatus:
+ *                 type: string
+ *               militaryStatus:
+ *                 type: string
+ *               phoneNumber:
+ *                 type: string
+ *               state:
+ *                 type: string
+ *               city:
+ *                 type: string
+ *               category:
+ *                 type: string
+ *               skills:
+ *                 type: string
+ *                 description: آرایه یا رشته با کاما
+ *               suggestedSalaryIRT:
+ *                 type: string
+ *               aboutMe:
+ *                 type: string
+ *               instagram:
+ *                 type: string
+ *               linkedIn:
+ *                 type: string
+ *               gitHub:
+ *                 type: string
+ *               person:
+ *                 type: string
+ *                 enum: [self, other]
+ *               isVerified:
+ *                 type: boolean
+ *               enableChat:
+ *                 type: boolean
+ *               enablePhone:
+ *                 type: boolean
+ *               paymentMethod:
+ *                 type: string
+ *                 enum: [Subscription, Wallet, Bank_card]
+ *               adStatus:
+ *                 type: string
+ *                 enum: [pending, approved, rejected, expired]
  *     responses:
  *       200:
- *         description: آگهی ویرایش شد
+ *         description: بروزرسانی موفق
+ *       400:
+ *         description: خطای اعتبارسنجی
  *       401:
- *         description: عدم احراز هویت
+ *         description: توکن معتبر نیست
  *       404:
  *         description: آگهی یافت نشد
+ *       500:
+ *         description: خطای سرور
  */
 router.put(
   "/ads/jobseeker/:ownerId/:adId",
@@ -423,7 +528,7 @@ router.put(
 );
 
 /* =======================
-   DELETE
+   DELETE (حذف)
 ======================= */
 /**
  * @swagger
@@ -441,11 +546,11 @@ router.put(
  *           type: string
  *     responses:
  *       200:
- *         description: آگهی با موفقیت حذف شد
+ *         description: حذف موفق
  *       401:
  *         description: توکن معتبر نیست
  *       404:
- *         description: آگهی یافت نشد
+ *         description: آگهی یافت نشد یا دسترسی ندارید
  *       500:
  *         description: خطای سرور
  */

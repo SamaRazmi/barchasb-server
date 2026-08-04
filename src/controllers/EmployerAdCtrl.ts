@@ -4,6 +4,7 @@ import { transformFileUrls } from "../middleware/upload";
 import { promises as fs } from "fs";
 import path from "path";
 import { AdType } from "@prisma/client";
+import categoriesData from "../data/jobCategoriesData";
 
 // ==========================================
 // 📋 لیست فیلدهای مجاز در مدل EmployerAd
@@ -62,6 +63,23 @@ const toStr = (value: string | string[] | undefined): string => {
   if (Array.isArray(value) && value.length > 0) return value[0];
   return "";
 };
+
+// ==========================================
+// 🧩 تابع کمکی برای دریافت همه زیردسته‌ها (بازگشتی) از داده‌های استاتیک
+// ==========================================
+function getAllSubCategoryIds(categoryId: number): number[] {
+  const result: number[] = [categoryId];
+
+  // پیدا کردن فرزندان مستقیم
+  const children = categoriesData.filter((c) => c.parent === categoryId);
+
+  for (const child of children) {
+    const subIds = getAllSubCategoryIds(child.id);
+    result.push(...subIds);
+  }
+
+  return result;
+}
 
 // ==========================================
 // 📌 ایجاد آگهی کارفرما
@@ -226,7 +244,7 @@ export const createEmployerAd = async (req: Request, res: Response) => {
 };
 
 // ==========================================
-// 📌 دریافت همه آگهی‌ها (با فیلترهای کامل)
+// 📌 دریافت همه آگهی‌ها (با فیلترهای کامل و پشتیبانی از سلسله‌مراتب دسته‌بندی)
 // ==========================================
 export const getAllEmployerAds = async (req: Request, res: Response) => {
   try {
@@ -304,16 +322,8 @@ export const getAllEmployerAds = async (req: Request, res: Response) => {
       }
     }
 
-    // 4️⃣ محدوده حقوق (minSalary و maxSalary از نوع string هستند)
-    const minSalary = req.query.minSalary as string;
-    const maxSalary = req.query.maxSalary as string;
-    if (minSalary || maxSalary) {
-      // برای سادگی، فقط در صورتی که هر دو مقدار عددی باشند، از آن‌ها استفاده می‌کنیم.
-      // توجه: minSalary و maxSalary در مدل string هستند، اما می‌توان با تبدیل به عدد مقایسه کرد (با استفاده از $queryRaw)
-      // در اینجا به دلیل محدودیت، از فیلتر ساده صرف‌نظر می‌کنیم و فقط در صورت وجود هر دو، شرط می‌گذاریم.
-      // بهتر است از `prisma.$queryRaw` استفاده شود، اما برای نمونه کد فعلی را به‌روز می‌کنیم.
-      // فعلاً این فیلتر را غیرفعال می‌کنیم (می‌توان در آینده با raw query پیاده‌سازی کرد).
-    }
+    // 4️⃣ محدوده حقوق (غیرفعال فعلاً)
+    // ...
 
     // 5️⃣ نوع همکاری
     if (req.query.cooperationType) {
@@ -338,6 +348,39 @@ export const getAllEmployerAds = async (req: Request, res: Response) => {
       where.experience = req.query.experience as string;
     }
 
+    // ========== 9️⃣ فیلتر دسته‌بندی (سلسله‌مراتبی) ==========
+    // پارامتر ورودی می‌تواند 'selectedCategory' یا 'categories' باشد
+    let selectedCategoryIds: number[] = [];
+    const categoryParam = req.query.selectedCategory || req.query.categories;
+    if (categoryParam) {
+      if (Array.isArray(categoryParam)) {
+        selectedCategoryIds = categoryParam.map(Number).filter(Boolean);
+      } else if (typeof categoryParam === "string") {
+        selectedCategoryIds = categoryParam
+          .split(",")
+          .map(Number)
+          .filter(Boolean);
+      }
+    }
+
+    if (selectedCategoryIds.length > 0) {
+      // جمع‌آوری همه زیردسته‌ها برای هر دسته‌بندی انتخاب‌شده
+      let allSubIds: number[] = [];
+      for (const catId of selectedCategoryIds) {
+        const subIds = getAllSubCategoryIds(catId);
+        allSubIds.push(...subIds);
+      }
+      // حذف شناسه‌های تکراری
+      allSubIds = [...new Set(allSubIds)];
+
+      // تبدیل به رشته برای تطابق با فیلد categories (که از نوع String[] است)
+      const allSubIdsAsString = allSubIds.map(String);
+
+      if (allSubIdsAsString.length > 0) {
+        where.categories = { hasSome: allSubIdsAsString };
+      }
+    }
+
     // ---------- اجرای کوئری ----------
     const [ads, total] = await Promise.all([
       prisma.employerAd.findMany({
@@ -348,7 +391,7 @@ export const getAllEmployerAds = async (req: Request, res: Response) => {
         include: {
           ownerRelation: {
             select: {
-              id: true, // ✅ اضافه شد
+              id: true,
               name: true,
               lastName: true,
               phone: true,
@@ -368,7 +411,7 @@ export const getAllEmployerAds = async (req: Request, res: Response) => {
           ...ad,
           owner: ad.ownerRelation
             ? {
-                id: ad.ownerRelation.id, // ✅ اضافه شد
+                id: ad.ownerRelation.id,
                 fullName:
                   `${ad.ownerRelation.name || ""} ${ad.ownerRelation.lastName || ""}`.trim(),
                 phoneNumber: ad.ownerRelation.phone,
@@ -414,7 +457,7 @@ export const getEmployerAdById = async (req: Request, res: Response) => {
       include: {
         ownerRelation: {
           select: {
-            id: true, // ✅ اضافه شد
+            id: true,
             name: true,
             lastName: true,
             phone: true,
@@ -431,7 +474,7 @@ export const getEmployerAdById = async (req: Request, res: Response) => {
       ...(ad as any),
       owner: (ad as any).ownerRelation
         ? {
-            id: (ad as any).ownerRelation.id, // ✅ اضافه شد
+            id: (ad as any).ownerRelation.id,
             fullName:
               `${(ad as any).ownerRelation.name || ""} ${(ad as any).ownerRelation.lastName || ""}`.trim(),
             phoneNumber: (ad as any).ownerRelation.phone,
@@ -477,7 +520,7 @@ export const getAdsByOwner = async (req: Request, res: Response) => {
         include: {
           ownerRelation: {
             select: {
-              id: true, // ✅ اضافه شد
+              id: true,
               name: true,
               lastName: true,
               phone: true,
@@ -496,7 +539,7 @@ export const getAdsByOwner = async (req: Request, res: Response) => {
           ...ad,
           owner: ad.ownerRelation
             ? {
-                id: ad.ownerRelation.id, // ✅ اضافه شد
+                id: ad.ownerRelation.id,
                 fullName:
                   `${ad.ownerRelation.name || ""} ${ad.ownerRelation.lastName || ""}`.trim(),
                 phoneNumber: ad.ownerRelation.phone,
@@ -553,7 +596,7 @@ export const getEmployerAdByOwnerAndId = async (
       include: {
         ownerRelation: {
           select: {
-            id: true, // ✅ اضافه شد
+            id: true,
             name: true,
             lastName: true,
             phone: true,
@@ -570,7 +613,7 @@ export const getEmployerAdByOwnerAndId = async (
       ...(ad as any),
       owner: (ad as any).ownerRelation
         ? {
-            id: (ad as any).ownerRelation.id, // ✅ اضافه شد
+            id: (ad as any).ownerRelation.id,
             fullName:
               `${(ad as any).ownerRelation.name || ""} ${(ad as any).ownerRelation.lastName || ""}`.trim(),
             phoneNumber: (ad as any).ownerRelation.phone,
@@ -783,7 +826,9 @@ export const deleteEmployerAd = async (req: Request, res: Response) => {
   }
 };
 
-//  helper
+// ==========================================
+// 🔧 Helper
+// ==========================================
 async function getAdEnhancement(adId: string, adType: AdType) {
   const enhancement = await prisma.adEnhancement.findFirst({
     where: { adId, adType },

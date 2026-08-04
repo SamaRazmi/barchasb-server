@@ -305,8 +305,8 @@ model DigitalAd {
   digitalTotalDesc    String?
   projectNames        String[]
   projectDescriptions String[]
-  minBudget           String?
-  maxBudget           String?
+  minBudget           String?       // ✅ برگشت به String
+  maxBudget           String?       // ✅ برگشت به String
   requiredSkills      Json[] // [{name: String}]
   person              PersonType    @default(self)
   remote              Boolean       @default(false)
@@ -331,9 +331,13 @@ model DigitalAd {
   // شماره تماس در صورت شخص دیگر
   phoneOther          String?
 
-  rejectionReason  String?
-  approvedBy         String?
-  rejectedBy         String?
+  // ===== فیلدهای فعال‌سازی چت و تماس (اضافه شده) =====
+  enableChat          Boolean       @default(false)
+  enablePhone         Boolean       @default(false)
+
+  rejectionReason     String?
+  approvedBy          String?       // ✅ اضافه شده
+  rejectedBy          String?       // ✅ اضافه شده
 
   ownerRelation User @relation(fields: [owner], references: [id])
 }
@@ -365,8 +369,8 @@ model EmployerAd {
   thursdayUntilNoon  Boolean       @default(false)
   startTime          String?
   endTime            String?
-  minSalary          String?
-  maxSalary          String?
+  minSalary          String?       // ✅ برگشت به String
+  maxSalary          String?       // ✅ برگشت به String
   companyName        String?
   companyType        String?
   benefits           String?
@@ -392,8 +396,8 @@ model EmployerAd {
   phoneOther          String?
 
   rejectionReason  String?
-  approvedBy         String?
-  rejectedBy         String?
+  approvedBy         String?       // ✅ اضافه شده
+  rejectedBy         String?       // ✅ اضافه شده
 
   ownerRelation User @relation(fields: [owner], references: [id])
 }
@@ -424,7 +428,7 @@ model JobSeekerAd {
   workSampleFile     String?
   education          String?
   skills             String[]
-  suggestedSalaryIRT String?
+  suggestedSalaryIRT String?       // ✅ برگشت به String
   aboutMe            String?
   instagram          String?
   linkedIn           String?
@@ -449,8 +453,8 @@ model JobSeekerAd {
   phoneOther          String?
 
   rejectionReason  String?
-  approvedBy         String?
-  rejectedBy         String?
+  approvedBy         String?       // ✅ اضافه شده
+  rejectedBy         String?       // ✅ اضافه شده
 
   ownerRelation User @relation(fields: [owner], references: [id])
 }
@@ -563,7 +567,7 @@ model SellerAd {
   application   String?
   status        String?
   images        Json[] // [{url: String, isMain: Boolean}]
-  priceIRT      BigInt        @default(0)
+  priceIRT      BigInt        @default(0)  // ✅ بدون تغییر (همان BigInt)
   isFixedPrice  Boolean       @default(false)
   isNegotiable  Boolean       @default(false)
   hasWarranty   Boolean       @default(false)
@@ -588,8 +592,8 @@ model SellerAd {
   phoneOther          String?
   
   rejectionReason  String?
-  approvedBy         String?
-  rejectedBy         String?
+  approvedBy         String?       // ✅ اضافه شده
+  rejectedBy         String?       // ✅ اضافه شده
   ownerRelation User @relation(fields: [owner], references: [id])
 }
 

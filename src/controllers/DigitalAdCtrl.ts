@@ -37,6 +37,8 @@ const ALLOWED_FIELDS = [
   "rejectionReason",
   "approvedBy",
   "rejectedBy",
+  "enableChat",
+  "enablePhone",
 ] as const;
 
 // ==========================================
@@ -95,6 +97,8 @@ export const createDigitalAd = async (req: Request, res: Response) => {
       const toBool = (v: any) => v === "true" || v === true;
       updateData.remote = toBool(req.body.remote);
       updateData.thursdayHalf = toBool(req.body.thursdayHalf);
+      updateData.enableChat = toBool(req.body.enableChat);
+      updateData.enablePhone = toBool(req.body.enablePhone);
 
       // پردازش آرایه‌ها
       const parseArray = (field: string) => {
@@ -694,6 +698,15 @@ export const updateDigitalAd = async (req: Request, res: Response) => {
       }
     }
 
+    // اطمینان از تبدیل بولی برای enableChat و enablePhone
+    const toBool = (v: any) => v === "true" || v === true;
+    if (updateData.enableChat !== undefined) {
+      updateData.enableChat = toBool(updateData.enableChat);
+    }
+    if (updateData.enablePhone !== undefined) {
+      updateData.enablePhone = toBool(updateData.enablePhone);
+    }
+
     // فیلتر کردن داده‌ها با لیست مجاز
     const filteredData = filterAdData(updateData);
 
@@ -810,10 +823,10 @@ const DigitalAdCtrl = {
   createDigitalAd,
   getAllDigitalAds,
   getDigitalAdById,
-  getDigitalAdsByOwner, // جدید
-  getDigitalAdByOwnerAndId, // جدید
-  updateDigitalAd, // جدید
-  deleteDigitalAd, // جدید
+  getDigitalAdsByOwner,
+  getDigitalAdByOwnerAndId,
+  updateDigitalAd,
+  deleteDigitalAd,
 };
 
 export default DigitalAdCtrl;

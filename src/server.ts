@@ -157,7 +157,7 @@ app.use(cors(corsOptions));
 // 3. Rate Limiting: جلوگیری از حملات Brute Force و DoS
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // ۱۵ دقیقه
-  max: 1000, // حداکثر ۱۰۰ درخواست از هر IP در بازه زمانی
+  max: 5000, // افزایش یافته از ۱۰۰۰ به ۵۰۰۰ برای کاهش خطای حد مجاز در بازه زمانی طولانی‌تر
   message: {
     success: false,
     message:
@@ -321,8 +321,8 @@ app.use("/api/admin/vip-codes", adminVipRoutes);
 // admin route
 app.use("/api/admin/auth", adminAuthRoutes);
 app.use("/api/admin/admins", adminManagementRoutes);
-app.use('/api/admin/ads', adManagementRoutes);
-app.use('/api/admin/pricing', adminPricingRoutes)
+app.use("/api/admin/ads", adManagementRoutes);
+app.use("/api/admin/pricing", adminPricingRoutes);
 app.use("/api/admin/article/categories", articleCategoryRoutes);
 app.use("/api/admin/articles", articlesRoutes);
 
