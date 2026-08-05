@@ -1,131 +1,26 @@
 import { Router } from "express";
-import testController from "../controllers/TestCtrl";
-import resumeController from "../controllers/ResumeCtrl";
-import converterController from "../controllers/converterCtrl";
-import { authenticateAdmin } from "../middleware/authMidleware";
+import { authenticateAdmin } from "../../middleware/authMidleware";
+import ExtensionManagementCtrl from "../controllers/ExtensionManagementCtrl";
 
 const router = Router();
 
+// test section 
 /**
  * @swagger
- * /api/admin/extension/tests/summaryResult/{userId}:
- *   get:
- *     summary: Get a summary list of all completed tests for a specific user
- *     tags: [Admin-Extensions]
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - name: userId
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: A list of test summaries
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   sessionId:
- *                     type: string
- *                   testName:
- *                     type: string
- *                   category:
- *                     type: string
- *                   date:
- *                     type: string
- *                     format: date-time
- *                   result:
- *                     type: string
- *                   score:
- *                     type: string
- *       404:
- *         description: User not found or no completed sessions
- */
-router.get("/tests/summaryResult/:userId", authenticateAdmin, testController.getUserTestsSummary);
-
-/**
- * @swagger
- * /api/admin/extension/tests/detailedResult/{sessionId}:
- *   get:
- *     summary: Get full detailed analytics of a specific test session
- *     tags: [Admin-Extensions]
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - name: sessionId
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Detailed test analysis retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 baseInfo:
- *                   type: object
- *                   properties:
- *                     testName:
- *                       type: string
- *                     category:
- *                       type: string
- *                     summary:
- *                       type: string
- *                     score:
- *                       type: string
- *                     date:
- *                       type: string
- *                       format: date-time
- *                     stats:
- *                       type: object
- *                       properties:
- *                         total:
- *                           type: integer
- *                         correct:
- *                           type: integer
- *                         wrong:
- *                           type: integer
- *                         unanswered:
- *                           type: integer
- *                 analysis:
- *                   type: object
- *                   description: Dynamic object containing formatted results.
- *       404:
- *         description: Session not found
- */
-router.get(
-  "/tests/detailedResult/:sessionId",
-  authenticateAdmin,
-  testController.getTestResultDetail,
-);
-
-// categories
-/**
- * @swagger
- * /api/admin/extension/categories:
+ * /api/admin/extensions/tests/categories:
  *   get:
  *     summary: Get all categories
  *     tags: [Admin-Extensions]
  *     security:
  *       - BearerAuth: []
  *     responses:
- *       200:
- *         description: categories list
+ *       200: { description: موفق }
  */
-router.route("/categories").get(authenticateAdmin, testController.getCategories);
+router.get("/tests/categories", authenticateAdmin, ExtensionManagementCtrl.testCategories);
 
-// test types
 /**
  * @swagger
- * /api/admin/extension/test-types:
+ * /api/admin/extensions/tests/types:
  *   get:
  *     summary: Get all test types
  *     tags: [Admin-Extensions]
@@ -134,42 +29,29 @@ router.route("/categories").get(authenticateAdmin, testController.getCategories)
  *     parameters:
  *       - name: categoryId
  *         in: query
- *         schema:
- *           type: string
- *         description: filter based on category(optional)
+ *         schema: { type: string }
  *     responses:
- *       200:
- *         description: test types list
+ *       200: { description: موفق }
  */
-router.get("/test-types",authenticateAdmin, testController.getTypes);
+router.get("/tests/types", authenticateAdmin, ExtensionManagementCtrl.testTypes);
 
-// user's test reporting
 /**
  * @swagger
- * /api/admin/extension/users-with-sessions:
+ * /api/admin/extensions/tests/users-with-sessions:
  *   get:
  *     summary: Get all users id that has test session
  *     tags: [Admin-Extensions]
  *     security:
  *       - BearerAuth: []
  *     responses:
- *       200:
- *         description: users id list
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: string
- *               example: ["user123", "user456"]
- *       500:
- *         description: server error
+ *       200: { description: موفق }
+ *       500: {description: خطای سرور}
  */
-router.get("/users-with-sessions",authenticateAdmin, testController.getUsersWithSessions);
+router.get("/tests/users-with-sessions", authenticateAdmin, ExtensionManagementCtrl.usersWithTestSessions);
 
 /**
  * @swagger
- * /api/admin/extension/all-sessions-info:
+ * /api/admin/extensions/tests/all-sessions:
  *   get:
  *     summary: Get all info of test sessions
  *     tags: [Admin-Extensions]
@@ -204,12 +86,12 @@ router.get("/users-with-sessions",authenticateAdmin, testController.getUsersWith
  *       500:
  *         description: server error
  */
-router.get("/all-sessions-info",authenticateAdmin, testController.getAllTestSessionsInfo);
+router.get("/tests/all-sessions", authenticateAdmin, ExtensionManagementCtrl.allTestSessionsInfo);
 
-// resume reporting
+// resume section 
 /**
  * @swagger
- * /api/admin/extension/resume-users:
+ * /api/admin/extensions/resumes:
  *   get:
  *     summary: Get list of users that have resume(with detail)
  *     tags: [Admin-Extensions]
@@ -217,17 +99,58 @@ router.get("/all-sessions-info",authenticateAdmin, testController.getAllTestSess
  *       - BearerAuth: []
  *     responses:
  *       200:
- *         description: user list received successfully
- *       500:
- *         description: server error
+ *         description: موفق
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 count:
+ *                   type: integer
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       userId:
+ *                         type: string
+ *                       totalResumes:
+ *                         type: integer
+ *                       lastUserUpdate:
+ *                         type: string
+ *                       resumes:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             resumeId:
+ *                               type: string
+ *                             updateCount:
+ *                               type: integer
+ *                             updatedAt:
+ *                               type: string
+ *                       userInfo:
+ *                         type: object
+ *                         properties:
+ *                           fullName:
+ *                             type: string
+ *                           phone:
+ *                             type: string
+ *                           email:
+ *                             type: string
+ *                           province:
+ *                             type: string
+ *                           city:
+ *                             type: string
  */
-router.get("/resume-users",authenticateAdmin, resumeController.getUsersWithResumes);
+router.get("/resumes", authenticateAdmin, ExtensionManagementCtrl.resumes);
 
-// converter tools reporting
-// ---------------------------------------------
+// converter section 
 /**
  * @swagger
- * /api/admin/extension/converter-tools/users-tool-usage:
+ * /api/admin/extensions/converter/users-usage:
  *   get:
  *     summary: User usage report of tools
  *     tags: [Admin-Extensions]
@@ -272,15 +195,11 @@ router.get("/resume-users",authenticateAdmin, resumeController.getUsersWithResum
  *       500:
  *         description: Server Error
  */
-router.get(
-  "/converter-tools/users-tool-usage",
-  authenticateAdmin,
-  converterController.getUsersToolUsage,
-);
+router.get("/converter/users-usage", authenticateAdmin, ExtensionManagementCtrl.converterUserUsage);
 
 /**
  * @swagger
- * /api/admin/extension/converter-tools/tool-popularity:
+ * /api/admin/extensions/converter/popularity:
  *   get:
  *     summary: Popularity of tools based on frequency of use
  *     tags: [Admin-Extensions]
@@ -324,15 +243,11 @@ router.get(
  *       500:
  *         description: Server Error
  */
-router.get(
-  "/converter-tools/tool-popularity",
-  authenticateAdmin,
-  converterController.getToolPopularity,
-);
+router.get("/converter/popularity", authenticateAdmin, ExtensionManagementCtrl.converterPopularity);
 
 /**
  * @swagger
- * /api/admin/extension/converter-tools/tool-performance:
+ * /api/admin/extensions/converter/performance:
  *   get:
  *     summary: Performance of tools
  *     tags: [Admin-Extensions]
@@ -390,10 +305,5 @@ router.get(
  *       500:
  *         description: Server error
  */
-router.get(
-  "/converter-tools/tool-performance",
-  authenticateAdmin,
-  converterController.getToolPerformance,
-);
-
+router.get("/converter/performance", authenticateAdmin, ExtensionManagementCtrl.converterPerformance);
 export default router;

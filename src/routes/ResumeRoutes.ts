@@ -225,22 +225,4 @@ router.get("/preview/:id", authenticateUser, ResumeCtrl.getResumeUrl);
  */
 router.get("/my", authenticateUser, ResumeCtrl.getMyResumes);
 
-/**
- * @swagger
- * /api/resume/admin/users-with-resumes:
- *   get:
- *     summary: دریافت کاربران دارای رزومه (فقط ادمین)
- *     tags: [Resume]
- *     security:
- *       - BearerAuth: []
- *     responses:
- *       200:
- *         description: لیست کاربران و رزومه‌هایشان
- *       401:
- *         description: احراز هویت نشده
- *       403:
- *         description: دسترسی غیرمجاز
- */
-router.get("/admin/users-with-resumes", authenticateUser, ResumeCtrl.getUsersWithResumes);
-
 export default router;

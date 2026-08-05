@@ -490,7 +490,7 @@ export async function getUserTestsSummary(userId: string) {
       score: true,
       quickResult: true,
       finishedAt: true,
-      testType: {                    // ✅ اصلاح
+      testType: {
         select: {
           name: true,
           category: {
@@ -504,8 +504,8 @@ export async function getUserTestsSummary(userId: string) {
 
   return sessions.map((s) => ({
     sessionId: s.id,
-    testName: (s as any).testType?.name || "نامشخص",   // ✅ اصلاح
-    category: (s as any).testType?.category?.name || "بدون دسته‌بندی", // ✅ اصلاح
+    testName: (s as any).testType?.name || "نامشخص",
+    category: (s as any).testType?.category?.name || "بدون دسته‌بندی",
     date: toJalali(s.finishedAt),
     result: s.quickResult || "مشاهده جزئیات",
     score: s.score?.toFixed(1) || "۰",
@@ -524,7 +524,7 @@ export async function getUserTestDetail(userId: string, sessionId: string) {
       finishedAt: true,
       quickResult: true,
       detailedResult: true,
-      testType: {                    // ✅ اصلاح: type → testType
+      testType: {
         select: {
           name: true,
           scoringMethod: true,
@@ -538,7 +538,7 @@ export async function getUserTestDetail(userId: string, sessionId: string) {
 
   if (!session) return null;
 
-  const testType = (session as any).testType;    // ✅ اصلاح
+  const testType = (session as any).testType;
   const method = testType?.scoringMethod;
 
   const result: any = {

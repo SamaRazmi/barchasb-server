@@ -6,7 +6,7 @@ import { authenticateUser } from "../middleware/authMidleware";
 
 /**
  * @swagger
- * /api/user/my-tests:
+ * /api/user/extensions/my-tests:
  *   get:
  *     summary: Get the current user's test history
  *     tags: [User Profile]
@@ -42,7 +42,7 @@ router.get('/my-tests', authenticateUser, testController.getMyTestsSummary);
 
 /**
  * @swagger
- * /api/user/my-tests/{sessionId}:
+ * /api/user/extensions/my-tests/{sessionId}:
  *   get:
  *     summary: Get specific test results for the current user
  *     tags: [User Profile]
@@ -96,7 +96,7 @@ router.get('/my-tests/:sessionId', authenticateUser, testController.getMyTestDet
 
 /**
  * @swagger
- * /api/user/my-resumes:
+ * /api/user/extensions/my-resumes:
  *   get:
  *     summary: Get all user's resumes
  *     tags: [User Profile]
@@ -114,7 +114,7 @@ router.get('/my-resumes', authenticateUser, resumeController.getMyResumes);
 
 /**
  * @swagger
- * /api/user/my-resume/preview/{id}:
+ * /api/user/extensions/my-resume/preview/{id}:
  *   get:
  *     summary: Get resume url
  *     tags: [User Profile]

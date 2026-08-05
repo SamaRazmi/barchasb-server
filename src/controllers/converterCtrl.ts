@@ -4,7 +4,6 @@ import sharp from "sharp";
 import { PDFDocument, PageSizes } from "pdf-lib";
 import prisma from "../config/prisma";
 
-// ========== توابع کمکی ==========
 const logToolUsage = async (data: {
   userId: string;
   toolName: string;
@@ -32,8 +31,6 @@ const logToolUsage = async (data: {
     console.error("Error logging tool usage:", error);
   }
 };
-
-// ========== کنترلرهای اصلی ==========
 
 // convert and compress image
 export const convertAndCompressImage = async (req: Request, res: Response) => {
@@ -484,185 +481,6 @@ export const convertToPdf = async (req: Request, res: Response) => {
   }
 };
 
-// ========== گزارش‌های مدیریتی (Admin) ==========
-
-// اسامی فارسی ابزارها
-const toolNamesFa: Record<string, string> = {
-  "convert-image": "تبدیل و فشرده‌سازی تصویر",
-  "merge-pdf": "ترکیب PDF",
-  "compress-pdf": "فشرده‌سازی PDF",
-  "extract-pages": "جداسازی صفحات PDF",
-  "images-to-pdf": "تبدیل تصاویر به PDF",
-};
-const allTools = Object.keys(toolNamesFa);
-
-export const getUsersToolUsage = async (req: Request, res: Response) => {
-  try {
-    // گروه‌بندی بر اساس userId و toolName
-    const groupData = await prisma.toolUsageLog.groupBy({
-      by: ["userId", "toolName"],
-      _count: true,
-    });
-
-    // ساختاردهی خروجی
-    const userMap: Record<string, Record<string, number>> = {};
-    for (const item of groupData) {
-      const userId = item.userId;
-      const toolName = item.toolName;
-      const count = item._count;
-      if (!userMap[userId]) userMap[userId] = {};
-      userMap[userId][toolName] = count;
-    }
-
-    const result = Object.keys(userMap).map((userId) => {
-      const usage = allTools.map((tool) => ({
-        toolName: tool,
-        toolNameFa: toolNamesFa[tool],
-        count: userMap[userId][tool] || 0,
-      }));
-      return { userId, usage };
-    });
-
-    res.status(200).json({
-      success: true,
-      data: result,
-    });
-  } catch (error: any) {
-    console.error("Error in getUsersToolUsage:", error);
-    res
-      .status(500)
-      .json({ message: "خطا در دریافت گزارش کاربران", error: error.message });
-  }
-};
-
-export const getToolPopularity = async (req: Request, res: Response) => {
-  try {
-    const totalCounts = await prisma.toolUsageLog.groupBy({
-      by: ["toolName"],
-      _count: true,
-    });
-
-    const totalAll = totalCounts.reduce((sum, item) => sum + item._count, 0);
-
-    const popularity = allTools.map((tool) => {
-      const found = totalCounts.find((item) => item.toolName === tool);
-      const count = found ? found._count : 0;
-      const percent =
-        totalAll === 0 ? 0 : parseFloat(((count / totalAll) * 100).toFixed(2));
-      return {
-        toolName: tool,
-        toolNameFa: toolNamesFa[tool],
-        count,
-        percent,
-      };
-    });
-    popularity.sort((a, b) => b.count - a.count);
-
-    res.status(200).json({
-      success: true,
-      totalUsage: totalAll,
-      data: popularity,
-    });
-  } catch (error: any) {
-    console.error("Error in getToolPopularity:", error);
-    res
-      .status(500)
-      .json({ message: "خطا در دریافت محبوبیت ابزارها", error: error.message });
-  }
-};
-
-export const getToolPerformance = async (req: Request, res: Response) => {
-  try {
-    // دریافت همه رکوردها برای پردازش دستی (برای محاسبات پیچیده)
-    const allLogs = await prisma.toolUsageLog.findMany({
-      select: {
-        toolName: true,
-        status: true,
-        durationMs: true,
-        metadata: true,
-      },
-    });
-
-    const performanceMap: Record<
-      string,
-      {
-        totalInputSize: number;
-        totalOutputSize: number;
-        totalDurationMs: number;
-        successCount: number;
-        failedCount: number;
-      }
-    > = {};
-
-    for (const log of allLogs) {
-      const tool = log.toolName;
-      if (!performanceMap[tool]) {
-        performanceMap[tool] = {
-          totalInputSize: 0,
-          totalOutputSize: 0,
-          totalDurationMs: 0,
-          successCount: 0,
-          failedCount: 0,
-        };
-      }
-      const meta = log.metadata as any;
-      performanceMap[tool].totalInputSize += meta?.inputSize || 0;
-      performanceMap[tool].totalOutputSize += meta?.outputSize || 0;
-      performanceMap[tool].totalDurationMs += log.durationMs || 0;
-      if (log.status === "success") {
-        performanceMap[tool].successCount++;
-      } else {
-        performanceMap[tool].failedCount++;
-      }
-    }
-
-    const result = allTools.map((tool) => {
-      const found = performanceMap[tool];
-      if (found) {
-        const totalCalls = found.successCount + found.failedCount;
-        const successRate =
-          totalCalls === 0
-            ? 0
-            : parseFloat(((found.successCount / totalCalls) * 100).toFixed(2));
-        return {
-          toolName: tool,
-          toolNameFa: toolNamesFa[tool],
-          totalInputSize: found.totalInputSize,
-          totalOutputSize: found.totalOutputSize,
-          totalDurationMs: found.totalDurationMs,
-          successCount: found.successCount,
-          failedCount: found.failedCount,
-          totalCalls,
-          successRate,
-        };
-      } else {
-        return {
-          toolName: tool,
-          toolNameFa: toolNamesFa[tool],
-          totalInputSize: 0,
-          totalOutputSize: 0,
-          totalDurationMs: 0,
-          successCount: 0,
-          failedCount: 0,
-          totalCalls: 0,
-          successRate: 0,
-        };
-      }
-    });
-    result.sort((a, b) => b.totalCalls - a.totalCalls);
-
-    res.status(200).json({
-      success: true,
-      data: result,
-    });
-  } catch (error: any) {
-    console.error("Error in getToolPerformance:", error);
-    res
-      .status(500)
-      .json({ message: "خطا در دریافت عملکرد ابزارها", error: error.message });
-  }
-};
-
 // ========== export default ==========
 const converterController = {
   convertAndCompressImage,
@@ -670,9 +488,6 @@ const converterController = {
   compressPdf,
   extractPdfPages,
   convertToPdf,
-  getUsersToolUsage,
-  getToolPopularity,
-  getToolPerformance,
 };
 
 export default converterController;

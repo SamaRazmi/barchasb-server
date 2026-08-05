@@ -45,7 +45,6 @@ import reportRoutes from "./routes/reportRoutes";
 import TestRoutes from "./routes/TestRoutes";
 import ResumeRoutes from "./routes/ResumeRoutes";
 import converterRoutes from "./routes/converterRoutes";
-import AdminExtensionsRoutes from "./routes/AdminExtensionsRoutes";
 import UserExtensionsRoutes from "./routes/UserExtensionsRoutes";
 import walletRoutes from "./routes/WalletRoutes";
 import pricingRoutes from "./routes/PricingRoutes";
@@ -62,6 +61,7 @@ import adminVipRoutes from "./Admin/routes/VipManagementRoutes";
 import articleCategoryRoutes from "./Admin/routes/ArticleCategoryRoutes";
 import articlesRoutes from "./Admin/routes/ArticleManagementRoutes";
 import userManagementRoutes from "./Admin/routes/UserManagementRoutes";
+import ExtensionManagementRoutes from "./Admin/routes/ExtensionManagementRoutes";
 
 import SuggestionRoutes from "./routes/SuggestionRoutes";
 import profileRoutes from "./routes/UserProfileRoutes"; // مسیر صحیح
@@ -315,18 +315,18 @@ app.use("/api", vipRoutes);
 app.use("/api/tests", TestRoutes);
 app.use("/api/resume", ResumeRoutes);
 app.use("/api/converter", converterRoutes);
-app.use("/api/user", UserExtensionsRoutes);
-app.use("/api/admin/extension", AdminExtensionsRoutes);
-app.use("/api/admin/vip-codes", adminVipRoutes);
+app.use("/api/user/extensions", UserExtensionsRoutes);
 
 // admin route
 app.use("/api/admin/auth", adminAuthRoutes);
 app.use("/api/admin/admins", adminManagementRoutes);
 app.use('/api/admin/ads', adManagementRoutes);
-app.use('/api/admin/pricing', adminPricingRoutes)
+app.use('/api/admin/pricing', adminPricingRoutes);
+app.use("/api/admin/vip-codes", adminVipRoutes);
 app.use("/api/admin/article/categories", articleCategoryRoutes);
 app.use("/api/admin/articles", articlesRoutes);
 app.use("/api/admin/users", userManagementRoutes);
+app.use("/api/admin/extensions", ExtensionManagementRoutes);
 
 // ===== اضافه شده: مسیرهای مدیریت گزارش توسط ادمین =====
 // app.use("/api/admin", adminReportRoutes);
