@@ -481,3 +481,144 @@ export async function getUserSessions(userId: string) {
     };
   });
 }
+
+export async function getUserTestsSummary(userId: string) {
+  const sessions = await prisma.testSession.findMany({
+    where: { userId, status: "completed" },
+    select: {
+      id: true,
+      score: true,
+      quickResult: true,
+      finishedAt: true,
+      testType: {                    // ✅ اصلاح
+        select: {
+          name: true,
+          category: {
+            select: { name: true },
+          },
+        },
+      },
+    },
+    orderBy: { finishedAt: "desc" },
+  });
+
+  return sessions.map((s) => ({
+    sessionId: s.id,
+    testName: (s as any).testType?.name || "نامشخص",   // ✅ اصلاح
+    category: (s as any).testType?.category?.name || "بدون دسته‌بندی", // ✅ اصلاح
+    date: toJalali(s.finishedAt),
+    result: s.quickResult || "مشاهده جزئیات",
+    score: s.score?.toFixed(1) || "۰",
+  }));
+}
+
+export async function getUserTestDetail(userId: string, sessionId: string) {
+  const session = await prisma.testSession.findFirst({
+    where: { id: sessionId, userId },
+    select: {
+      id: true,
+      score: true,
+      assignedLevel: true,
+      levelResults: true,
+      startedAt: true,
+      finishedAt: true,
+      quickResult: true,
+      detailedResult: true,
+      testType: {                    // ✅ اصلاح: type → testType
+        select: {
+          name: true,
+          scoringMethod: true,
+          category: {
+            select: { name: true },
+          },
+        },
+      },
+    },
+  });
+
+  if (!session) return null;
+
+  const testType = (session as any).testType;    // ✅ اصلاح
+  const method = testType?.scoringMethod;
+
+  const result: any = {
+    baseInfo: {
+      testName: testType?.name || "نامشخص",
+      category: testType?.category?.name || "بدون دسته‌بندی",
+      score: session.score?.toFixed(1) || "۰",
+      date: toJalali(session.finishedAt),
+      startedAt: toJalali(session.startedAt),
+      stats: {
+        total: 0,
+        correct: 0,
+        wrong: 0,
+        unanswered: 0,
+      },
+    },
+    analysis: session.detailedResult || session.levelResults || {},
+  };
+
+  if (session.detailedResult) {
+    const detailed = session.detailedResult as any;
+    if (detailed.baseInfo?.stats) {
+      result.baseInfo.stats = detailed.baseInfo.stats;
+    }
+  }
+
+  if (method === "weighted_level") {
+    result.assignedLevel = session.assignedLevel;
+  }
+
+  return result;
+}
+
+export async function getUserResume(userId: string) {
+  const resume = await prisma.resume.findFirst({
+    where: { userId },
+  });
+
+  if (!resume) return null;
+
+  return {
+    id: resume.id,
+    fullName: resume.fullName,
+    phoneNumber: resume.phoneNumber,
+    birthDate: resume.birthDate,
+    gender: resume.gender,
+    maritalStatus: resume.maritalStatus,
+    address: resume.address,
+    expectedSalary: resume.expectedSalary,
+    cooperationType: resume.cooperationType,
+    hasInsuranceHistory: resume.hasInsuranceHistory,
+    willingToGoOnMission: resume.willingToGoOnMission,
+    skills: resume.skills,
+    education: resume.education,
+    workExperience: resume.workExperience,
+    certificates: resume.certificates,
+    fileUrl: resume.fileUrl,
+    updatedAt: toJalali(resume.updatedAt),
+  };
+}
+
+export async function getUserConverterUsage(userId: string) {
+  const logs = await prisma.toolUsageLog.groupBy({
+    by: ["toolName"],
+    where: { userId },
+    _count: { toolName: true },
+    orderBy: { _count: { toolName: "desc" } },
+  });
+
+  const toolNameMap: Record<string, string> = {
+    "convert-image": "تبدیل و فشرده‌سازی تصویر",
+    "merge-pdf": "ادغام PDF",
+    "compress-pdf": "فشرده‌سازی PDF",
+    "extract-pages": "استخراج صفحات PDF",
+    "images-to-pdf": "تبدیل تصاویر به PDF",
+  };
+
+  return logs.map((log) => ({
+    toolName: log.toolName,
+    toolNameFa: toolNameMap[log.toolName] || log.toolName,
+    count: log._count.toolName,
+  }));
+}

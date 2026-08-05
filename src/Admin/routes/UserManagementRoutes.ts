@@ -408,4 +408,92 @@ router.get("/:id/financial", UserManagementCtrl.financial);
  */
 router.get("/:id/sessions", UserManagementCtrl.sessions);
 
+/**
+ * @swagger
+ * /api/admin/users/{id}/tests/summary:
+ *   get:
+ *     tags: [Admin-Users]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200: { description: موفق }
+ *       401: { description: احراز هویت نشده }
+ *       403: { description: دسترسی غیرمجاز }
+ *       404: { description: کاربر یافت نشد }
+ *       500: { description: خطای سرور }
+ */
+router.get("/:id/tests/summary", UserManagementCtrl.testSummary);
+
+/**
+ * @swagger
+ * /api/admin/users/{id}/tests/{sessionId}/detail:
+ *   get:
+ *     tags: [Admin-Users]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema: { type: string }
+ *       - name: sessionId
+ *         in: path
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200: { description: موفق }
+ *       401: { description: احراز هویت نشده }
+ *       403: { description: دسترسی غیرمجاز }
+ *       404: { description: کاربر یا جلسه یافت نشد }
+ *       500: { description: خطای سرور }
+ */
+router.get("/:id/tests/:sessionId/detail", UserManagementCtrl.testDetail);
+
+/**
+ * @swagger
+ * /api/admin/users/{id}/resume:
+ *   get:
+ *     tags: [Admin-Users]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200: { description: موفق }
+ *       401: { description: احراز هویت نشده }
+ *       403: { description: دسترسی غیرمجاز }
+ *       404: { description: رزومه یافت نشد }
+ *       500: { description: خطای سرور }
+ */
+router.get("/:id/resume", UserManagementCtrl.resume);
+
+/**
+ * @swagger
+ * /api/admin/users/{id}/converter-usage:
+ *   get:
+ *     tags: [Admin-Users]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200: { description: موفق }
+ *       401: { description: احراز هویت نشده }
+ *       403: { description: دسترسی غیرمجاز }
+ *       404: { description: کاربر یافت نشد }
+ *       500: { description: خطای سرور }
+ */
+router.get("/:id/converter-usage", UserManagementCtrl.converterUsage);
+
 export default router;

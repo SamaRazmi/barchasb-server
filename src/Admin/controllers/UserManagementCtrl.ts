@@ -165,6 +165,81 @@ const UserManagementCtrl = {
       res.status(500).json({ status: "error", message: error.message });
     }
   },
+
+  testSummary: async (req: AuthRequest, res: Response) => {
+    try {
+      const admin = req.admin;
+      if (!admin) return res.status(401).json({ status: "error", message: "احراز هویت نشده" });
+      checkUserPermission(admin);
+
+      const userId = toStr(req.params.id);
+      if (!userId) return res.status(400).json({ status: "error", message: "شناسه کاربر نامعتبر" });
+
+      const summary = await UserManagementService.getUserTestsSummary(userId);
+      res.status(200).json({ status: "success", data: summary });
+    } catch (error: any) {
+      console.error("Error fetching user test summary:", error);
+      res.status(500).json({ status: "error", message: error.message });
+    }
+  },
+
+  testDetail: async (req: AuthRequest, res: Response) => {
+    try {
+      const admin = req.admin;
+      if (!admin) return res.status(401).json({ status: "error", message: "احراز هویت نشده" });
+      checkUserPermission(admin);
+
+      const userId = toStr(req.params.id);
+      const sessionId = toStr(req.params.sessionId);
+      if (!userId || !sessionId) {
+        return res.status(400).json({ status: "error", message: "شناسه کاربر یا جلسه نامعتبر" });
+      }
+
+      const detail = await UserManagementService.getUserTestDetail(userId, sessionId);
+      if (!detail) return res.status(404).json({ status: "error", message: "جلسه آزمون یافت نشد" });
+
+      res.status(200).json({ status: "success", data: detail });
+    } catch (error: any) {
+      console.error("Error fetching user test detail:", error);
+      res.status(500).json({ status: "error", message: error.message });
+    }
+  },
+
+  resume: async (req: AuthRequest, res: Response) => {
+    try {
+      const admin = req.admin;
+      if (!admin) return res.status(401).json({ status: "error", message: "احراز هویت نشده" });
+      checkUserPermission(admin);
+
+      const userId = toStr(req.params.id);
+      if (!userId) return res.status(400).json({ status: "error", message: "شناسه کاربر نامعتبر" });
+
+      const resume = await UserManagementService.getUserResume(userId);
+      if (!resume) return res.status(404).json({ status: "error", message: "رزومه‌ای برای این کاربر یافت نشد" });
+
+      res.status(200).json({ status: "success", data: resume });
+    } catch (error: any) {
+      console.error("Error fetching user resume:", error);
+      res.status(500).json({ status: "error", message: error.message });
+    }
+  },
+
+  converterUsage: async (req: AuthRequest, res: Response) => {
+    try {
+      const admin = req.admin;
+      if (!admin) return res.status(401).json({ status: "error", message: "احراز هویت نشده" });
+      checkUserPermission(admin);
+
+      const userId = toStr(req.params.id);
+      if (!userId) return res.status(400).json({ status: "error", message: "شناسه کاربر نامعتبر" });
+
+      const usage = await UserManagementService.getUserConverterUsage(userId);
+      res.status(200).json({ status: "success", data: usage });
+    } catch (error: any) {
+      console.error("Error fetching user converter usage:", error);
+      res.status(500).json({ status: "error", message: error.message });
+    }
+  },
 };
 
 export default UserManagementCtrl;
