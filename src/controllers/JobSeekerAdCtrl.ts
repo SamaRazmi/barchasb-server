@@ -1,3 +1,4 @@
+// controllers/JobSeekerAdCtrl.ts
 import { Request, Response } from "express";
 import prisma from "../config/prisma";
 import { transformFileUrls, transformS3Url } from "../middleware/upload";
@@ -439,6 +440,7 @@ export const getAllJobSeekerAds = async (req: Request, res: Response) => {
         include: {
           ownerRelation: {
             select: {
+              id: true,
               name: true,
               lastName: true,
               phone: true,
@@ -457,6 +459,7 @@ export const getAllJobSeekerAds = async (req: Request, res: Response) => {
           ...ad,
           owner: ad.ownerRelation
             ? {
+                id: ad.ownerRelation.id,
                 fullName:
                   `${ad.ownerRelation.name || ""} ${ad.ownerRelation.lastName || ""}`.trim(),
                 phoneNumber: ad.ownerRelation.phone,
@@ -503,6 +506,7 @@ export const getJobSeekerAdById = async (req: Request, res: Response) => {
       include: {
         ownerRelation: {
           select: {
+            id: true,
             name: true,
             lastName: true,
             phone: true,
@@ -518,6 +522,7 @@ export const getJobSeekerAdById = async (req: Request, res: Response) => {
       ...(ad as any),
       owner: (ad as any).ownerRelation
         ? {
+            id: (ad as any).ownerRelation.id,
             fullName:
               `${(ad as any).ownerRelation.name || ""} ${(ad as any).ownerRelation.lastName || ""}`.trim(),
             phoneNumber: (ad as any).ownerRelation.phone,
@@ -561,6 +566,7 @@ export const getAdsByOwner = async (req: Request, res: Response) => {
         include: {
           ownerRelation: {
             select: {
+              id: true,
               name: true,
               lastName: true,
               phone: true,
@@ -578,6 +584,7 @@ export const getAdsByOwner = async (req: Request, res: Response) => {
           ...ad,
           owner: ad.ownerRelation
             ? {
+                id: ad.ownerRelation.id,
                 fullName:
                   `${ad.ownerRelation.name || ""} ${ad.ownerRelation.lastName || ""}`.trim(),
                 phoneNumber: ad.ownerRelation.phone,
@@ -632,6 +639,7 @@ export const getJobSeekerAdByOwnerAndId = async (
       include: {
         ownerRelation: {
           select: {
+            id: true,
             name: true,
             lastName: true,
             phone: true,
@@ -645,6 +653,7 @@ export const getJobSeekerAdByOwnerAndId = async (
       ...(ad as any),
       owner: (ad as any).ownerRelation
         ? {
+            id: (ad as any).ownerRelation.id,
             fullName:
               `${(ad as any).ownerRelation.name || ""} ${(ad as any).ownerRelation.lastName || ""}`.trim(),
             phoneNumber: (ad as any).ownerRelation.phone,

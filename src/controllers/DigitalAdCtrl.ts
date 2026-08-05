@@ -1,6 +1,9 @@
+// controllers/DigitalAdCtrl.ts
 import { Request, Response } from "express";
 import prisma from "../config/prisma";
-import { transformFileUrls } from "../middleware/upload";
+import { transformFileUrls, transformS3Url } from "../middleware/upload";
+import fs from "fs/promises";
+import path from "path";
 import { AdType, TimeUnit } from "@prisma/client";
 
 // ==========================================
@@ -31,6 +34,11 @@ const ALLOWED_FIELDS = [
   "province",
   "city",
   "phoneOther",
+  "rejectionReason",
+  "approvedBy",
+  "rejectedBy",
+  "enableChat",
+  "enablePhone",
 ] as const;
 
 // ==========================================
@@ -46,8 +54,15 @@ function filterAdData(data: any): any {
   return filtered;
 }
 
+// تابع کمکی برای تبدیل params به string
+const toStr = (value: string | string[] | undefined): string => {
+  if (typeof value === "string") return value;
+  if (Array.isArray(value) && value.length > 0) return value[0];
+  return "";
+};
+
 // ==========================================
-// 📌 ایجاد آگهی دیجیتال
+// 📌 ایجاد آگهی دیجیتال (همان کد قبلی)
 // ==========================================
 export const createDigitalAd = async (req: Request, res: Response) => {
   console.log("\n🚀 createDigitalAd START");
@@ -82,6 +97,8 @@ export const createDigitalAd = async (req: Request, res: Response) => {
       const toBool = (v: any) => v === "true" || v === true;
       updateData.remote = toBool(req.body.remote);
       updateData.thursdayHalf = toBool(req.body.thursdayHalf);
+      updateData.enableChat = toBool(req.body.enableChat);
+      updateData.enablePhone = toBool(req.body.enablePhone);
 
       // پردازش آرایه‌ها
       const parseArray = (field: string) => {
@@ -274,17 +291,7 @@ export const getAllDigitalAds = async (req: Request, res: Response) => {
     }
 
     // 5️⃣ محدوده بودجه (minBudget و maxBudget از نوع string هستند)
-    // برای مقایسه عددی از $queryRaw استفاده می‌کنیم.
-    // اما با توجه به اینکه می‌خواهیم از Prisma ORM استفاده کنیم،
-    // از `prisma.$queryRaw` برای فیلتر عددی استفاده می‌کنیم.
-    const minBudget = req.query.minBudget as string;
-    const maxBudget = req.query.maxBudget as string;
-    if (minBudget || maxBudget) {
-      // زیرا نمی‌توانیم روی String عملگر عددی بزنیم، از raw query استفاده می‌کنیم.
-      // برای سادگی در این نمونه، این فیلتر را با استفاده از شرط‌های جایگزین پیاده‌سازی می‌کنیم.
-      // بهتر است از `$queryRaw` استفاده شود ولی برای جلوگیری از پیچیدگی، فعلاً غیرفعال.
-      // (می‌توانید در صورت نیاز با raw query پیاده‌سازی کنید)
-    }
+    // برای سادگی، از فیلتر عددی صرفنظر شده (می‌توان با raw query پیاده‌سازی کرد)
 
     // 6️⃣ واحد زمان (durationUnit) و مقدار زمان (durationAmount)
     if (req.query.durationUnit) {
@@ -316,6 +323,7 @@ export const getAllDigitalAds = async (req: Request, res: Response) => {
         include: {
           ownerRelation: {
             select: {
+              id: true,
               name: true,
               lastName: true,
               phone: true,
@@ -337,6 +345,7 @@ export const getAllDigitalAds = async (req: Request, res: Response) => {
           ...ad,
           owner: ad.ownerRelation
             ? {
+                id: ad.ownerRelation.id,
                 fullName:
                   `${ad.ownerRelation.name || ""} ${ad.ownerRelation.lastName || ""}`.trim(),
                 phoneNumber: ad.ownerRelation.phone,
@@ -390,6 +399,7 @@ export const getDigitalAdById = async (req: Request, res: Response) => {
       include: {
         ownerRelation: {
           select: {
+            id: true,
             name: true,
             lastName: true,
             phone: true,
@@ -408,6 +418,7 @@ export const getDigitalAdById = async (req: Request, res: Response) => {
       ...(ad as any),
       owner: (ad as any).ownerRelation
         ? {
+            id: (ad as any).ownerRelation.id,
             fullName:
               `${(ad as any).ownerRelation.name || ""} ${(ad as any).ownerRelation.lastName || ""}`.trim(),
             phoneNumber: (ad as any).ownerRelation.phone,
@@ -432,7 +443,344 @@ export const getDigitalAdById = async (req: Request, res: Response) => {
   }
 };
 
-//  helper
+// ==========================================
+// 📌 دریافت آگهی‌های دیجیتال یک کاربر خاص (جدید)
+// ==========================================
+export const getDigitalAdsByOwner = async (req: Request, res: Response) => {
+  try {
+    const ownerId = toStr(req.params.ownerId);
+    if (!ownerId) {
+      return res.status(400).json({ message: "شناسه کاربر نامعتبر است" });
+    }
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    const [ads, total] = await Promise.all([
+      prisma.digitalAd.findMany({
+        where: { owner: ownerId },
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+        include: {
+          ownerRelation: {
+            select: {
+              id: true,
+              name: true,
+              lastName: true,
+              phone: true,
+            },
+          },
+        },
+      }),
+      prisma.digitalAd.count({ where: { owner: ownerId } }),
+    ]);
+
+    const formattedAds = await Promise.all(
+      (ads as any[]).map(async (ad) => {
+        const enhancement = await getAdEnhancement(ad.id, AdType.DigitalAd);
+        return {
+          ...ad,
+          owner: ad.ownerRelation
+            ? {
+                id: ad.ownerRelation.id,
+                fullName:
+                  `${ad.ownerRelation.name || ""} ${ad.ownerRelation.lastName || ""}`.trim(),
+                phoneNumber: ad.ownerRelation.phone,
+              }
+            : null,
+          ownerRelation: undefined,
+          enhancements: {
+            isSpecial: enhancement.isSpecial,
+            specialStartDate: enhancement.specialStartDate,
+            specialEndDate: enhancement.specialEndDate,
+            isLadder: enhancement.isLadder,
+            ladders: enhancement.ladders,
+          },
+        };
+      }),
+    );
+
+    res.status(200).json({
+      status: "success",
+      data: formattedAds,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error: any) {
+    console.error("❌ ERROR GETTING DIGITAL ADS BY OWNER:", error);
+    res.status(500).json({ status: "error", message: error.message });
+  }
+};
+
+// ==========================================
+// 📌 گرفتن یک آگهی دیجیتال مشخص از یک کاربر مشخص (جدید)
+// ==========================================
+export const getDigitalAdByOwnerAndId = async (req: Request, res: Response) => {
+  try {
+    const ownerId = toStr(req.params.ownerId);
+    const adId = toStr(req.params.adId);
+    if (!ownerId || !adId) {
+      return res.status(400).json({ message: "شناسه نامعتبر است" });
+    }
+    const ad = await prisma.digitalAd.findFirst({
+      where: {
+        id: adId,
+        owner: ownerId,
+      },
+      include: {
+        ownerRelation: {
+          select: {
+            id: true,
+            name: true,
+            lastName: true,
+            phone: true,
+          },
+        },
+      },
+    });
+    if (!ad) return res.status(404).json({ message: "آگهی یافت نشد" });
+    const enhancement = await getAdEnhancement(ad.id, AdType.DigitalAd);
+    const formattedAd = {
+      ...(ad as any),
+      owner: (ad as any).ownerRelation
+        ? {
+            id: (ad as any).ownerRelation.id,
+            fullName:
+              `${(ad as any).ownerRelation.name || ""} ${(ad as any).ownerRelation.lastName || ""}`.trim(),
+            phoneNumber: (ad as any).ownerRelation.phone,
+          }
+        : null,
+      ownerRelation: undefined,
+      enhancements: {
+        isSpecial: enhancement.isSpecial,
+        specialStartDate: enhancement.specialStartDate,
+        specialEndDate: enhancement.specialEndDate,
+        isLadder: enhancement.isLadder,
+        ladders: enhancement.ladders,
+      },
+    };
+    res.status(200).json({ status: "success", ad: formattedAd });
+  } catch (err: any) {
+    console.error("❌ ERROR GETTING DIGITAL AD BY OWNER AND ID:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ==========================================
+// 📌 ویرایش آگهی دیجیتال (جدید)
+// ==========================================
+export const updateDigitalAd = async (req: Request, res: Response) => {
+  try {
+    const ownerId = toStr(req.params.ownerId);
+    const adId = toStr(req.params.adId);
+    if (!ownerId || !adId) {
+      return res.status(400).json({ message: "شناسه نامعتبر است" });
+    }
+
+    // پردازش فایل‌های جدید (تصاویر)
+    let newUploadedFiles = (req as any).files || [];
+    let newImages: any[] = [];
+    if (newUploadedFiles.length > 0) {
+      const transformed = transformFileUrls(newUploadedFiles);
+      newImages = transformed.map((file: any) => ({
+        url: file.location || file.path,
+        isMain: false,
+      }));
+    }
+
+    // تصاویر موجود (از سمت کلاینت)
+    let imagesFromApi: any[] = [];
+    if (req.body.imagesFromApi) {
+      try {
+        imagesFromApi = JSON.parse(req.body.imagesFromApi);
+      } catch (err) {
+        console.error("❌ Invalid imagesFromApi JSON:", err);
+        imagesFromApi = [];
+      }
+    }
+
+    // ترکیب تصاویر قدیمی و جدید
+    const finalImages = [
+      ...imagesFromApi.map((img) => ({
+        url: img.url,
+        isMain: img.isMain || false,
+      })),
+      ...newImages,
+    ];
+
+    // اگر هیچ تصویری به عنوان اصلی تعیین نشده، اولین تصویر را اصلی کن
+    if (!finalImages.some((img) => img.isMain) && finalImages.length > 0) {
+      finalImages[0].isMain = true;
+    }
+
+    // پردازش آرایه‌ها (مشابه create)
+    let requiredSkills = req.body.requiredSkills || [];
+    if (typeof requiredSkills === "string") {
+      try {
+        requiredSkills = JSON.parse(requiredSkills);
+      } catch {
+        requiredSkills = [];
+      }
+    }
+    if (!Array.isArray(requiredSkills)) requiredSkills = [];
+
+    let projectNames = req.body.projectNames || [];
+    if (typeof projectNames === "string") {
+      try {
+        projectNames = JSON.parse(projectNames);
+      } catch {
+        projectNames = [];
+      }
+    }
+    if (!Array.isArray(projectNames)) projectNames = [];
+
+    let projectDescriptions = req.body.projectDescriptions || [];
+    if (typeof projectDescriptions === "string") {
+      try {
+        projectDescriptions = JSON.parse(projectDescriptions);
+      } catch {
+        projectDescriptions = [];
+      }
+    }
+    if (!Array.isArray(projectDescriptions)) projectDescriptions = [];
+
+    // ساخت شیء به‌روزرسانی
+    const updateData: any = {
+      ...req.body,
+      requiredSkills,
+      projectNames,
+      projectDescriptions,
+      images: finalImages,
+    };
+
+    // حذف فیلدهای اضافی که نباید در Prisma استفاده شوند
+    delete updateData.imagesFromApi;
+
+    // ─── اعتبارسنجی و تصحیح Enumها ───
+    const validPerson = ["self", "other"];
+    if (updateData.person && !validPerson.includes(updateData.person)) {
+      updateData.person = "self";
+    }
+
+    if (updateData.paymentMethod) {
+      if (updateData.paymentMethod === "Bank card")
+        updateData.paymentMethod = "Bank_card";
+      const validPayment = ["Subscription", "Wallet", "Bank_card"];
+      if (!validPayment.includes(updateData.paymentMethod)) {
+        updateData.paymentMethod = "Bank_card";
+      }
+    } else {
+      updateData.paymentMethod = "Bank_card";
+    }
+
+    const validStatus = [
+      "pending",
+      "approved",
+      "rejected",
+      "expired",
+      "pending_payment",
+      "updated",
+    ];
+    if (updateData.adStatus && !validStatus.includes(updateData.adStatus)) {
+      updateData.adStatus = "pending";
+    }
+
+    // durationUnit
+    if (updateData.durationUnit) {
+      const validUnits = Object.values(TimeUnit);
+      if (!validUnits.includes(updateData.durationUnit)) {
+        updateData.durationUnit = "day";
+      }
+    }
+
+    // اطمینان از تبدیل بولی برای enableChat و enablePhone
+    const toBool = (v: any) => v === "true" || v === true;
+    if (updateData.enableChat !== undefined) {
+      updateData.enableChat = toBool(updateData.enableChat);
+    }
+    if (updateData.enablePhone !== undefined) {
+      updateData.enablePhone = toBool(updateData.enablePhone);
+    }
+
+    // فیلتر کردن داده‌ها با لیست مجاز
+    const filteredData = filterAdData(updateData);
+
+    // به‌روزرسانی در دیتابیس
+    const updatedAd = await prisma.digitalAd.update({
+      where: { id: adId },
+      data: filteredData,
+    });
+
+    if (!updatedAd) return res.status(404).json({ message: "آگهی یافت نشد" });
+
+    res.status(200).json({ status: "success", updatedAd });
+  } catch (err: any) {
+    console.error("❌ ERROR UPDATING DIGITAL AD:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ==========================================
+// 📌 حذف آگهی دیجیتال (فقط مالک) (جدید)
+// ==========================================
+export const deleteDigitalAd = async (req: Request, res: Response) => {
+  try {
+    const adId = toStr(req.params.adId);
+    const userId = (req as any).user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "احراز هویت لازم است" });
+    }
+    if (!adId) {
+      return res.status(400).json({ message: "شناسه آگهی نامعتبر است" });
+    }
+
+    const ad = await prisma.digitalAd.findFirst({
+      where: { id: adId, owner: userId },
+    });
+
+    if (!ad) {
+      return res
+        .status(404)
+        .json({ message: "آگهی یافت نشد یا دسترسی ندارید." });
+    }
+
+    // حذف فایل‌های فیزیکی (اگر تصاویر به صورت محلی ذخیره شده باشند)
+    const images = ad.images as any[];
+    if (images && images.length > 0) {
+      for (const img of images) {
+        if (img.url && !img.url.startsWith("http")) {
+          const filePath = path.join(__dirname, "..", img.url);
+          try {
+            await fs.unlink(filePath);
+          } catch (err) {
+            console.warn(`حذف فایل ${filePath} ناموفق:`, err);
+          }
+        }
+      }
+    }
+
+    await prisma.digitalAd.delete({
+      where: { id: adId },
+    });
+
+    res.status(200).json({ message: "آگهی دیجیتال با موفقیت حذف شد." });
+  } catch (err: any) {
+    console.error("❌ ERROR DELETING DIGITAL AD:", err);
+    res
+      .status(500)
+      .json({ message: "خطای سرور در حذف آگهی", error: err.message });
+  }
+};
+
+// ==========================================
+// helper (بدون تغییر)
+// ==========================================
 async function getAdEnhancement(adId: string, adType: AdType) {
   const enhancement = await prisma.adEnhancement.findFirst({
     where: { adId, adType },
@@ -475,6 +823,10 @@ const DigitalAdCtrl = {
   createDigitalAd,
   getAllDigitalAds,
   getDigitalAdById,
+  getDigitalAdsByOwner,
+  getDigitalAdByOwnerAndId,
+  updateDigitalAd,
+  deleteDigitalAd,
 };
 
 export default DigitalAdCtrl;

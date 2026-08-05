@@ -1,3 +1,4 @@
+// controllers/SellerAdCtrl.ts
 import { Request, Response } from "express";
 import prisma from "../config/prisma";
 import { transformFileUrls } from "../middleware/upload";
@@ -141,6 +142,12 @@ export const createSellerAd = async (req: Request, res: Response) => {
       }
       if (!updateData.images) updateData.images = [];
       if (!updateData.extraFeatures) updateData.extraFeatures = {};
+
+      // ✅ اضافه کردن تبدیل priceIRT به عدد (مانند بخش multipart)
+      if (updateData.priceIRT !== undefined) {
+        const priceStr = String(updateData.priceIRT).replace(/,/g, "");
+        updateData.priceIRT = parseInt(priceStr) || 0;
+      }
     }
 
     // ─── اعتبارسنجی فیلدهای اجباری ───
@@ -317,6 +324,7 @@ export const getAllSellerAds = async (req: Request, res: Response) => {
         include: {
           ownerRelation: {
             select: {
+              id: true,
               name: true,
               lastName: true,
               phone: true,
@@ -336,6 +344,7 @@ export const getAllSellerAds = async (req: Request, res: Response) => {
           ...ad,
           owner: ad.ownerRelation
             ? {
+                id: ad.ownerRelation.id,
                 fullName:
                   `${ad.ownerRelation.name || ""} ${ad.ownerRelation.lastName || ""}`.trim(),
                 phoneNumber: ad.ownerRelation.phone,
@@ -486,6 +495,7 @@ export const getSellerAdsByOwnerWithFilters = async (
         include: {
           ownerRelation: {
             select: {
+              id: true,
               name: true,
               lastName: true,
               phone: true,
@@ -505,6 +515,7 @@ export const getSellerAdsByOwnerWithFilters = async (
           ...ad,
           owner: ad.ownerRelation
             ? {
+                id: ad.ownerRelation.id,
                 fullName:
                   `${ad.ownerRelation.name || ""} ${ad.ownerRelation.lastName || ""}`.trim(),
                 phoneNumber: ad.ownerRelation.phone,
@@ -552,6 +563,7 @@ export const getSellerAdById = async (req: Request, res: Response) => {
       include: {
         ownerRelation: {
           select: {
+            id: true,
             name: true,
             lastName: true,
             phone: true,
@@ -570,6 +582,7 @@ export const getSellerAdById = async (req: Request, res: Response) => {
       ...(ad as any),
       owner: (ad as any).ownerRelation
         ? {
+            id: (ad as any).ownerRelation.id,
             fullName:
               `${(ad as any).ownerRelation.name || ""} ${(ad as any).ownerRelation.lastName || ""}`.trim(),
             phoneNumber: (ad as any).ownerRelation.phone,
@@ -615,6 +628,7 @@ export const getAdsByOwner = async (req: Request, res: Response) => {
         include: {
           ownerRelation: {
             select: {
+              id: true,
               name: true,
               lastName: true,
               phone: true,
@@ -633,6 +647,7 @@ export const getAdsByOwner = async (req: Request, res: Response) => {
           ...ad,
           owner: ad.ownerRelation
             ? {
+                id: ad.ownerRelation.id,
                 fullName:
                   `${ad.ownerRelation.name || ""} ${ad.ownerRelation.lastName || ""}`.trim(),
                 phoneNumber: ad.ownerRelation.phone,
@@ -686,6 +701,7 @@ export const getSellerAdByOwnerAndId = async (req: Request, res: Response) => {
       include: {
         ownerRelation: {
           select: {
+            id: true,
             name: true,
             lastName: true,
             phone: true,
@@ -702,6 +718,7 @@ export const getSellerAdByOwnerAndId = async (req: Request, res: Response) => {
       ...(ad as any),
       owner: (ad as any).ownerRelation
         ? {
+            id: (ad as any).ownerRelation.id,
             fullName:
               `${(ad as any).ownerRelation.name || ""} ${(ad as any).ownerRelation.lastName || ""}`.trim(),
             phoneNumber: (ad as any).ownerRelation.phone,
@@ -911,21 +928,7 @@ export const deleteSellerAd = async (req: Request, res: Response) => {
   }
 };
 
-// =================== export default ===================
-const SellerAdCtrl = {
-  createSellerAd,
-  getAllSellerAds,
-  getSellerAdById,
-  getAdsByOwner,
-  getSellerAdByOwnerAndId,
-  updateSellerAd,
-  deleteSellerAd,
-  getSellerAdsByOwnerWithFilters, // 👈 تابع جدید اضافه شد
-};
-
-export default SellerAdCtrl;
-
-//  helper
+// =================== helper ===================
 async function getAdEnhancement(adId: string, adType: AdType) {
   const enhancement = await prisma.adEnhancement.findFirst({
     where: { adId, adType },
@@ -962,3 +965,17 @@ async function getAdEnhancement(adId: string, adType: AdType) {
     ladders: enhancement.ladders || [],
   };
 }
+
+// =================== export default ===================
+const SellerAdCtrl = {
+  createSellerAd,
+  getAllSellerAds,
+  getSellerAdById,
+  getAdsByOwner,
+  getSellerAdByOwnerAndId,
+  updateSellerAd,
+  deleteSellerAd,
+  getSellerAdsByOwnerWithFilters,
+};
+
+export default SellerAdCtrl;

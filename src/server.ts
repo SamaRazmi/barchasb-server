@@ -65,6 +65,7 @@ import ExtensionManagementRoutes from "./Admin/routes/ExtensionManagementRoutes"
 
 import SuggestionRoutes from "./routes/SuggestionRoutes";
 import profileRoutes from "./routes/UserProfileRoutes"; // مسیر صحیح
+import AdsRouter from "./routes/AdsRouter";
 // ===== اضافه شده: مسیرهای مدیریت گزارش توسط ادمین =====
 // import adminReportRoutes from "./routes/admin/adminReportRoutes"; // ✅ کامنت شد
 
@@ -158,7 +159,7 @@ app.use(cors(corsOptions));
 // 3. Rate Limiting: جلوگیری از حملات Brute Force و DoS
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // ۱۵ دقیقه
-  max: 1000, // حداکثر ۱۰۰ درخواست از هر IP در بازه زمانی
+  max: 5000, // افزایش یافته از ۱۰۰۰ به ۵۰۰۰ برای کاهش خطای حد مجاز در بازه زمانی طولانی‌تر
   message: {
     success: false,
     message:
@@ -297,6 +298,7 @@ app.use("/api", OtpRoutes);
 app.use("/api", EmployerAdRoutes);
 app.use("/api", SellerAdRoutes);
 app.use("/api", JobSeekerAdRoutes);
+app.use("/api", AdsRouter);
 app.use("/api", DigitalAdRoutes);
 app.use("/api", AdMarkRoutes);
 app.use("/api", RecentViewRoutes);

@@ -283,8 +283,10 @@ router.get("/ads/employer", EmployerAdCtrl.getAllEmployerAds);
  * @swagger
  * /api/ads/employer/owner/{ownerId}:
  *   get:
- *     summary: دریافت آگهی‌های یک کاربر خاص (با پیجینیشن)
+ *     summary: دریافت آگهی‌های یک کاربر خاص (مالک) - نیازمند احراز هویت
  *     tags: [EmployerAds]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - name: ownerId
  *         in: path
@@ -332,8 +334,16 @@ router.get("/ads/employer", EmployerAdCtrl.getAllEmployerAds);
  *                       type: integer
  *       400:
  *         description: شناسه نامعتبر
+ *       401:
+ *         description: عدم احراز هویت
+ *       500:
+ *         description: خطای سرور
  */
-router.get("/ads/employer/owner/:ownerId", EmployerAdCtrl.getAdsByOwner);
+router.get(
+  "/ads/employer/owner/:ownerId",
+  authenticateToken, // ✅ اضافه شد
+  EmployerAdCtrl.getAdsByOwner,
+);
 
 /* ===================== GET SINGLE ===================== */
 /**
