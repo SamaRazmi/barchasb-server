@@ -157,6 +157,47 @@ router.get("/job-categories/sub/all", JobCategoryCtrl.getAllSubCategories);
 
 /**
  * @swagger
+ * /api/job-categories/{id}:
+ *   get:
+ *     summary: دریافت یک دسته بر اساس شناسه
+ *     tags: [JobCategories]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: شناسه دسته
+ *     responses:
+ *       200:
+ *         description: موفق
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 category:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     parentId:
+ *                       type: string
+ *                       nullable: true
+ *       404:
+ *         description: دسته یافت نشد
+ *       500:
+ *         description: خطای سرور
+ */
+router.get("/job-categories/:id", JobCategoryCtrl.getCategoryById);
+
+/**
+ * @swagger
  * /api/job-categories/main/{mainId}/jobs:
  *   get:
  *     summary: دریافت آگهی‌های شغلی بر اساس دسته اصلی (فیلتر سمت سرور)

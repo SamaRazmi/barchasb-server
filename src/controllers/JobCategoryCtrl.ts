@@ -1,4 +1,3 @@
-// controllers/JobCategoryCtrl.ts
 import { Request, Response } from "express";
 import prisma from "../config/prisma";
 
@@ -70,6 +69,7 @@ const JobCategoryCtrl = {
 
   /**
    * جستجو فقط در زیردسته‌ها (دسته‌هایی که parent !== null)
+   * ✅ اصلاح شده: اضافه کردن parentId در خروجی
    */
   searchSubCategories: async (req: Request, res: Response) => {
     try {
@@ -91,6 +91,7 @@ const JobCategoryCtrl = {
         select: {
           id: true,
           name: true,
+          parent: true,
         },
         orderBy: { name: "asc" },
       });
@@ -100,7 +101,50 @@ const JobCategoryCtrl = {
         categories: subCategories.map((cat) => ({
           _id: cat.id,
           name: cat.name,
+          parentId: cat.parent,
         })),
+      });
+    } catch (error: any) {
+      console.error(error);
+      res.status(500).json({ status: "error", message: error.message });
+    }
+  },
+
+  /**
+   * دریافت یک دسته بر اساس id (برای استفاده در فرانت‌اند)
+   * ✅ اضافه شد تا درخواست fetchCategoryById در فرانت‌اند پاسخ داده شود
+   */
+  getCategoryById: async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params as { id: string };
+      if (!id) {
+        return res
+          .status(400)
+          .json({ status: "error", message: "id required" });
+      }
+
+      const category = await prisma.jobCategory.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          name: true,
+          parent: true,
+        },
+      });
+
+      if (!category) {
+        return res
+          .status(404)
+          .json({ status: "error", message: "Category not found" });
+      }
+
+      res.status(200).json({
+        status: "success",
+        category: {
+          _id: category.id,
+          name: category.name,
+          parentId: category.parent,
+        },
       });
     } catch (error: any) {
       console.error(error);
@@ -139,7 +183,7 @@ const JobCategoryCtrl = {
 
   /**
    * دریافت آگهی‌های شغلی بر اساس دسته اصلی (فیلتر سمت سرور)
-   * ⚠️ این تابع placeholder است و باید بر اساس مدل‌های واقعی توسعه داده شود.
+   * ⚠️ placeholder
    */
   getJobsByMainCategory: async (req: Request, res: Response) => {
     try {
@@ -150,7 +194,6 @@ const JobCategoryCtrl = {
           .json({ status: "error", message: "mainId required" });
       }
 
-      // 1. پیدا کردن همه زیردسته‌های این دسته اصلی
       const subCategories = await prisma.jobCategory.findMany({
         where: { parent: mainId as string },
         select: { id: true },
@@ -161,10 +204,7 @@ const JobCategoryCtrl = {
         return res.status(200).json({ status: "success", jobs: [] });
       }
 
-      // 2. در اینجا باید بر اساس مدل‌های واقعی (مثلاً JobSeekerAd یا EmployerAd) کوئری بزنید.
-      //    فعلاً آرایه خالی برگردانده می‌شود.
       const jobs: any[] = [];
-
       res.status(200).json({
         status: "success",
         jobs: jobs,
