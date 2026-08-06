@@ -1,4 +1,5 @@
 import prisma from "../../../config/prisma";
+import { randomUUID } from 'crypto';
 
 const questionsData = [
   // Vocabulary & Advanced Expressions - المفردات والتعبيرات المتقدمة
@@ -296,6 +297,7 @@ const ArabicC1Data = async (typeId: string) => {
       level: q.level,
       questionText: q.text,
       options: q.options.map((opt, index) => ({
+        _id: randomUUID(),
         text: opt,
         isCorrect: index === q.correct,
       })),

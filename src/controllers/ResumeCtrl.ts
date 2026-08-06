@@ -3,7 +3,6 @@ import prisma from "../config/prisma";
 import * as dateFormatter from "../utils/dateFormatter";
 import { uploadToLiara } from "../utils/s3Upload";
 
-// ====== تابع کمکی برای تبدیل params به string ======
 const toStr = (value: string | string[] | undefined): string => {
   if (typeof value === "string") return value;
   if (Array.isArray(value) && value.length > 0) return value[0];
@@ -187,82 +186,6 @@ export const getMyResumes = async (req: Request, res: Response) => {
   }
 };
 
-// =================== ADMIN ===================
-
-export const getUsersWithResumes = async (req: Request, res: Response) => {
-  try {
-    const resumes = await prisma.resume.findMany({
-      select: {
-        id: true,
-        userId: true,
-        updateCount: true,
-        updatedAt: true,
-      },
-      orderBy: { updatedAt: "desc" },
-    });
-
-    const userMap: Record<
-      string,
-      {
-        totalResumes: number;
-        lastUserUpdate: Date;
-        resumes: Array<{
-          resumeId: string;
-          updateCount: number;
-          updatedAt: Date;
-        }>;
-      }
-    > = {};
-
-    for (const resume of resumes) {
-      const userId = resume.userId;
-      if (!userMap[userId]) {
-        userMap[userId] = {
-          totalResumes: 0,
-          lastUserUpdate: resume.updatedAt,
-          resumes: [],
-        };
-      }
-      userMap[userId].totalResumes += 1;
-      if (resume.updatedAt > userMap[userId].lastUserUpdate) {
-        userMap[userId].lastUserUpdate = resume.updatedAt;
-      }
-      userMap[userId].resumes.push({
-        resumeId: resume.id,
-        updateCount: resume.updateCount,
-        updatedAt: resume.updatedAt,
-      });
-    }
-
-    const result = Object.keys(userMap).map((userId) => ({
-      userId,
-      totalResumes: userMap[userId].totalResumes,
-      lastUserUpdate: dateFormatter.toJalali(userMap[userId].lastUserUpdate),
-      resumes: userMap[userId].resumes.map((r) => ({
-        ...r,
-        updatedAt: dateFormatter.toJalali(r.updatedAt),
-      })),
-    }));
-
-    result.sort(
-      (a, b) =>
-        new Date(b.lastUserUpdate).getTime() -
-        new Date(a.lastUserUpdate).getTime(),
-    );
-
-    res.status(200).json({
-      success: true,
-      count: result.length,
-      data: result,
-    });
-  } catch (error) {
-    console.error("Error fetching users with resumes:", error);
-    res
-      .status(500)
-      .json({ success: false, message: "خطا در دریافت کاربران دارای رزومه." });
-  }
-};
-
 // =================== EXPORT DEFAULT ===================
 const ResumeCtrl = {
   getResumeData,
@@ -270,7 +193,6 @@ const ResumeCtrl = {
   getResumeUrl,
   uploadResumeFile,
   getMyResumes,
-  getUsersWithResumes,
 };
 
 export default ResumeCtrl;

@@ -58,3 +58,17 @@ export function checkArticlePermission(admin: AdminWithPermissions): void {
     throw new Error('شما دسترسی لازم برای مدیریت مقالات را ندارید')
   }
 }
+
+export function hasUserPermission(admin: AdminWithPermissions): boolean {
+  if (admin.role === 'OWNER') return true
+  if (admin.role === 'ADMIN' || admin.role === 'SUPPORTER') {
+    return admin.permissions?.users === true || admin.permissions?.all === true
+  }
+  return false
+}
+
+export function checkUserPermission(admin: AdminWithPermissions): void {
+  if (!hasUserPermission(admin)) {
+    throw new Error('شما دسترسی لازم برای مدیریت کاربران را ندارید')
+  }
+}

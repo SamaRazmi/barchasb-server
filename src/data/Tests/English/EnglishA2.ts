@@ -1,4 +1,5 @@
 import prisma from "../../../config/prisma";
+import { randomUUID } from 'crypto';
 
 const questionsData = [
   // Vocabulary
@@ -71,6 +72,7 @@ const EnglishA2Data = async (typeId: string) => {
       level: q.level,
       questionText: q.text,
       options: q.options.map((opt, index) => ({
+        _id: randomUUID(),
         text: opt,
         isCorrect: index === q.correct,
       })),

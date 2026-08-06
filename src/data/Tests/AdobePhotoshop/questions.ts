@@ -1,4 +1,5 @@
 import prisma from "../../../config/prisma";
+import { randomUUID } from 'crypto';
 
 const AdobePsQuestions = async (typeId: string) => {
   const rawQuestions = [
@@ -1168,6 +1169,7 @@ const AdobePsQuestions = async (typeId: string) => {
       level: q.level,
       typeId: typeId,
       options: q.opts.map((o, i) => ({
+        _id: randomUUID(),
         text: o,
         value: i,
         isCorrect: i === q.ans,
