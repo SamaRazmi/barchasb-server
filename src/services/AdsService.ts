@@ -24,6 +24,9 @@ interface GetUserStatsParams {
   userId: string;
 }
 
+// ============================================
+// 1. دریافت همه آگهی‌های عمومی (تایید شده و معتبر)
+// ============================================
 export const getAllAds = async (filters: GetAllFilters) => {
   const { page, limit, adType, category, province, city, search } = filters;
   const skip = (page - 1) * limit;
@@ -166,6 +169,9 @@ export const getAllAds = async (filters: GetAllFilters) => {
   };
 };
 
+// ============================================
+// 2. دریافت آگهی‌های کاربر + (اختیاری) آگهی‌های عمومی دیگران
+// ============================================
 export const getUserAds = async (params: GetUserFilters) => {
   const { userId, includeOthers, page, limit } = params;
   const skip = (page - 1) * limit;
@@ -264,7 +270,7 @@ export const getUserAds = async (params: GetUserFilters) => {
       );
   }
 
-  // صفحه‌بندی دستی (می‌توان از همان ابتدا limit اعمال کرد ولی برای سادگی)
+  // صفحه‌بندی دستی
   const paginatedUser = userAds.slice(skip, skip + limit);
   const paginatedPublic = publicAds.slice(skip, skip + limit);
 
@@ -286,19 +292,26 @@ export const getUserAds = async (params: GetUserFilters) => {
   };
 };
 
-// ----- تابع جدید برای دریافت آمار آگهی‌های کاربر -----
+// ============================================
+// 3. دریافت آمار آگهی‌های کاربر (تعداد کل و تعداد Approved)
+// ============================================
 export const getUserAdsStats = async (params: GetUserStatsParams) => {
   const { userId } = params;
 
-  // شرط پایه برای آگهی‌های فعال (approved و غیرمنقضی)
-  const activeWhere = {
+  // شرط برای همه آگهی‌های کاربر (بدون فیلتر وضعیت)
+  const allWhere = { owner: userId };
+
+  // شرط فقط برای آگهی‌های تایید شده (approved)
+  const approvedWhere = {
+    ...allWhere,
     adStatus: AdStatus.approved,
-    OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
-    owner: userId,
   };
 
-  // شرط برای همه آگهی‌های کاربر (بدون در نظر گرفتن وضعیت)
-  const allWhere = { owner: userId };
+  // (اختیاری) اگر بخواهید تعداد فعال (approved + منقضی نشده) هم محاسبه کنید، می‌توانید این شرط را اضافه کنید:
+  // const activeWhere = {
+  //   ...approvedWhere,
+  //   OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+  // };
 
   // کوئری‌های موازی برای شمارش
   const [
@@ -306,39 +319,53 @@ export const getUserAdsStats = async (params: GetUserStatsParams) => {
     totalEmployer,
     totalJobSeeker,
     totalSeller,
-    activeDigital,
-    activeEmployer,
-    activeJobSeeker,
-    activeSeller,
+    approvedDigital,
+    approvedEmployer,
+    approvedJobSeeker,
+    approvedSeller,
   ] = await Promise.all([
     prisma.digitalAd.count({ where: allWhere }),
     prisma.employerAd.count({ where: allWhere }),
     prisma.jobSeekerAd.count({ where: allWhere }),
     prisma.sellerAd.count({ where: allWhere }),
-    prisma.digitalAd.count({ where: activeWhere }),
-    prisma.employerAd.count({ where: activeWhere }),
-    prisma.jobSeekerAd.count({ where: activeWhere }),
-    prisma.sellerAd.count({ where: activeWhere }),
+    prisma.digitalAd.count({ where: approvedWhere }),
+    prisma.employerAd.count({ where: approvedWhere }),
+    prisma.jobSeekerAd.count({ where: approvedWhere }),
+    prisma.sellerAd.count({ where: approvedWhere }),
   ]);
 
   const totalAll = totalDigital + totalEmployer + totalJobSeeker + totalSeller;
-  const totalActive =
-    activeDigital + activeEmployer + activeJobSeeker + activeSeller;
+  const totalApproved =
+    approvedDigital + approvedEmployer + approvedJobSeeker + approvedSeller;
 
   return {
-    totalAll,
-    totalActive,
+    totalAll, // تعداد کل آگهی‌های کاربر (همه وضعیت‌ها)
+    totalApproved, // تعداد آگهی‌های تایید شده (approved) بدون در نظر گرفتن انقضا
+    // در صورت نیاز می‌توانید totalActive را هم اضافه کنید
     breakdown: {
-      digital: { all: totalDigital, active: activeDigital },
-      employer: { all: totalEmployer, active: activeEmployer },
-      jobSeeker: { all: totalJobSeeker, active: activeJobSeeker },
-      seller: { all: totalSeller, active: activeSeller },
+      digital: {
+        all: totalDigital,
+        approved: approvedDigital,
+      },
+      employer: {
+        all: totalEmployer,
+        approved: approvedEmployer,
+      },
+      jobSeeker: {
+        all: totalJobSeeker,
+        approved: approvedJobSeeker,
+      },
+      seller: {
+        all: totalSeller,
+        approved: approvedSeller,
+      },
     },
   };
 };
-// ------------------------------------------------
 
+// ============================================
 // تابع کمکی برای شمارش کل (برای getAllAds)
+// ============================================
 async function getTotalCount(filters: GetAllFilters): Promise<number> {
   const { adType, category, province, city, search } = filters;
 
