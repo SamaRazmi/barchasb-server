@@ -111,6 +111,19 @@ export const holdBalance = async (
     throw new Error("مبلغ فریز باید بزرگتر از صفر باشد");
   }
 
+  if (referenceId) {
+    const existingHold = await prisma.transaction.findFirst({
+      where: {
+        referenceId: referenceId,
+        type: TransactionType.HOLD,
+        status: TransactionStatus.PENDING,
+      },
+    });
+    if (existingHold) {
+      throw new Error("تراکنش قبلاً برای این مرجع ثبت شده است");
+    }
+  }
+
   const wallet = await prisma.wallet.findUnique({
     where: { userId },
   });
@@ -128,9 +141,6 @@ export const holdBalance = async (
     const updatedWallet = await tx.wallet.update({
       where: { id: wallet.id },
       data: {
-        balance: {
-          decrement: amount,
-        },
         heldBalance: {
           increment: amount,
         },
@@ -179,9 +189,12 @@ export const releaseHold = async (
   }
 
   const result = await prisma.$transaction(async (tx) => {
-    await tx.wallet.update({
+    const updatedWallet = await tx.wallet.update({
       where: { id: transaction.walletId },
       data: {
+        balance: {
+          decrement: transaction.amount,
+        },
         heldBalance: {
           decrement: transaction.amount,
         },
@@ -229,9 +242,6 @@ export const refundHold = async (
     await tx.wallet.update({
       where: { id: transaction.walletId },
       data: {
-        balance: {
-          increment: transaction.amount,
-        },
         heldBalance: {
           decrement: transaction.amount,
         },
