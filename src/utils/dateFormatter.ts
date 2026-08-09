@@ -34,3 +34,10 @@ export const toJalaliShort = (
   if (!date) return "-";
   return moment(date).format("jYYYY/jMM/jDD");
 };
+
+export const convertJalaliToGregorian = (
+  jy: number, jm: number, jd: number
+): Date => {
+  const gregorian = moment(`${jy}/${jm}/${jd}`, "jYYYY/jMM/jDD").toDate();
+  return gregorian;
+}
