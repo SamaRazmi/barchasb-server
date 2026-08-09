@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import * as PurchaseService from "../services/PurchaseService";
+import * as IdempotencyService from "../services/IdempotencyService";
 import { AdType, PaymentMethod } from "@prisma/client";
+import crypto from "crypto";
 
 interface AuthRequest extends Request {
   user?: { id: string; [key: string]: any };
@@ -24,6 +26,7 @@ const PurchaseCtrl = {
         isLadder,
         ladderOption,
         paymentMethod,
+        idempotencyKey, 
       } = req.body;
 
       // اعتبارسنجی
@@ -33,6 +36,15 @@ const PurchaseCtrl = {
           message: "فیلدهای adId, adType و paymentMethod الزامی هستند",
         });
       }
+
+      // if (!idempotencyKey) {
+      //   return res.status(400).json({
+      //     status: "error",
+      //     message: "idempotencyKey الزامی است",
+      //   });
+      // }
+      // note: replace above lines with this line 
+      const finalKey = idempotencyKey || crypto.randomUUID();
 
       if (!Object.values(AdType).includes(adType)) {
         return res.status(400).json({
@@ -54,6 +66,31 @@ const PurchaseCtrl = {
           message: "گزینه پله باید یکی از مقادیر 24h, 72h یا 7d باشد",
         });
       }
+
+      const checkResult = await IdempotencyService.checkAndCreateIdempotency(
+        // idempotencyKey,
+        // note : replace above line with this line
+        finalKey,
+        userId,
+        "AD_PURCHASE",
+        adId
+      );
+
+      if (checkResult.success && checkResult.status === "DUPLICATE") {
+        return res.status(200).json({
+          status: "success",
+          data: checkResult.data,
+          idempotent: true,
+        });
+      }
+
+      if (checkResult.status === "EXPIRED") {
+        return res.status(400).json({
+          status: "error",
+          message: checkResult.message,
+        });
+      }
+
       const result = await PurchaseService.processAdPayment({
         adId,
         adType,
@@ -65,11 +102,18 @@ const PurchaseCtrl = {
       });
 
       if (!result.success) {
+        // await IdempotencyService.failIdempotency(idempotencyKey, result.message);
+        // note: replace above line with this line 
+        await IdempotencyService.failIdempotency(finalKey, result.message);
         return res.status(400).json({
           status: "error",
           message: result.message,
         });
       }
+
+      // await IdempotencyService.completeIdempotency(idempotencyKey, result);
+      // note: replace above line with this line 
+      await IdempotencyService.completeIdempotency(finalKey, result);
 
       res.status(200).json({
         status: "success",
@@ -102,6 +146,7 @@ const PurchaseCtrl = {
         ladderSchedule,
         ladderOption,
         paymentMethod,
+        idempotencyKey,
       } = req.body;
 
       // validate
@@ -111,6 +156,15 @@ const PurchaseCtrl = {
           message: "تمام فیلدها الزامی هستند",
         });
       }
+
+      // if (!idempotencyKey) {
+      //   return res.status(400).json({
+      //     status: "error",
+      //     message: "idempotencyKey الزامی است",
+      //   });
+      // }
+      // note: replace above lines with this line
+      const finalKey = idempotencyKey || crypto.randomUUID();
 
       if (!Object.values(AdType).includes(adType)) {
         return res.status(400).json({
@@ -132,6 +186,30 @@ const PurchaseCtrl = {
         });
       }
 
+      const checkResult = await IdempotencyService.checkAndCreateIdempotency(
+        // idempotencyKey,
+        //note: replace above line with this line 
+        finalKey,
+        userId,
+        "ENHANCEMENT_PURCHASE",
+        adId
+      );
+
+      if (checkResult.success && checkResult.status === "DUPLICATE") {
+        return res.status(200).json({
+          status: "success",
+          data: checkResult.data,
+          idempotent: true,
+        });
+      }
+
+      if (checkResult.status === "EXPIRED") {
+        return res.status(400).json({
+          status: "error",
+          message: checkResult.message,
+        });
+      }
+
       const result = await PurchaseService.purchaseEnhancement({
         adId,
         adType,
@@ -143,12 +221,19 @@ const PurchaseCtrl = {
       });
 
       if (!result.success) {
+        // await IdempotencyService.failIdempotency(idempotencyKey, result.message);
+        // note: replace above line with this line 
+        await IdempotencyService.failIdempotency(finalKey, result.message);
         return res.status(400).json({
           status: "error",
           message: result.message,
         });
       }
 
+      // await IdempotencyService.completeIdempotency(idempotencyKey, result);
+      // note: replace above line with this line 
+      await IdempotencyService.completeIdempotency(finalKey, result);
+      
       res.status(200).json({
         status: "success",
         data: result,
