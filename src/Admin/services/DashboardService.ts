@@ -37,7 +37,9 @@ export async function getDashboardStats() {
 
   const revenueAggregate = await prisma.transaction.aggregate({
     where: {
-      type: TransactionType.WITHDRAWAL,
+      type: {
+        in: [TransactionType.WITHDRAWAL, TransactionType.HOLD],
+      },
       status: TransactionStatus.COMPLETED,
     },
     _sum: {
@@ -88,7 +90,9 @@ export async function getMonthlyRevenue(year: number) {
   const dailyRevenues = await prisma.transaction.groupBy({
     by: ["createdAt"],
     where: {
-      type: TransactionType.WITHDRAWAL,
+      type: {
+        in: [TransactionType.WITHDRAWAL, TransactionType.HOLD],
+      },
       status: TransactionStatus.COMPLETED,
       createdAt: {
         gte: startOfYear,
