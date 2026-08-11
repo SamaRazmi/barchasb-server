@@ -138,7 +138,7 @@ export const submitTest = async (req: Request, res: Response) => {
     }
 
     // Cast to any to avoid TypeScript issues with nested select
-    const testType = (session as any).type;
+    const testType = (session as any).testType;
     const categoryName = testType?.category?.name || "";
     const method = testType?.scoringMethod;
     const testName = testType?.name || "";
@@ -149,9 +149,12 @@ export const submitTest = async (req: Request, res: Response) => {
     const questionMap = new Map(allQuestions.map(q => [q.id, q]));
 
     const fullQuestions = session.questions.map((sq: any) => {
-      const fullQ = questionMap.get(sq.questionId);
+      const qId = typeof sq.questionId === 'object' 
+        ? (sq.questionId.id || sq.questionId._id) 
+        : sq.questionId;
+      const fullQ = questionMap.get(qId);
       if (!fullQ) {
-        throw new Error(`سوال با شناسه ${sq.questionId} یافت نشد`);
+        throw new Error(`سوال با شناسه ${qId} یافت نشد`);
       }
       return {
         ...sq,
@@ -194,7 +197,9 @@ export const submitTest = async (req: Request, res: Response) => {
     }
 
     const questionsToSave = session.questions.map((sq: any) => {
-      const questionId = sq.questionId;
+      const questionId = typeof sq.questionId === 'object' 
+        ? (sq.questionId.id || sq.questionId._id || sq.questionId) 
+        : sq.questionId;
       const processed = calculatedData.questions.find((q: any) => {
         const qId = typeof q.questionId === 'object' ? q.questionId?._id : q.questionId;
         return qId === questionId;
