@@ -205,6 +205,24 @@ const UserManagementCtrl = {
     }
   },
 
+  // resume: async (req: AuthRequest, res: Response) => {
+  //   try {
+  //     const admin = req.admin;
+  //     if (!admin) return res.status(401).json({ status: "error", message: "احراز هویت نشده" });
+  //     checkUserPermission(admin);
+
+  //     const userId = toStr(req.params.id);
+  //     if (!userId) return res.status(400).json({ status: "error", message: "شناسه کاربر نامعتبر" });
+
+  //     const resume = await UserManagementService.getUserResume(userId);
+  //     if (!resume) return res.status(404).json({ status: "error", message: "رزومه‌ای برای این کاربر یافت نشد" });
+
+  //     res.status(200).json({ status: "success", data: resume });
+  //   } catch (error: any) {
+  //     console.error("Error fetching user resume:", error);
+  //     res.status(500).json({ status: "error", message: error.message });
+  //   }
+  // },
   resume: async (req: AuthRequest, res: Response) => {
     try {
       const admin = req.admin;
@@ -214,16 +232,13 @@ const UserManagementCtrl = {
       const userId = toStr(req.params.id);
       if (!userId) return res.status(400).json({ status: "error", message: "شناسه کاربر نامعتبر" });
 
-      const resume = await UserManagementService.getUserResume(userId);
-      if (!resume) return res.status(404).json({ status: "error", message: "رزومه‌ای برای این کاربر یافت نشد" });
-
-      res.status(200).json({ status: "success", data: resume });
+      const resumes = await UserManagementService.getUserResumes(userId);
+      res.status(200).json({ status: "success", data: resumes });
     } catch (error: any) {
-      console.error("Error fetching user resume:", error);
+      console.error("Error fetching user resumes:", error);
       res.status(500).json({ status: "error", message: error.message });
     }
   },
-
   converterUsage: async (req: AuthRequest, res: Response) => {
     try {
       const admin = req.admin;
