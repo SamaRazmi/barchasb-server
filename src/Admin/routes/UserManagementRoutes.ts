@@ -454,6 +454,26 @@ router.get("/:id/tests/summary", UserManagementCtrl.testSummary);
  */
 router.get("/:id/tests/:sessionId/detail", UserManagementCtrl.testDetail);
 
+// /**
+//  * @swagger
+//  * /api/admin/users/{id}/resume:
+//  *   get:
+//  *     tags: [Admin-Users]
+//  *     security:
+//  *       - BearerAuth: []
+//  *     parameters:
+//  *       - name: id
+//  *         in: path
+//  *         required: true
+//  *         schema: { type: string }
+//  *     responses:
+//  *       200: { description: موفق }
+//  *       401: { description: احراز هویت نشده }
+//  *       403: { description: دسترسی غیرمجاز }
+//  *       404: { description: رزومه یافت نشد }
+//  *       500: { description: خطای سرور }
+//  */
+// router.get("/:id/resume", UserManagementCtrl.resume);
 /**
  * @swagger
  * /api/admin/users/{id}/resume:
@@ -467,11 +487,71 @@ router.get("/:id/tests/:sessionId/detail", UserManagementCtrl.testDetail);
  *         required: true
  *         schema: { type: string }
  *     responses:
- *       200: { description: موفق }
- *       401: { description: احراز هویت نشده }
- *       403: { description: دسترسی غیرمجاز }
- *       404: { description: رزومه یافت نشد }
- *       500: { description: خطای سرور }
+ *       200:
+ *         description: موفق
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       fullName:
+ *                         type: string
+ *                       phoneNumber:
+ *                         type: string
+ *                       birthDate:
+ *                         type: string
+ *                       gender:
+ *                         type: string
+ *                       maritalStatus:
+ *                         type: string
+ *                       address:
+ *                         type: string
+ *                       expectedSalary:
+ *                         type: string
+ *                       cooperationType:
+ *                         type: string
+ *                       hasInsuranceHistory:
+ *                         type: boolean
+ *                       willingToGoOnMission:
+ *                         type: boolean
+ *                       skills:
+ *                         type: array
+ *                         items:
+ *                           type: string
+ *                       education:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                       workExperience:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                       certificates:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                       fileUrl:
+ *                         type: string
+ *                       updatedAt:
+ *                         type: string
+ *                       createdAt:
+ *                         type: string
+ *       401:
+ *         description: احراز هویت نشده
+ *       403:
+ *         description: دسترسی غیرمجاز
+ *       500:
+ *         description: خطای سرور
  */
 router.get("/:id/resume", UserManagementCtrl.resume);
 

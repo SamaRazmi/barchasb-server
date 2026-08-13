@@ -1,6 +1,4 @@
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "../src/config/prisma";
 
 const categoryData = [
   { name: "هوش مصنوعی و یادگیری ماشین", slug: "ai-ml" },
@@ -46,16 +44,13 @@ export async function seedCategories() {
   console.log(`✅ ${count} دسته‌بندی با موفقیت سید شدند!`);
 }
 
-// اجرای مستقیم فقط در صورتی که فایل به‌تنهایی اجرا شود (با استفاده از import.meta.url)
-if (import.meta.url === `file://${process.argv[1]}`) {
-  seedCategories()
-    .catch((e) => {
-      console.error("❌ خطا در Seed دسته‌بندی:", e);
-      process.exit(1);
-    })
-    .finally(async () => {
-      await prisma.$disconnect();
-    });
-}
+seedCategories()
+  .catch((e) => {
+    console.error("❌ خطا در Seed دسته‌بندی:", e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
 
 export default seedCategories;

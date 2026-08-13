@@ -1003,3 +1003,24 @@ model Article {
   @@index([slug])
   @@index([status])
 }
+
+enum IdempotencyStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model Idempotency {
+  id          String             @id @default(uuid())
+  key         String             @unique
+  userId      String
+  action      String             // "AD_PURCHASE" | "ENHANCEMENT_PURCHASE" | "WALLET_DEPOSIT"
+  referenceId String?            // adId or userId
+  status      IdempotencyStatus  @default(PENDING)
+  response    Json?              
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@index([userId])
+  @@index([createdAt])
+}

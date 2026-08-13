@@ -22,6 +22,7 @@ const router = Router();
  *               - adId
  *               - adType
  *               - paymentMethod
+//  *               - idempotencyKey
  *             properties:
  *               adId:
  *                 type: string
@@ -40,6 +41,9 @@ const router = Router();
  *               paymentMethod:
  *                 type: string
  *                 enum: [Wallet, Bank_card]
+ *               idempotencyKey:
+ *                 type: string
+ *                 required: false
  *     responses:
  *       200:
  *         description: موفق
@@ -65,6 +69,7 @@ router.post("/purchase/process-ad", authenticateUser, PurchaseCtrl.processAdPaym
  *               - adType
  *               - enhancementType
  *               - paymentMethod
+//  *               - idempotencyKey
  *             properties:
  *               adId:
  *                 type: string
@@ -85,6 +90,9 @@ router.post("/purchase/process-ad", authenticateUser, PurchaseCtrl.processAdPaym
  *               paymentMethod:
  *                 type: string
  *                 enum: [Wallet, Bank_card]
+ *               idempotencyKey:
+ *                 type: string
+ *                 required: false
  *     responses:
  *       200:
  *         description: موفق

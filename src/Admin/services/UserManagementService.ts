@@ -572,14 +572,40 @@ export async function getUserTestDetail(userId: string, sessionId: string) {
   return result;
 }
 
-export async function getUserResume(userId: string) {
-  const resume = await prisma.resume.findFirst({
+// export async function getUserResume(userId: string) {
+//   const resume = await prisma.resume.findFirst({
+//     where: { userId },
+//   });
+
+//   if (!resume) return null;
+
+//   return {
+//     id: resume.id,
+//     fullName: resume.fullName,
+//     phoneNumber: resume.phoneNumber,
+//     birthDate: resume.birthDate,
+//     gender: resume.gender,
+//     maritalStatus: resume.maritalStatus,
+//     address: resume.address,
+//     expectedSalary: resume.expectedSalary,
+//     cooperationType: resume.cooperationType,
+//     hasInsuranceHistory: resume.hasInsuranceHistory,
+//     willingToGoOnMission: resume.willingToGoOnMission,
+//     skills: resume.skills,
+//     education: resume.education,
+//     workExperience: resume.workExperience,
+//     certificates: resume.certificates,
+//     fileUrl: resume.fileUrl,
+//     updatedAt: toJalali(resume.updatedAt),
+//   };
+// }
+export async function getUserResumes(userId: string) {
+  const resumes = await prisma.resume.findMany({
     where: { userId },
+    orderBy: { updatedAt: "desc" },
   });
 
-  if (!resume) return null;
-
-  return {
+  return resumes.map((resume) => ({
     id: resume.id,
     fullName: resume.fullName,
     phoneNumber: resume.phoneNumber,
@@ -597,7 +623,8 @@ export async function getUserResume(userId: string) {
     certificates: resume.certificates,
     fileUrl: resume.fileUrl,
     updatedAt: toJalali(resume.updatedAt),
-  };
+    createdAt: toJalali(resume.createdAt),
+  }));
 }
 
 export async function getUserConverterUsage(userId: string) {
