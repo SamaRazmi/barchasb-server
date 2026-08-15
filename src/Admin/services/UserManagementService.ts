@@ -443,7 +443,17 @@ export async function getUserSessions(userId: string) {
     },
   });
 
-  return sessions.map((session) => {
+  const ipMap = new Map<string, typeof sessions[0]>();
+  for (const session of sessions) {
+    const deviceInfo = session.deviceInfo as any;
+    const ip = deviceInfo?.ip || 'نامشخص';
+    if (!ipMap.has(ip)) {
+      ipMap.set(ip, session);
+    }
+  }
+
+  // return sessions.map((session) => {
+  return Array.from(ipMap.values()).map((session) => {
     const deviceInfo = session.deviceInfo as any;
     
     let deviceName = 'دستگاه ناشناخته';
