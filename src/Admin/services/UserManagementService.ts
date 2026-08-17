@@ -99,7 +99,8 @@ export async function getUsersList(input: GetUsersListInput) {
   const adCounts = await getUserAdCounts(userIds);
 
   const formattedUsers = users.map((user) => {
-    const profileImage = user.userProfiles[0]?.profileImage || null;
+    // const profileImage = user.userProfiles[0]?.profileImage || null;
+      const profileImage = getFileUrl(user.userProfiles[0]?.profileImage) || null;
     const platforms = ["MAIN"];
 
     return {
@@ -220,8 +221,9 @@ export async function getUserProfileById(userId: string) {
     aboutMe: profile?.aboutMe || null,
     interests: profile?.interests || [],
     skills: profile?.skills || [],
-    resumeFile: profile?.resumeFile || null,
-    portfolioFiles: profile?.portfolioFiles || [],
+    resumeFile: getFileUrl(profile?.resumeFile) || null,
+    portfolioFiles: profile?.portfolioFiles?.map(getFileUrl).filter(Boolean) as string[] || [],
+    profileImage: getFileUrl(profile?.profileImage),
   };
 }
 
@@ -443,7 +445,17 @@ export async function getUserSessions(userId: string) {
     },
   });
 
-  return sessions.map((session) => {
+  const ipMap = new Map<string, typeof sessions[0]>();
+  for (const session of sessions) {
+    const deviceInfo = session.deviceInfo as any;
+    const ip = deviceInfo?.ip || 'نامشخص';
+    if (!ipMap.has(ip)) {
+      ipMap.set(ip, session);
+    }
+  }
+
+  // return sessions.map((session) => {
+  return Array.from(ipMap.values()).map((session) => {
     const deviceInfo = session.deviceInfo as any;
     
     let deviceName = 'دستگاه ناشناخته';
@@ -648,4 +660,22 @@ export async function getUserConverterUsage(userId: string) {
     toolNameFa: toolNameMap[log.toolName] || log.toolName,
     count: log._count.toolName,
   }));
+}
+
+function getFileUrl(filePath: string | null | undefined): string | null {
+  if (!filePath) return null;
+
+  const endpoint = process.env.LIARA_ENDPOINT2;
+  if (!endpoint) {
+    return filePath;
+  }
+
+  try {
+    const url = new URL(filePath);
+    const path = url.pathname; 
+    return `${endpoint}${path}`;
+  } catch {
+
+    return filePath;
+  }
 }
