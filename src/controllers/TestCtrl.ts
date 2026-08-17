@@ -3,6 +3,10 @@ import prisma from "../config/prisma";
 import { pickQuestions } from "../utils/testHelper";
 import ScoringLogic from "../utils/scoringLogic";
 import * as dateFormatter from "../utils/dateFormatter";
+import {
+  generateQuickResult,
+  generateDetailData,
+} from "../utils/tesrResultAnalyzer";
 
 const toStr = (value: string | string[] | undefined): string => {
   if (typeof value === "string") return value;
@@ -149,8 +153,8 @@ export const submitTest = async (req: Request, res: Response) => {
     const questionMap = new Map(allQuestions.map(q => [q.id, q]));
 
     const fullQuestions = session.questions.map((sq: any) => {
-      const qId = typeof sq.questionId === 'object' 
-        ? (sq.questionId.id || sq.questionId._id) 
+      const qId = typeof sq.questionId === 'object'
+        ? (sq.questionId.id || sq.questionId._id)
         : sq.questionId;
       const fullQ = questionMap.get(qId);
       if (!fullQ) {
@@ -196,9 +200,31 @@ export const submitTest = async (req: Request, res: Response) => {
       }
     }
 
+    const sessionWithAnswers = {
+      ...session,
+      questions: calculatedData.questions.map((q: any) => ({
+        ...q,
+        questionId: typeof q.questionId === 'object' ? q.questionId._id : q.questionId,
+        subject: q.subject || "General",
+        level: q.level || "Unknown",
+      })),
+    };
+
+    const quickResult = generateQuickResult(
+      sessionWithAnswers,
+      testType,
+      calculatedData.levelResults
+    );
+
+    const { detailData } = generateDetailData(
+      sessionWithAnswers,
+      testType,
+      calculatedData.levelResults
+    );
+
     const questionsToSave = session.questions.map((sq: any) => {
-      const questionId = typeof sq.questionId === 'object' 
-        ? (sq.questionId.id || sq.questionId._id || sq.questionId) 
+      const questionId = typeof sq.questionId === 'object'
+        ? (sq.questionId.id || sq.questionId._id || sq.questionId)
         : sq.questionId;
       const processed = calculatedData.questions.find((q: any) => {
         const qId = typeof q.questionId === 'object' ? q.questionId?._id : q.questionId;
@@ -215,69 +241,6 @@ export const submitTest = async (req: Request, res: Response) => {
       };
     });
 
-    const questionsWithAnswers = calculatedData.questions.map((q: any) => ({
-      ...q,
-      subject: q.subject || "General",
-    }));
-
-    const total = questionsWithAnswers.length;
-    const correct = questionsWithAnswers.filter((q: any) => q.isCorrect).length;
-    const wrong = questionsWithAnswers.filter((q: any) => q.userAnswer !== null && !q.isCorrect).length;
-    const unanswered = questionsWithAnswers.filter((q: any) => q.userAnswer === null).length;
-
-    const topicMap: Record<string, { total: number; correct: number }> = {};
-    questionsWithAnswers.forEach((q: any) => {
-      const topic = q.subject || "General";
-      if (!topicMap[topic]) {
-        topicMap[topic] = { total: 0, correct: 0 };
-      }
-      topicMap[topic].total += 1;
-      if (q.isCorrect) {
-        topicMap[topic].correct += 1;
-      }
-    });
-
-    const topicAnalysis = Object.keys(topicMap).map((topic) => ({
-      topic,
-      total: topicMap[topic].total,
-      correct: topicMap[topic].correct,
-      percentage: topicMap[topic].total > 0
-        ? ((topicMap[topic].correct / topicMap[topic].total) * 100).toFixed(0)
-        : "0",
-    }));
-
-    // درصد بالای ۶۰ = قوت، پایین ۴۰ = ضعف
-    const strengths: string[] = [];
-    const weaknesses: string[] = [];
-    topicAnalysis.forEach((item) => {
-      const pct = parseFloat(item.percentage);
-      if (pct >= 60) strengths.push(item.topic);
-      else if (pct < 40) weaknesses.push(item.topic);
-    });
-
-    const detailedResult = {
-      baseInfo: {
-        testName: testType?.name || "نامشخص",
-        date: dateFormatter.toJalali(new Date()),
-        stats: {
-          total,
-          correct,
-          wrong,
-          unanswered,
-        },
-      },
-      analysis: {
-        strengths,
-        weaknesses,
-        topicAnalysis,
-      },
-    };
-
-    const quickResult = {
-      summary: `تعداد پاسخ‌های صحیح: ${correct} از ${total}`,
-      score: ((correct / total) * 100).toFixed(1) + '%',
-    };
-
     const updatedSession = await prisma.testSession.update({
       where: { id: sessionId },
       data: {
@@ -286,7 +249,7 @@ export const submitTest = async (req: Request, res: Response) => {
         status: "completed",
         finishedAt: new Date(),
         quickResult: quickResult,
-        detailedResult: detailedResult,
+        detailedResult: detailData,
         assignedLevel: (session as any).assignedLevel,
         questions: questionsToSave,
       },
