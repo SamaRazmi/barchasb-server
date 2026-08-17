@@ -63,7 +63,7 @@ import articlesRoutes from "./Admin/routes/ArticleManagementRoutes";
 import userManagementRoutes from "./Admin/routes/UserManagementRoutes";
 import ExtensionManagementRoutes from "./Admin/routes/ExtensionManagementRoutes";
 import dashboardRoutes from "./Admin/routes/DashboardRoutes";
-
+import inAppNotificationRoutes from "./routes/inAppNotificationRoutes";
 import SuggestionRoutes from "./routes/SuggestionRoutes";
 import profileRoutes from "./routes/UserProfileRoutes"; // مسیر صحیح
 import AdsRouter from "./routes/AdsRouter";
@@ -313,7 +313,7 @@ app.use("/api", checkoutRoutes);
 app.use("/api", purchaseRoutes);
 app.use("/api", paymentRoutes);
 app.use("/api", vipRoutes);
-
+app.use("/api", inAppNotificationRoutes);
 // extensions routes
 app.use("/api/tests", TestRoutes);
 app.use("/api/resume", ResumeRoutes);
@@ -323,8 +323,8 @@ app.use("/api/user/extensions", UserExtensionsRoutes);
 // admin route
 app.use("/api/admin/auth", adminAuthRoutes);
 app.use("/api/admin/admins", adminManagementRoutes);
-app.use('/api/admin/ads', adManagementRoutes);
-app.use('/api/admin/pricing', adminPricingRoutes);
+app.use("/api/admin/ads", adManagementRoutes);
+app.use("/api/admin/pricing", adminPricingRoutes);
 app.use("/api/admin/vip-codes", adminVipRoutes);
 app.use("/api/admin/article/categories", articleCategoryRoutes);
 app.use("/api/admin/articles", articlesRoutes);
