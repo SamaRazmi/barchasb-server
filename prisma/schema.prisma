@@ -164,6 +164,7 @@ model User {
   updatedAt                DateTime  @updatedAt
 
   // روابط
+  inAppNotifications InAppNotification[] // <-- اضافه شده برای ارتباط معکوس
   adMarks           AdMark[]
   adViews           AdView[]
   chatFrom          Chat[]         @relation("ChatFrom")
@@ -1023,4 +1024,33 @@ model Idempotency {
 
   @@index([userId])
   @@index([createdAt])
+}
+
+// ============================================
+// مدل نوتیفیکیشن‌های درون برنامه‌ای (In-App)
+// ============================================
+enum NotificationType {
+  AD_APPROVED
+  AD_REJECTED
+}
+
+model InAppNotification {
+  id            String           @id @default(uuid())
+  userId        String
+  title         String
+  message       String
+  type          NotificationType
+  referenceId   String
+  referenceType AdType
+  isRead        Boolean          @default(false)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+  @@index([referenceId, referenceType])
 }
