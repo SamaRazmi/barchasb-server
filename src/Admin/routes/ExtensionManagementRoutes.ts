@@ -20,46 +20,19 @@ router.get("/tests/categories", authenticateAdmin, ExtensionManagementCtrl.testC
 
 /**
  * @swagger
- * /api/admin/extensions/tests/types:
+ * /api/admin/extensions/tests/categories/{categoryId}/types-with-stats:
  *   get:
- *     summary: Get all test types
  *     tags: [Admin-Extensions]
  *     security:
  *       - BearerAuth: []
  *     parameters:
  *       - name: categoryId
- *         in: query
+ *         in: path
+ *         required: true
  *         schema: { type: string }
  *     responses:
- *       200: { description: موفق }
- */
-router.get("/tests/types", authenticateAdmin, ExtensionManagementCtrl.testTypes);
-
-/**
- * @swagger
- * /api/admin/extensions/tests/users-with-sessions:
- *   get:
- *     summary: Get all users id that has test session
- *     tags: [Admin-Extensions]
- *     security:
- *       - BearerAuth: []
- *     responses:
- *       200: { description: موفق }
- *       500: {description: خطای سرور}
- */
-router.get("/tests/users-with-sessions", authenticateAdmin, ExtensionManagementCtrl.usersWithTestSessions);
-
-/**
- * @swagger
- * /api/admin/extensions/tests/all-sessions:
- *   get:
- *     summary: Get all info of test sessions
- *     tags: [Admin-Extensions]
- *     security:
- *       - BearerAuth: []
- *     responses:
  *       200:
- *         description: all test sessions
+ *         description: موفق
  *         content:
  *           application/json:
  *             schema:
@@ -67,26 +40,76 @@ router.get("/tests/users-with-sessions", authenticateAdmin, ExtensionManagementC
  *               items:
  *                 type: object
  *                 properties:
- *                   sessionId:
+ *                   id:
  *                     type: string
- *                   userId:
+ *                   name:
  *                     type: string
- *                   status:
+ *                   description:
  *                     type: string
- *                     enum: [in-progress, completed]
- *                   startedAt:
- *                     type: string
- *                     example: 1405/02/03 14:30
- *                   testName:
- *                     type: string
- *                   testTags:
+ *                   tags:
  *                     type: array
  *                     items:
  *                       type: string
+ *                   category:
+ *                     type: string
+ *                   totalQuestions:
+ *                     type: integer
+ *                   timeLimit:
+ *                     type: integer
+ *                   totalSessions:
+ *                     type: integer
+ *                   completedSessions:
+ *                     type: integer
+ *       400:
+ *         description: شناسه دسته‌بندی ارسال نشده
+ *       401:
+ *         description: احراز هویت نشده
+ *       403:
+ *         description: دسترسی غیرمجاز
  *       500:
- *         description: server error
+ *         description: خطای سرور
  */
-router.get("/tests/all-sessions", authenticateAdmin, ExtensionManagementCtrl.allTestSessionsInfo);
+router.get(
+  "/tests/categories/:categoryId/types-with-stats",
+  authenticateAdmin,
+  ExtensionManagementCtrl.testTypesWithStats
+);
+
+/**
+ * @swagger
+ * /api/admin/extensions/tests/{typeId}/sessions:
+ *   get:
+ *     tags: [Admin-Extensions]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: typeId
+ *         in: path
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200: { description: موفق }
+ *       404: { description: نوع تست یافت نشد }
+ */
+router.get("/tests/:typeId/sessions", authenticateAdmin, ExtensionManagementCtrl.testSessions);
+
+/**
+ * @swagger
+ * /api/admin/extensions/tests/sessions/{sessionId}/detail:
+ *   get:
+ *     tags: [Admin-Extensions]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - name: sessionId
+ *         in: path
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200: { description: موفق }
+ *       404: { description: جلسه یافت نشد }
+ */
+router.get("/tests/sessions/:sessionId/detail", authenticateAdmin, ExtensionManagementCtrl.testSessionDetail);
 
 // resume section 
 /**
