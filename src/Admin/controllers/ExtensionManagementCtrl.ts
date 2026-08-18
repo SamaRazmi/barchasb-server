@@ -11,6 +11,12 @@ interface AuthRequest extends Request {
   };
 }
 
+const toStr = (value: string | string[] | undefined): string => {
+  if (typeof value === "string") return value;
+  if (Array.isArray(value) && value.length > 0) return value[0];
+  return "";
+};
+
 const ExtensionManagementCtrl = {
   // test section 
   testCategories: async (req: AuthRequest, res: Response) => {
@@ -26,41 +32,55 @@ const ExtensionManagementCtrl = {
     }
   },
 
-  testTypes: async (req: AuthRequest, res: Response) => {
+  testTypesWithStats: async (req: AuthRequest, res: Response) => {
     try {
       const admin = req.admin;
       if (!admin) return res.status(401).json({ status: "error", message: "احراز هویت نشده" });
       checkUserPermission(admin);
 
-      const categoryId = req.query.categoryId as string | undefined;
-      const types = await ExtensionManagementService.getAllTestTypes(categoryId);
+      const categoryId = toStr(req.params.categoryId);
+      if (!categoryId) {
+        return res.status(400).json({ status: "error", message: "شناسه دسته‌بندی ارسال نشده" });
+      }
+
+      const types = await ExtensionManagementService.getTestTypesWithStats(categoryId);
       res.status(200).json({ status: "success", data: types });
     } catch (error: any) {
       res.status(500).json({ status: "error", message: error.message });
     }
   },
 
-  usersWithTestSessions: async (req: AuthRequest, res: Response) => {
+  testSessions: async (req: AuthRequest, res: Response) => {
     try {
       const admin = req.admin;
       if (!admin) return res.status(401).json({ status: "error", message: "احراز هویت نشده" });
       checkUserPermission(admin);
 
-      const users = await ExtensionManagementService.getUsersWithTestSessions();
-      res.status(200).json({ status: "success", data: users });
+      const typeId = toStr(req.params.typeId);
+      if (!typeId) {
+        return res.status(400).json({ status: "error", message: "شناسه نوع تست ارسال نشده" });
+      }
+
+      const sessions = await ExtensionManagementService.getTestSessionsByType(typeId);
+      res.status(200).json({ status: "success", data: sessions });
     } catch (error: any) {
       res.status(500).json({ status: "error", message: error.message });
     }
   },
 
-  allTestSessionsInfo: async (req: AuthRequest, res: Response) => {
+  testSessionDetail: async (req: AuthRequest, res: Response) => {
     try {
       const admin = req.admin;
       if (!admin) return res.status(401).json({ status: "error", message: "احراز هویت نشده" });
       checkUserPermission(admin);
 
-      const sessions = await ExtensionManagementService.getAllTestSessionsInfo();
-      res.status(200).json({ status: "success", data: sessions });
+      const sessionId = toStr(req.params.sessionId);
+      if (!sessionId) {
+        return res.status(400).json({ status: "error", message: "شناسه جلسه ارسال نشده" });
+      }
+
+      const detail = await ExtensionManagementService.getTestSessionDetailById(sessionId);
+      res.status(200).json({ status: "success", data: detail });
     } catch (error: any) {
       res.status(500).json({ status: "error", message: error.message });
     }

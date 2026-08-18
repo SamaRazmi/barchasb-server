@@ -4,66 +4,74 @@ import { toJalali } from "../../utils/dateFormatter";
 // test section
 export const getAllCategories = async () => {
   return await prisma.testCategory.findMany({
-    orderBy: { createdAt: "desc" },
-  });
-};
-
-export const getAllTestTypes = async (categoryId?: string) => {
-  const filter: any = {};
-  if (categoryId) {
-    filter.categoryId = categoryId;
-  }
-  const types = await prisma.testType.findMany({
-    where: filter,
     select: {
       id: true,
       name: true,
-      tags: true,
-      description: true,
-      scoringMethod: true,
-      dimensions: true,
-      createdAt: true,
-      updatedAt: true,
-      blueprint: true,
-      category: {
-        select: {
-          name: true,
-          icon: true,
-        },
-      },
+      icon: true,
+    },
+    orderBy: { createdAt: "desc" },
+  });
+};
+
+export const getTestTypesWithStats = async (categoryId: string) => {
+  const types = await prisma.testType.findMany({
+    where: { categoryId },
+    include: {
+      category: true,
     },
     orderBy: { createdAt: "desc" },
   });
 
-  return types.map((type) => ({
-    ...type,
-    blueprint: {
-      ...(type.blueprint as any),
-      structure: undefined,
-      levelWeights: undefined,
-    },
-  }));
+  if (types.length === 0) {
+    return [];
+  }
+
+  const results = await Promise.all(
+    types.map(async (type) => {
+      const [totalSessions, completedSessions] = await Promise.all([
+        prisma.testSession.count({ where: { typeId: type.id } }),
+        prisma.testSession.count({ where: { typeId: type.id, status: "completed" } }),
+      ]);
+
+      const blueprint = type.blueprint as any;
+      const totalQuestions = blueprint?.totalQuestions || 0;
+      const timeLimit = blueprint?.timeLimit || null;
+
+      return {
+        id: type.id,
+        name: type.name,
+        description: type.description,
+        tags: type.tags,
+        category: type.category?.name || "بدون دسته‌بندی",
+        totalQuestions,
+        timeLimit,
+        totalSessions,
+        completedSessions,
+      };
+    })
+  );
+
+
+  return results;
 };
 
-export const getUsersWithTestSessions = async () => {
+export const getTestSessionsByType = async (typeId: string) => {
   const sessions = await prisma.testSession.findMany({
-    select: { userId: true },
-    distinct: ["userId"],
-  });
-  return sessions.map((s) => s.userId);
-};
-
-export const getAllTestSessionsInfo = async () => {
-  const sessions = await prisma.testSession.findMany({
+    where: { typeId },
     select: {
       id: true,
       userId: true,
       status: true,
       startedAt: true,
-      testType: {
+      finishedAt: true,
+      quickResult: true,
+      score: true,
+      user: {
         select: {
+          id: true,
           name: true,
-          tags: true,
+          lastName: true,
+          phone: true,
         },
       },
     },
@@ -72,12 +80,104 @@ export const getAllTestSessionsInfo = async () => {
 
   return sessions.map((session) => ({
     sessionId: session.id,
-    userId: session.userId,
+    user: {
+      id: session.user.id,
+      fullName: `${session.user.name || ''} ${session.user.lastName || ''}`.trim(),
+      phone: session.user.phone,
+    },
     status: session.status,
     startedAt: toJalali(session.startedAt),
-    testName: (session as any).testType?.name || "نامشخص",
-    testTags: (session as any).testType?.tags || [],
+    finishedAt: session.finishedAt ? toJalali(session.finishedAt) : null,
+    result: session.status === "completed"
+      ? (session.quickResult || "مشاهده جزئیات")
+      : "در حال انجام",
+    score: session.score?.toFixed(1),
   }));
+};
+
+export const getTestSessionDetailById = async (sessionId: string) => {
+  const session = await prisma.testSession.findUnique({
+    where: { id: sessionId },
+    select: {
+      id: true,
+      userId: true,
+      status: true,
+      typeId: true,
+      questions: true,
+      score: true,
+      assignedLevel: true,
+      levelResults: true,
+      startedAt: true,
+      finishedAt: true,
+      quickResult: true,
+      detailedResult: true,
+      testType: {
+        select: {
+          id: true,
+          name: true,
+          scoringMethod: true,
+          blueprint: true,
+          category: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+      user: {
+        select: {
+          id: true,
+          name: true,
+          lastName: true,
+          phone: true,
+          email: true,
+        },
+      },
+    },
+  });
+
+  if (!session) {
+    throw new Error("جلسه تست یافت نشد");
+  }
+
+  const testType = (session as any).testType;
+  const method = testType?.scoringMethod;
+
+  const result: any = {
+    baseInfo: {
+      testName: testType?.name || "نامشخص",
+      category: testType?.category?.name || "بدون دسته‌بندی",
+      score: session.score?.toFixed(1) || "۰",
+      date: toJalali(session.finishedAt),
+      startedAt: toJalali(session.startedAt),
+      user: {
+        fullName: `${session.user?.name || ''} ${session.user?.lastName || ''}`.trim(),
+        phone: session.user?.phone || '',
+        email: session.user?.email || '',
+      },
+      stats: {
+        total: 0,
+        correct: 0,
+        wrong: 0,
+        unanswered: 0,
+      },
+    },
+    analysis: session.detailedResult || session.levelResults || {},
+  };
+
+  if (session.detailedResult) {
+    const detailed = session.detailedResult as any;
+    if (detailed.baseInfo?.stats) {
+      result.baseInfo.stats = detailed.baseInfo.stats;
+    }
+  }
+
+  if (method === "weighted_level") {
+    result.assignedLevel = session.assignedLevel;
+  }
+
+  return result;
 };
 
 // resume section 
