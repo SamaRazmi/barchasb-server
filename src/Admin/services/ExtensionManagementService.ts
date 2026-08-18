@@ -188,6 +188,7 @@ export const getUsersWithResumes = async () => {
       userId: true,
       updateCount: true,
       updatedAt: true,
+      fileUrl: true,
       user: {
         select: {
           id: true,
@@ -212,6 +213,7 @@ export const getUsersWithResumes = async () => {
         resumeId: string;
         updateCount: number;
         updatedAt: Date;
+        fileUrl: string | null;
       }>;
       user: {
         name: string;
@@ -249,6 +251,7 @@ export const getUsersWithResumes = async () => {
       resumeId: resume.id,
       updateCount: resume.updateCount,
       updatedAt: resume.updatedAt,
+      fileUrl: resume.fileUrl,
     });
   }
 
@@ -257,8 +260,10 @@ export const getUsersWithResumes = async () => {
     totalResumes: userMap[userId].totalResumes,
     lastUserUpdate: toJalali(userMap[userId].lastUserUpdate),
     resumes: userMap[userId].resumes.map((r) => ({
-      ...r,
+      resumeId: r.resumeId,
+      updateCount: r.updateCount,
       updatedAt: toJalali(r.updatedAt),
+      fileUrl: r.fileUrl,
     })),
     userInfo: {
       fullName: `${userMap[userId].user.name} ${userMap[userId].user.lastName}`.trim(),
