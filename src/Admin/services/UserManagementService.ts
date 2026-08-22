@@ -552,6 +552,7 @@ export async function getUserTestDetail(userId: string, sessionId: string) {
 
   const testType = (session as any).testType;
   const method = testType?.scoringMethod;
+  const levelResults = session.levelResults as any;
 
   const result: any = {
     baseInfo: {
@@ -567,8 +568,12 @@ export async function getUserTestDetail(userId: string, sessionId: string) {
         unanswered: 0,
       },
     },
-    analysis: session.detailedResult || session.levelResults || {},
+    analysis: session.detailedResult || levelResults || {},
   };
+
+  if (levelResults?.type) {
+    result.analysis.type = levelResults.type;
+  }
 
   if (session.detailedResult) {
     const detailed = session.detailedResult as any;
