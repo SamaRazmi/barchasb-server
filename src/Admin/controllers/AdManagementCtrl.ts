@@ -3,14 +3,6 @@ import * as AdManagementService from "../services/AdManagementService";
 import { AdStatus, AdType } from "@prisma/client";
 import { checkAdPermission } from "../utils/permissionCheck";
 import { AdminRole } from "@prisma/client";
-// ============================================================
-// اضافه شده برای ساخت نوتیفیکیشن درون‌برنامه‌ای پس از تأیید/رد آگهی
-// ============================================================
-import {
-  createAdApprovedNotification,
-  createAdRejectedNotification,
-} from "../../services/notificationService";
-import prisma from "../../config/prisma";
 
 interface AuthRequest extends Request {
   admin?: {
@@ -30,11 +22,13 @@ const AdManagementCtrl = {
   list: async (req: AuthRequest, res: Response) => {
     try {
       const admin = req.admin;
+
       if (!admin) {
         return res
           .status(401)
           .json({ status: "error", message: "احراز هویت نشده" });
       }
+
       checkAdPermission(admin);
 
       const status = req.query.status as AdStatus | "pending" | undefined;
@@ -49,21 +43,30 @@ const AdManagementCtrl = {
         limit,
       });
 
-      res.status(200).json({ status: "success", data: result });
+      res.status(200).json({
+        status: "success",
+        data: result,
+      });
     } catch (error: any) {
       console.error("Error in list ads:", error);
-      res.status(500).json({ status: "error", message: error.message });
+
+      res.status(500).json({
+        status: "error",
+        message: error.message,
+      });
     }
   },
 
   details: async (req: AuthRequest, res: Response) => {
     try {
       const admin = req.admin;
+
       if (!admin) {
         return res
           .status(401)
           .json({ status: "error", message: "احراز هویت نشده" });
       }
+
       checkAdPermission(admin);
 
       const id = toStr(req.params.id);
@@ -78,21 +81,30 @@ const AdManagementCtrl = {
 
       const result = await AdManagementService.getAdDetails(id, type);
 
-      res.status(200).json({ status: "success", data: result });
+      res.status(200).json({
+        status: "success",
+        data: result,
+      });
     } catch (error: any) {
       console.error("Error in ad details:", error);
-      res.status(404).json({ status: "error", message: error.message });
+
+      res.status(404).json({
+        status: "error",
+        message: error.message,
+      });
     }
   },
 
   approve: async (req: AuthRequest, res: Response) => {
     try {
       const admin = req.admin;
+
       if (!admin) {
         return res
           .status(401)
           .json({ status: "error", message: "احراز هویت نشده" });
       }
+
       checkAdPermission(admin);
 
       const id = toStr(req.params.id);
@@ -105,43 +117,37 @@ const AdManagementCtrl = {
         });
       }
 
-      const result = await AdManagementService.approveAd(id, type, admin.id);
+      // تغییر جدید: ساخت نوتیفیکیشن تأیید داخل Service انجام می‌شود.
+      const result = await AdManagementService.approveAd(
+        id,
+        type,
+        admin.id
+      );
 
-      // ============================================================
-      // ساخت نوتیفیکیشن تأیید برای کاربر صاحب آگهی
-      // ============================================================
-      try {
-        const ad = await prisma[type].findUnique({
-          where: { id },
-          select: { id: true, title: true, owner: true },
-        });
-        if (ad) {
-          await createAdApprovedNotification(
-            { id: ad.id, title: ad.title, owner: ad.owner },
-            type,
-            admin.id,
-          );
-        }
-      } catch (notifError) {
-        console.error("خطا در ساخت نوتیفیکیشن تأیید:", notifError);
-        // خطای نوتیفیکیشن نباید باعث شکست کل درخواست شود
-      }
-
-      res.status(200).json({ status: "success", data: result });
+      res.status(200).json({
+        status: "success",
+        data: result,
+      });
     } catch (error: any) {
       console.error("Error approving ad:", error);
-      res.status(400).json({ status: "error", message: error.message });
+
+      res.status(400).json({
+        status: "error",
+        message: error.message,
+      });
     }
   },
 
   reject: async (req: AuthRequest, res: Response) => {
     try {
       const admin = req.admin;
+
       if (!admin) {
         return res
           .status(401)
           .json({ status: "error", message: "احراز هویت نشده" });
       }
+
       checkAdPermission(admin);
 
       const id = toStr(req.params.id);
@@ -162,37 +168,25 @@ const AdManagementCtrl = {
         });
       }
 
+      // تغییر جدید: ساخت نوتیفیکیشن رد داخل Service انجام می‌شود.
       const result = await AdManagementService.rejectAd(
         id,
         type,
         reason,
-        admin.id,
+        admin.id
       );
 
-      // ============================================================
-      // ساخت نوتیفیکیشن رد برای کاربر صاحب آگهی
-      // ============================================================
-      try {
-        const ad = await prisma[type].findUnique({
-          where: { id },
-          select: { id: true, title: true, owner: true },
-        });
-        if (ad) {
-          await createAdRejectedNotification(
-            { id: ad.id, title: ad.title, owner: ad.owner },
-            type,
-            reason,
-          );
-        }
-      } catch (notifError) {
-        console.error("خطا در ساخت نوتیفیکیشن رد:", notifError);
-        // خطای نوتیفیکیشن نباید باعث شکست کل درخواست شود
-      }
-
-      res.status(200).json({ status: "success", data: result });
+      res.status(200).json({
+        status: "success",
+        data: result,
+      });
     } catch (error: any) {
       console.error("Error rejecting ad:", error);
-      res.status(400).json({ status: "error", message: error.message });
+
+      res.status(400).json({
+        status: "error",
+        message: error.message,
+      });
     }
   },
 };

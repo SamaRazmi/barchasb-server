@@ -1,7 +1,18 @@
-import prisma from '../../config/prisma'
-import { AdStatus, AdType, PaymentMethod, TransactionStatus } from '@prisma/client'
-import * as WalletService from '../../services/WalletService'
-import { toJalali } from '../../utils/dateFormatter'
+import prisma from "../../config/prisma";
+import {
+  AdStatus,
+  AdType,
+  PaymentMethod,
+  TransactionStatus,
+} from "@prisma/client";
+import * as WalletService from "../../services/WalletService";
+import { toJalali } from "../../utils/dateFormatter";
+
+// تغییر جدید: Notification بعد از تغییر موفق وضعیت آگهی در همین Service ساخته می‌شود.
+import {
+  createAdApprovedNotification,
+  createAdRejectedNotification,
+} from "../../services/notificationService";
 
 // helper
 async function getAdEnhancement(adId: string, adType: AdType) {
@@ -25,6 +36,7 @@ async function getAdEnhancement(adId: string, adType: AdType) {
   }
 
   const now = new Date();
+
   const isSpecialActive =
     enhancement.isSpecial &&
     enhancement.specialStartDate &&
@@ -36,33 +48,55 @@ async function getAdEnhancement(adId: string, adType: AdType) {
     isSpecial: isSpecialActive,
     specialStartDate: enhancement.specialStartDate,
     specialEndDate: enhancement.specialEndDate,
-    isLadder: enhancement.ladders && enhancement.ladders.length > 0,
+    isLadder:
+      enhancement.ladders && enhancement.ladders.length > 0,
     ladders: enhancement.ladders || [],
   };
 }
 
 interface GetAdsListInput {
-  status?: AdStatus | 'pending'
-  type?: AdType
-  page?: number
-  limit?: number
+  status?: AdStatus | "pending";
+  type?: AdType;
+  page?: number;
+  limit?: number;
 }
 
 export async function getAdsList(input: GetAdsListInput) {
-  const { status, type, page = 1, limit = 10 } = input
-  const skip = (page - 1) * limit
+  const {
+    status,
+    type,
+    page = 1,
+    limit = 10,
+  } = input;
 
-  let statusCondition: any = {}
-  if (status === 'pending') {
-    statusCondition = { adStatus: { in: ['pending', 'updated'] } }
+  const skip = (page - 1) * limit;
+
+  let statusCondition: any = {};
+
+  if (status === "pending") {
+    statusCondition = {
+      adStatus: {
+        in: ["pending", "updated"],
+      },
+    };
   } else if (status) {
-    statusCondition = { adStatus: status }
+    statusCondition = {
+      adStatus: status,
+    };
   }
 
-  const typeCondition = type ? { adType: type } : {}
+  const typeCondition = type
+    ? { adType: type }
+    : {};
 
-  const adTypes: AdType[] = [AdType.DigitalAd, AdType.EmployerAd, AdType.JobSeekerAd, AdType.SellerAd]
-  const allAds: any[] = []
+  const adTypes: AdType[] = [
+    AdType.DigitalAd,
+    AdType.EmployerAd,
+    AdType.JobSeekerAd,
+    AdType.SellerAd,
+  ];
+
+  const allAds: any[] = [];
 
   for (const adType of adTypes) {
     const modelMap: Record<string, any> = {
@@ -70,19 +104,22 @@ export async function getAdsList(input: GetAdsListInput) {
       [AdType.EmployerAd]: prisma.employerAd,
       [AdType.JobSeekerAd]: prisma.jobSeekerAd,
       [AdType.SellerAd]: prisma.sellerAd,
-    }
-    const model = modelMap[adType]
+    };
 
-    if (type && adType !== type) continue
+    const model = modelMap[adType];
+
+    if (type && adType !== type) continue;
 
     const where: any = {
       ...statusCondition,
-    }
+    };
 
     const ads = await model.findMany({
       where,
       skip,
-      orderBy: { createdAt: 'desc' },
+      orderBy: {
+        createdAt: "desc",
+      },
       include: {
         ownerRelation: {
           select: {
@@ -93,74 +130,128 @@ export async function getAdsList(input: GetAdsListInput) {
           },
         },
       },
-    })
+    });
 
     for (const ad of ads) {
-      const enhancement = await getAdEnhancement(ad.id, adType)
-      const firstImage = ad.images && ad.images.length > 0 ? ad.images[0] : null
+      const enhancement = await getAdEnhancement(
+        ad.id,
+        adType
+      );
+
+      const firstImage =
+        ad.images && ad.images.length > 0
+          ? ad.images[0]
+          : null;
 
       allAds.push({
         id: ad.id,
         type: adType,
-        title: ad.title || ad.name || 'بدون عنوان',
-        description: ad.description || ad.aboutMe || '',
-        firstImage: firstImage?.url || null,
+        title:
+          ad.title ||
+          ad.name ||
+          "بدون عنوان",
+
+        description:
+          ad.description ||
+          ad.aboutMe ||
+          "",
+
+        firstImage:
+          firstImage?.url ||
+          null,
+
         status: ad.adStatus,
+
         owner: ad.ownerRelation
           ? {
-              fullName: `${ad.ownerRelation.name || ''} ${ad.ownerRelation.lastName || ''}`.trim(),
-              phone: ad.ownerRelation.phone,
+              fullName:
+                `${ad.ownerRelation.name || ""} ${
+                  ad.ownerRelation.lastName || ""
+                }`.trim(),
+
+              phone:
+                ad.ownerRelation.phone,
             }
           : null,
+
         createdAt: toJalali(ad.createdAt),
+
         enhancements: {
-          isSpecial: enhancement.isSpecial,
-          isLadder: enhancement.isLadder,
+          isSpecial:
+            enhancement.isSpecial,
+
+          isLadder:
+            enhancement.isLadder,
         },
-      })
+      });
     }
   }
-  allAds.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-  const paginatedData = allAds.slice(skip, skip + limit)
 
-  let total = 0
+  allAds.sort(
+    (a, b) =>
+      new Date(b.createdAt).getTime() -
+      new Date(a.createdAt).getTime()
+  );
+
+  const paginatedData = allAds.slice(
+    skip,
+    skip + limit
+  );
+
+  let total = 0;
+
   for (const adType of adTypes) {
-    if (type && adType !== type) continue
+    if (type && adType !== type) continue;
+
     const modelMap: Record<string, any> = {
       [AdType.DigitalAd]: prisma.digitalAd,
       [AdType.EmployerAd]: prisma.employerAd,
       [AdType.JobSeekerAd]: prisma.jobSeekerAd,
       [AdType.SellerAd]: prisma.sellerAd,
-    }
-    const model = modelMap[adType]
+    };
+
+    const model = modelMap[adType];
+
     const count = await model.count({
-      where: { ...statusCondition },
-    })
-    total += count
+      where: {
+        ...statusCondition,
+      },
+    });
+
+    total += count;
   }
 
   return {
     data: paginatedData,
+
     pagination: {
       page,
       limit,
       total,
-      totalPages: Math.ceil(total / limit),
+      totalPages: Math.ceil(
+        total / limit
+      ),
     },
-  }
+  };
 }
 
-export async function getAdDetails(adId: string, adType: AdType) {
+export async function getAdDetails(
+  adId: string,
+  adType: AdType
+) {
   const modelMap: Record<string, any> = {
     [AdType.DigitalAd]: prisma.digitalAd,
     [AdType.EmployerAd]: prisma.employerAd,
     [AdType.JobSeekerAd]: prisma.jobSeekerAd,
     [AdType.SellerAd]: prisma.sellerAd,
-  }
-  const model = modelMap[adType]
+  };
+
+  const model = modelMap[adType];
 
   const ad = await model.findUnique({
-    where: { id: adId },
+    where: {
+      id: adId,
+    },
     include: {
       ownerRelation: {
         select: {
@@ -173,181 +264,353 @@ export async function getAdDetails(adId: string, adType: AdType) {
         },
       },
     },
-  })
+  });
 
   if (!ad) {
-    throw new Error('آگهی یافت نشد')
+    throw new Error("آگهی یافت نشد");
   }
 
-  let approvedByAdmin = null
+  let approvedByAdmin = null;
+
   if (ad.approvedBy) {
-    const admin = await prisma.admin.findUnique({
-      where: { id: ad.approvedBy },
-      select: {
-        id: true,
-        fullName: true,
-        phone: true,
-      },
-    })
+    const admin =
+      await prisma.admin.findUnique({
+        where: {
+          id: ad.approvedBy,
+        },
+        select: {
+          id: true,
+          fullName: true,
+          phone: true,
+        },
+      });
+
     if (admin) {
       approvedByAdmin = {
         id: admin.id,
         fullName: admin.fullName,
         phone: admin.phone,
-      }
+      };
     }
   }
 
-  let rejectedByAdmin = null
+  let rejectedByAdmin = null;
+
   if (ad.rejectedBy) {
-    const admin = await prisma.admin.findUnique({
-      where: { id: ad.rejectedBy },
-      select: {
-        id: true,
-        fullName: true,
-        phone: true,
-      },
-    })
+    const admin =
+      await prisma.admin.findUnique({
+        where: {
+          id: ad.rejectedBy,
+        },
+        select: {
+          id: true,
+          fullName: true,
+          phone: true,
+        },
+      });
+
     if (admin) {
       rejectedByAdmin = {
         id: admin.id,
         fullName: admin.fullName,
         phone: admin.phone,
-      }
+      };
     }
   }
 
-  const enhancement = await getAdEnhancement(ad.id, adType)
+  const enhancement =
+    await getAdEnhancement(
+      ad.id,
+      adType
+    );
 
-  const transaction = await prisma.transaction.findFirst({
-    where: {
-      referenceId: adId,
-      status: TransactionStatus.COMPLETED,
-    },
-    orderBy: { createdAt: 'desc' },
-  })
+  const transaction =
+    await prisma.transaction.findFirst({
+      where: {
+        referenceId: adId,
+        status: TransactionStatus.COMPLETED,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
-  const wallet = await prisma.wallet.findUnique({
-    where: { userId: ad.owner },
-    select: { balance: true, heldBalance: true },
-  })
+  const wallet =
+    await prisma.wallet.findUnique({
+      where: {
+        userId: ad.owner,
+      },
+      select: {
+        balance: true,
+        heldBalance: true,
+      },
+    });
 
   return {
     ad: {
       ...ad,
-      createdAt: toJalali(ad.createdAt),
-      approvedAt: ad.approvedAt ? toJalali(ad.approvedAt) : null,
-      expiresAt: ad.expiresAt ? toJalali(ad.expiresAt) : null,
+
+      createdAt: toJalali(
+        ad.createdAt
+      ),
+
+      approvedAt: ad.approvedAt
+        ? toJalali(ad.approvedAt)
+        : null,
+
+      expiresAt: ad.expiresAt
+        ? toJalali(ad.expiresAt)
+        : null,
     },
+
     owner: ad.ownerRelation
       ? {
           id: ad.ownerRelation.id,
-          fullName: `${ad.ownerRelation.name || ''} ${ad.ownerRelation.lastName || ''}`.trim(),
-          phone: ad.ownerRelation.phone,
-          province: ad.ownerRelation.province,
-          city: ad.ownerRelation.city,
+
+          fullName:
+            `${ad.ownerRelation.name || ""} ${
+              ad.ownerRelation.lastName || ""
+            }`.trim(),
+
+          phone:
+            ad.ownerRelation.phone,
+
+          province:
+            ad.ownerRelation.province,
+
+          city:
+            ad.ownerRelation.city,
         }
       : null,
+
     enhancements: {
-      isSpecial: enhancement.isSpecial,
-      specialStartDate: enhancement.specialStartDate,
-      specialEndDate: enhancement.specialEndDate,
-      isLadder: enhancement.isLadder,
-      ladders: enhancement.ladders,
+      isSpecial:
+        enhancement.isSpecial,
+
+      specialStartDate:
+        enhancement.specialStartDate,
+
+      specialEndDate:
+        enhancement.specialEndDate,
+
+      isLadder:
+        enhancement.isLadder,
+
+      ladders:
+        enhancement.ladders,
     },
+
     payment: transaction
       ? {
-          amount: transaction.amount,
-          method: transaction.paymentMethod,
-          status: transaction.status,
-          createdAt: toJalali(transaction.createdAt),
+          amount:
+            transaction.amount,
+
+          method:
+            transaction.paymentMethod,
+
+          status:
+            transaction.status,
+
+          createdAt:
+            toJalali(
+              transaction.createdAt
+            ),
         }
       : null,
+
     wallet: wallet
       ? {
-          balance: wallet.balance,
-          heldBalance: wallet.heldBalance,
-          available: wallet.balance - wallet.heldBalance,
+          balance:
+            wallet.balance,
+
+          heldBalance:
+            wallet.heldBalance,
+
+          available:
+            wallet.balance -
+            wallet.heldBalance,
         }
       : null,
-    approvedBy: approvedByAdmin,
-    rejectedBy: rejectedByAdmin,
-  }
+
+    approvedBy:
+      approvedByAdmin,
+
+    rejectedBy:
+      rejectedByAdmin,
+  };
 }
 
-export async function approveAd(adId: string, adType: AdType, adminId: string) {
+export async function approveAd(
+  adId: string,
+  adType: AdType,
+  adminId: string
+) {
   const modelMap: Record<string, any> = {
     [AdType.DigitalAd]: prisma.digitalAd,
     [AdType.EmployerAd]: prisma.employerAd,
     [AdType.JobSeekerAd]: prisma.jobSeekerAd,
     [AdType.SellerAd]: prisma.sellerAd,
-  }
-  const model = modelMap[adType]
+  };
+
+  const model = modelMap[adType];
 
   const ad = await model.findUnique({
-    where: { id: adId },
-  })
+    where: {
+      id: adId,
+    },
+  });
 
-  if (!ad) throw new Error('آگهی یافت نشد')
-
-  if (ad.adStatus !== 'pending' && ad.adStatus !== 'updated') {
-    throw new Error('فقط آگهی‌های در انتظار تایید یا ویرایش‌شده قابل تایید هستند')
+  if (!ad) {
+    throw new Error("آگهی یافت نشد");
   }
 
-  if (ad.adStatus === 'pending') {
-    const transaction = await prisma.transaction.findFirst({
-      where: {
-        referenceId: adId,
-        status: TransactionStatus.PENDING,
-        type: 'HOLD',
-      },
-      orderBy: { createdAt: 'desc' },
-    })
+  if (
+    ad.adStatus !== "pending" &&
+    ad.adStatus !== "updated"
+  ) {
+    throw new Error(
+      "فقط آگهی‌های در انتظار تایید یا ویرایش‌شده قابل تایید هستند"
+    );
+  }
+
+  if (ad.adStatus === "pending") {
+    const transaction =
+      await prisma.transaction.findFirst({
+        where: {
+          referenceId: adId,
+          status:
+            TransactionStatus.PENDING,
+          type: "HOLD",
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
 
     if (transaction) {
-      await WalletService.releaseHold(transaction.id, { approvedBy: adminId })
+      await WalletService.releaseHold(
+        transaction.id,
+        {
+          approvedBy: adminId,
+        }
+      );
     }
 
-    const now = new Date()
-    const expiresAt = new Date(now)
-    expiresAt.setDate(expiresAt.getDate() + 30)
+    const now = new Date();
 
-    await model.update({
-      where: { id: adId },
-      data: {
-        adStatus: 'approved',
-        approvedAt: now,
-        expiresAt: expiresAt,
-        approvedBy: adminId,
-      },
-    })
+    const expiresAt =
+      new Date(now);
 
-    await applyEnhancements(adId, adType, now)
+    expiresAt.setDate(
+      expiresAt.getDate() + 30
+    );
+
+    const updatedAd =
+      await model.update({
+        where: {
+          id: adId,
+        },
+        data: {
+          adStatus: "approved",
+          approvedAt: now,
+          expiresAt: expiresAt,
+          approvedBy: adminId,
+        },
+      });
+
+    await applyEnhancements(
+      adId,
+      adType,
+      now
+    );
+
+    // تغییر جدید: پس از ثبت موفق approved، نوتیفیکیشن تأیید برای مالک آگهی ساخته می‌شود.
+    try {
+      await createAdApprovedNotification(
+        {
+          id: updatedAd.id,
+          title:
+            updatedAd.title ||
+            updatedAd.name ||
+            "بدون عنوان",
+          owner: updatedAd.owner,
+        },
+        adType,
+        adminId
+      );
+    } catch (notificationError) {
+      console.error(
+        "خطا در ساخت نوتیفیکیشن تأیید:",
+        notificationError
+      );
+    }
 
     return {
-      message: 'آگهی با موفقیت تایید شد',
-      approvedAt: toJalali(now),
-      expiresAt: toJalali(expiresAt),
-    }
+      message:
+        "آگهی با موفقیت تایید شد",
+
+      // تغییر جدید: وضعیت نهایی آگهی صراحتاً در پاسخ API برگردانده می‌شود.
+      status: "approved",
+
+      approvedAt:
+        toJalali(now),
+
+      expiresAt:
+        toJalali(expiresAt),
+    };
   }
 
-  if (ad.adStatus === 'updated') {
-    const now = new Date()
-    await model.update({
-      where: { id: adId },
-      data: {
-        adStatus: 'approved',
-        approvedAt: now,
-        expiresAt: ad.expiresAt,
-        approvedBy: adminId,
-      },
-    })
+  if (ad.adStatus === "updated") {
+    const now = new Date();
+
+    const updatedAd =
+      await model.update({
+        where: {
+          id: adId,
+        },
+        data: {
+          adStatus: "approved",
+          approvedAt: now,
+          expiresAt: ad.expiresAt,
+          approvedBy: adminId,
+        },
+      });
+
+    // تغییر جدید: پس از تأیید آگهی ویرایش‌شده، نوتیفیکیشن تأیید برای مالک آگهی ساخته می‌شود.
+    try {
+      await createAdApprovedNotification(
+        {
+          id: updatedAd.id,
+          title:
+            updatedAd.title ||
+            updatedAd.name ||
+            "بدون عنوان",
+          owner: updatedAd.owner,
+        },
+        adType,
+        adminId
+      );
+    } catch (notificationError) {
+      console.error(
+        "خطا در ساخت نوتیفیکیشن تأیید:",
+        notificationError
+      );
+    }
 
     return {
-      message: 'آگهی ویرایش‌شده با موفقیت تایید شد',
-      approvedAt: toJalali(now),
-      expiresAt: toJalali(ad.expiresAt),
-    }
+      message:
+        "آگهی ویرایش‌شده با موفقیت تایید شد",
+
+      // تغییر جدید: وضعیت نهایی آگهی صراحتاً در پاسخ API برگردانده می‌شود.
+      status: "approved",
+
+      approvedAt:
+        toJalali(now),
+
+      expiresAt: ad.expiresAt
+        ? toJalali(ad.expiresAt)
+        : null,
+    };
   }
 }
 
@@ -362,87 +625,181 @@ export async function rejectAd(
     [AdType.EmployerAd]: prisma.employerAd,
     [AdType.JobSeekerAd]: prisma.jobSeekerAd,
     [AdType.SellerAd]: prisma.sellerAd,
-  }
-  const model = modelMap[adType]
+  };
+
+  const model = modelMap[adType];
 
   const ad = await model.findUnique({
-    where: { id: adId },
-  })
+    where: {
+      id: adId,
+    },
+  });
 
-  if (!ad) throw new Error('آگهی یافت نشد')
-
-  if (!['pending', 'approved', 'updated'].includes(ad.adStatus)) {
-    throw new Error('فقط آگهی‌های در انتظار، تایید شده یا ویرایش‌شده قابل رد هستند')
+  if (!ad) {
+    throw new Error("آگهی یافت نشد");
   }
-  if (ad.adStatus === 'pending') {
-    const transaction = await prisma.transaction.findFirst({
-      where: {
-        referenceId: adId,
-        status: TransactionStatus.PENDING,
-        type: 'HOLD',
-      },
-      orderBy: { createdAt: 'desc' },
-    })
+
+  if (
+    ![
+      "pending",
+      "approved",
+      "updated",
+    ].includes(ad.adStatus)
+  ) {
+    throw new Error(
+      "فقط آگهی‌های در انتظار، تایید شده یا ویرایش‌شده قابل رد هستند"
+    );
+  }
+
+  if (ad.adStatus === "pending") {
+    const transaction =
+      await prisma.transaction.findFirst({
+        where: {
+          referenceId: adId,
+          status:
+            TransactionStatus.PENDING,
+          type: "HOLD",
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
 
     if (transaction) {
-      await WalletService.refundHold(transaction.id, reason, { rejectedBy: adminId })
+      await WalletService.refundHold(
+        transaction.id,
+        reason,
+        {
+          rejectedBy: adminId,
+        }
+      );
     }
   }
 
-  await model.update({
-    where: { id: adId },
-    data: {
-      adStatus: 'rejected',
-      rejectionReason: reason,
-      rejectedBy: adminId,  
-    },
-  })
+  const updatedAd =
+    await model.update({
+      where: {
+        id: adId,
+      },
+      data: {
+        adStatus: "rejected",
+        rejectionReason: reason,
+        rejectedBy: adminId,
+      },
+    });
+
+  // تغییر جدید: پس از ثبت موفق rejected، نوتیفیکیشن رد برای مالک آگهی ساخته می‌شود.
+  try {
+    await createAdRejectedNotification(
+      {
+        id: updatedAd.id,
+        title:
+          updatedAd.title ||
+          updatedAd.name ||
+          "بدون عنوان",
+        owner: updatedAd.owner,
+      },
+      adType,
+      reason
+    );
+  } catch (notificationError) {
+    console.error(
+      "خطا در ساخت نوتیفیکیشن رد:",
+      notificationError
+    );
+  }
 
   return {
-    message: 'آگهی با موفقیت رد شد',
+    message:
+      "آگهی با موفقیت رد شد",
+
+    // تغییر جدید: وضعیت نهایی آگهی صراحتاً در پاسخ API برگردانده می‌شود.
+    status: "rejected",
+
     rejectionReason: reason,
-  }
+  };
 }
 
-async function applyEnhancements(adId: string, adType: AdType, approvedAt: Date) {
-  const enhancement = await prisma.adEnhancement.findFirst({
-    where: { adId, adType },
-    include: { ladders: true },
-  })
+async function applyEnhancements(
+  adId: string,
+  adType: AdType,
+  approvedAt: Date
+) {
+  const enhancement =
+    await prisma.adEnhancement.findFirst({
+      where: {
+        adId,
+        adType,
+      },
+      include: {
+        ladders: true,
+      },
+    });
 
-  if (!enhancement) return
+  if (!enhancement) return;
 
   if (enhancement.isSpecial) {
-    const specialEndDate = new Date(approvedAt)
-    specialEndDate.setDate(specialEndDate.getDate() + 30)
+    const specialEndDate =
+      new Date(approvedAt);
+
+    specialEndDate.setDate(
+      specialEndDate.getDate() + 30
+    );
 
     await prisma.adEnhancement.update({
-      where: { id: enhancement.id },
-      data: {
-        specialStartDate: approvedAt,
-        specialEndDate: specialEndDate,
+      where: {
+        id: enhancement.id,
       },
-    })
+      data: {
+        specialStartDate:
+          approvedAt,
+
+        specialEndDate:
+          specialEndDate,
+      },
+    });
   }
 
-  if (enhancement.ladders && enhancement.ladders.length > 0) {
+  if (
+    enhancement.ladders &&
+    enhancement.ladders.length > 0
+  ) {
     for (const ladder of enhancement.ladders) {
-      if (ladder.isExecuted) continue
+      if (ladder.isExecuted) continue;
 
-      let scheduledAt: Date | null = null
-      if (ladder.option === '24h') {
-        scheduledAt = new Date(approvedAt.getTime() + 24 * 60 * 60 * 1000)
-      } else if (ladder.option === '72h') {
-        scheduledAt = new Date(approvedAt.getTime() + 72 * 60 * 60 * 1000)
-      } else if (ladder.option === '7d') {
-        scheduledAt = new Date(approvedAt.getTime() + 7 * 24 * 60 * 60 * 1000)
+      let scheduledAt:
+        Date | null = null;
+
+      if (ladder.option === "24h") {
+        scheduledAt = new Date(
+          approvedAt.getTime() +
+            24 * 60 * 60 * 1000
+        );
+      } else if (
+        ladder.option === "72h"
+      ) {
+        scheduledAt = new Date(
+          approvedAt.getTime() +
+            72 * 60 * 60 * 1000
+        );
+      } else if (
+        ladder.option === "7d"
+      ) {
+        scheduledAt = new Date(
+          approvedAt.getTime() +
+            7 * 24 * 60 * 60 * 1000
+        );
       }
 
       if (scheduledAt) {
         await prisma.adLadder.update({
-          where: { id: ladder.id },
-          data: { scheduledAt },
-        })
+          where: {
+            id: ladder.id,
+          },
+          data: {
+            scheduledAt,
+          },
+        });
       }
     }
   }
