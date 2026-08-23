@@ -830,16 +830,9 @@ const ScoringLogic = {
         );
 
         if (selectedOption) {
-          const pts = selectedOption.traitPoints;
-          const traitPoints =
-            pts instanceof Map ? Object.fromEntries(pts) : pts;
-
-          if (traitPoints) {
-            for (const [trait, value] of Object.entries(traitPoints)) {
-              if (counts.hasOwnProperty(trait)) {
-                counts[trait] += value as number;
-              }
-            }
+          const trait = selectedOption.trait;
+          if (trait && counts.hasOwnProperty(trait)) {
+            counts[trait] += 1; 
           }
 
           processedQuestions.push({
@@ -858,8 +851,7 @@ const ScoringLogic = {
       const s1 = counts[p1] || 0;
       const s2 = counts[p2] || 0;
       const total = s1 + s2;
-      if (total === 0)
-        return { winner: p1, percentages: { [p1]: 50, [p2]: 50 } };
+      if (total === 0) return { winner: p1, percentages: { [p1]: 50, [p2]: 50 } };
       const p1Percent = Math.round((s1 / total) * 100);
       const p2Percent = 100 - p1Percent;
       return {
@@ -893,7 +885,7 @@ const ScoringLogic = {
       questions: processedQuestions,
     };
   },
-
+  
   /**
    * Holland career ENGINE
    */
