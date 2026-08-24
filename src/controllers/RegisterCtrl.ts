@@ -1,5 +1,3 @@
-// src/controllers/RegisterCtrl.ts
-
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -254,39 +252,40 @@ export const registerUser = async (
 
     const newUser = await prisma.user.create({
       data: {
-        // اطلاعاتی که فعلاً در فرم ثبت‌نام نیستند
-        name: name || "",
-        lastName: lastName || "",
-        nationalCode: nationalCode || "",
+        // اطلاعات اختیاری
+        // مقدار خالی به NULL تبدیل می‌شود
+        name: name?.trim() || null,
+        lastName: lastName?.trim() || null,
+        nationalCode:
+          nationalCode?.trim() || null,
 
         // اطلاعات اصلی ثبت‌نام
         phone,
         password: hashedPassword,
 
         // اطلاعات پروفایل که بعداً تکمیل می‌شوند
-        birthDate: birthDate || "",
+        birthDate:
+          birthDate?.trim() || null,
 
-        /*
-         * چون gender در Prisma فعلاً enum است
-         * و احتمالاً فقط male / female دارد،
-         * نمی‌توان مقدار "" ذخیره کرد.
-         *
-         * فعلاً اگر ارسال نشده باشد male قرار می‌گیرد.
-         */
+        // gender در Prisma اختیاری است
+        // بنابراین اگر ارسال نشده باشد NULL ذخیره می‌شود
         gender:
-          (gender || "male") as
-            | "male"
-            | "female",
+          gender === "male" ||
+          gender === "female"
+            ? gender
+            : null,
 
-        province: province || "",
-        city: city || "",
+        province:
+          province?.trim() || null,
+
+        city:
+          city?.trim() || null,
 
         referralCode:
-          referralCode || "",
+          referralCode?.trim() || "",
 
         // ========================================================
         // تاریخ ثبت‌نام
-        // همان مقدار قبلی
         // ========================================================
 
         joinedAt: persianJoinedAt,
