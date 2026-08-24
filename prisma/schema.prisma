@@ -35,8 +35,8 @@ enum AdStatus {
   pending
   approved
   rejected
-  expired   // اضافه شده برای مدیریت آگهی‌های منقضی شده
-  updated   // اضافه شده برای آگهی‌های ویرایش شده که منتظر تأیید مجدد هستند
+  expired // اضافه شده برای مدیریت آگهی‌های منقضی شده
+  updated // اضافه شده برای آگهی‌های ویرایش شده که منتظر تأیید مجدد هستند
 }
 
 enum PaymentMethod {
@@ -135,16 +135,16 @@ enum Platform {
 
 model User {
   id                       String    @id @default(uuid())
-  name                     String
-  lastName                 String
+  name                     String? // ✅ اختیاری
+  lastName                 String? // ✅ اختیاری
   username                 String?   @unique
-  nationalCode             String    @unique
+  nationalCode             String?   @unique // ✅ اختیاری (nullable unique)
   phone                    String    @unique
   password                 String
-  birthDate                String
-  gender                   Gender
-  province                 String
-  city                     String
+  birthDate                String? // ✅ اختیاری
+  gender                   Gender? // ✅ اختیاری
+  province                 String? // ✅ اختیاری
+  city                     String? // ✅ اختیاری
   acceptTerms              Boolean   @default(false)
   role                     UserRole  @default(USER)
   joinedAt                 String
@@ -164,36 +164,35 @@ model User {
   updatedAt                DateTime  @updatedAt
 
   // روابط
-  inAppNotifications InAppNotification[] // <-- اضافه شده برای ارتباط معکوس
-  adMarks           AdMark[]
-  adViews           AdView[]
-  chatFrom          Chat[]         @relation("ChatFrom")
-  chatTo            Chat[]         @relation("ChatTo")
-  digitalAds        DigitalAd[]
-  employerAds       EmployerAd[]
-  jobSeekerAds      JobSeekerAd[]
-  sellerAds         SellerAd[]
-  reports           Report[]       @relation("Reporter")
-  reportReasons     ReportReason[] @relation("ReasonCreator")
-  resumes           Resume[]
-  tickets           Ticket[]
-  ticketReplies     TicketReply[]
-  toolUsageLogs     ToolUsageLog[]
-  userProfiles      UserProfile[]
-  recentViews       RecentView[]
-  testSessions      TestSession[]
+  inAppNotifications    InAppNotification[] // <-- اضافه شده برای ارتباط معکوس
+  adMarks               AdMark[]
+  adViews               AdView[]
+  chatFrom              Chat[]                    @relation("ChatFrom")
+  chatTo                Chat[]                    @relation("ChatTo")
+  digitalAds            DigitalAd[]
+  employerAds           EmployerAd[]
+  jobSeekerAds          JobSeekerAd[]
+  sellerAds             SellerAd[]
+  reports               Report[]                  @relation("Reporter")
+  reportReasons         ReportReason[]            @relation("ReasonCreator")
+  resumes               Resume[]
+  tickets               Ticket[]
+  ticketReplies         TicketReply[]
+  toolUsageLogs         ToolUsageLog[]
+  userProfiles          UserProfile[]
+  recentViews           RecentView[]
+  testSessions          TestSession[]
   // ===== روابط جدید برای سیستم پیشنهادات ویژه =====
-  suggestionViews        SuggestionView[]          // هر کاربر چندین نمایش پیشنهاد دارد
-  suggestionPreference   UserSuggestionPreference? // هر کاربر یک تنظیمات پیشنهاد (One-to-One)
-  suggestionDailyLimits  SuggestionDailyLimit[]    // هر کاربر چندین محدودیت روزانه دارد
-  cachedSuggestions      CachedUserSuggestions?    // هر کاربر یک کش از پیشنهادات خود دارد (One-to-One)
-  wallet            Wallet?
-  payments          Payment[]
-       
-  targetVipCodes   VipCode[]        
-  vipCodeUsages    VipCodeUsage[] 
-  vipExpiresAt     DateTime?  
+  suggestionViews       SuggestionView[] // هر کاربر چندین نمایش پیشنهاد دارد
+  suggestionPreference  UserSuggestionPreference? // هر کاربر یک تنظیمات پیشنهاد (One-to-One)
+  suggestionDailyLimits SuggestionDailyLimit[] // هر کاربر چندین محدودیت روزانه دارد
+  cachedSuggestions     CachedUserSuggestions? // هر کاربر یک کش از پیشنهادات خود دارد (One-to-One)
+  wallet                Wallet?
+  payments              Payment[]
 
+  targetVipCodes VipCode[]
+  vipCodeUsages  VipCodeUsage[]
+  vipExpiresAt   DateTime?
 }
 
 model UserProfile {
@@ -292,7 +291,7 @@ model Conversation {
   adType       String
   lastMessage  String?
   updatedAt    DateTime @default(now())
-  isBlocked    Boolean  @default(false)  // <--  بلاک کردن مکالمه
+  isBlocked    Boolean  @default(false) // <--  بلاک کردن مکالمه
 
   chats Chat[]
 }
@@ -306,8 +305,8 @@ model DigitalAd {
   digitalTotalDesc    String?
   projectNames        String[]
   projectDescriptions String[]
-  minBudget           String?       // ✅ برگشت به String
-  maxBudget           String?       // ✅ برگشت به String
+  minBudget           String? // ✅ برگشت به String
+  maxBudget           String? // ✅ برگشت به String
   requiredSkills      Json[] // [{name: String}]
   person              PersonType    @default(self)
   remote              Boolean       @default(false)
@@ -321,24 +320,24 @@ model DigitalAd {
   createdAt           DateTime      @default(now())
 
   // فیلدهای جدید برای مدیریت انقضای آگهی تایید شده
-  approvedAt          DateTime?     // زمان تایید آگهی
-  expiresAt           DateTime?     // یک ماه بعد از approvedAt
-  isPaid              Boolean       @default(true)
+  approvedAt DateTime? // زمان تایید آگهی
+  expiresAt  DateTime? // یک ماه بعد از approvedAt
+  isPaid     Boolean   @default(true)
 
   // فیلدهای اضافه شده برای موقعیت مکانی
-  province            String?
-  city                String?
+  province String?
+  city     String?
 
   // شماره تماس در صورت شخص دیگر
-  phoneOther          String?
+  phoneOther String?
 
   // ===== فیلدهای فعال‌سازی چت و تماس (اضافه شده) =====
-  enableChat          Boolean       @default(false)
-  enablePhone         Boolean       @default(false)
+  enableChat  Boolean @default(false)
+  enablePhone Boolean @default(false)
 
-  rejectionReason     String?
-  approvedBy          String?       // ✅ اضافه شده
-  rejectedBy          String?       // ✅ اضافه شده
+  rejectionReason String?
+  approvedBy      String? // ✅ اضافه شده
+  rejectedBy      String? // ✅ اضافه شده
 
   ownerRelation User @relation(fields: [owner], references: [id])
 }
@@ -370,8 +369,8 @@ model EmployerAd {
   thursdayUntilNoon  Boolean       @default(false)
   startTime          String?
   endTime            String?
-  minSalary          String?       // ✅ برگشت به String
-  maxSalary          String?       // ✅ برگشت به String
+  minSalary          String? // ✅ برگشت به String
+  maxSalary          String? // ✅ برگشت به String
   companyName        String?
   companyType        String?
   benefits           String?
@@ -389,16 +388,16 @@ model EmployerAd {
   createdAt          DateTime      @default(now())
 
   // فیلدهای جدید برای مدیریت انقضای آگهی تایید شده
-  approvedAt          DateTime?     // زمان تایید آگهی
-  expiresAt           DateTime?     // یک ماه بعد از approvedAt
-  isPaid              Boolean     @default(true)
+  approvedAt DateTime? // زمان تایید آگهی
+  expiresAt  DateTime? // یک ماه بعد از approvedAt
+  isPaid     Boolean   @default(true)
 
   // شماره تماس در صورت شخص دیگر
-  phoneOther          String?
+  phoneOther String?
 
-  rejectionReason  String?
-  approvedBy         String?       // ✅ اضافه شده
-  rejectedBy         String?       // ✅ اضافه شده
+  rejectionReason String?
+  approvedBy      String? // ✅ اضافه شده
+  rejectedBy      String? // ✅ اضافه شده
 
   ownerRelation User @relation(fields: [owner], references: [id])
 }
@@ -429,7 +428,7 @@ model JobSeekerAd {
   workSampleFile     String?
   education          String?
   skills             String[]
-  suggestedSalaryIRT String?       // ✅ برگشت به String
+  suggestedSalaryIRT String? // ✅ برگشت به String
   aboutMe            String?
   instagram          String?
   linkedIn           String?
@@ -446,16 +445,16 @@ model JobSeekerAd {
   createdAt          DateTime      @default(now())
 
   // فیلدهای جدید برای مدیریت انقضای آگهی تایید شده
-  approvedAt          DateTime?     // زمان تایید آگهی
-  expiresAt           DateTime?     // یک ماه بعد از approvedAt
-  isPaid              Boolean      @default(false)
+  approvedAt DateTime? // زمان تایید آگهی
+  expiresAt  DateTime? // یک ماه بعد از approvedAt
+  isPaid     Boolean   @default(false)
 
   // شماره تماس در صورت شخص دیگر
-  phoneOther          String?
+  phoneOther String?
 
-  rejectionReason  String?
-  approvedBy         String?       // ✅ اضافه شده
-  rejectedBy         String?       // ✅ اضافه شده
+  rejectionReason String?
+  approvedBy      String? // ✅ اضافه شده
+  rejectedBy      String? // ✅ اضافه شده
 
   ownerRelation User @relation(fields: [owner], references: [id])
 }
@@ -568,7 +567,7 @@ model SellerAd {
   application   String?
   status        String?
   images        Json[] // [{url: String, isMain: Boolean}]
-  priceIRT      BigInt        @default(0)  // ✅ بدون تغییر (همان BigInt)
+  priceIRT      BigInt        @default(0) // ✅ بدون تغییر (همان BigInt)
   isFixedPrice  Boolean       @default(false)
   isNegotiable  Boolean       @default(false)
   hasWarranty   Boolean       @default(false)
@@ -585,17 +584,17 @@ model SellerAd {
   owner         String
 
   // فیلدهای جدید برای مدیریت انقضای آگهی تایید شده
-  approvedAt          DateTime?     // زمان تایید آگهی
-  expiresAt           DateTime?     // یک ماه بعد از approvedAt
-  isPaid        Boolean       @default(false)
+  approvedAt DateTime? // زمان تایید آگهی
+  expiresAt  DateTime? // یک ماه بعد از approvedAt
+  isPaid     Boolean   @default(false)
 
   // شماره تماس در صورت شخص دیگر
-  phoneOther          String?
-  
-  rejectionReason  String?
-  approvedBy         String?       // ✅ اضافه شده
-  rejectedBy         String?       // ✅ اضافه شده
-  ownerRelation User @relation(fields: [owner], references: [id])
+  phoneOther String?
+
+  rejectionReason String?
+  approvedBy      String? // ✅ اضافه شده
+  rejectedBy      String? // ✅ اضافه شده
+  ownerRelation   User    @relation(fields: [owner], references: [id])
 }
 
 model Session {
@@ -707,19 +706,19 @@ model ToolUsageLog {
 }
 
 model Admin {
-  id           String        @id @default(uuid())
-  fullName     String
-  username     String        @unique
-  phone        String?       @unique
-  password     String
-  role         AdminRole     @default(SUPPORTER)
-  status       AdminStatus   @default(PENDING)
-  platforms    Platform[]    
-  permissions  Json?         
-  lastLoginAt  DateTime?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  articles     Article[]
+  id          String      @id @default(uuid())
+  fullName    String
+  username    String      @unique
+  phone       String?     @unique
+  password    String
+  role        AdminRole   @default(SUPPORTER)
+  status      AdminStatus @default(PENDING)
+  platforms   Platform[]
+  permissions Json?
+  lastLoginAt DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  articles    Article[]
 }
 
 // ============================================
@@ -845,17 +844,17 @@ model Pricing {
 }
 
 model AdLadder {
-  id                 String   @id @default(uuid())
-  adEnhancementId    String   
-  adEnhancement      AdEnhancement @relation(fields: [adEnhancementId], references: [id], onDelete: Cascade)
-  
-  option             String?  // "24h" | "72h" | "7d" | null
-  scheduledAt        DateTime?
-  executedAt         DateTime? 
-  isExecuted         Boolean  @default(false) 
-  
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  id              String        @id @default(uuid())
+  adEnhancementId String
+  adEnhancement   AdEnhancement @relation(fields: [adEnhancementId], references: [id], onDelete: Cascade)
+
+  option      String? // "24h" | "72h" | "7d" | null
+  scheduledAt DateTime?
+  executedAt  DateTime?
+  isExecuted  Boolean   @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model AdEnhancement {
@@ -869,7 +868,7 @@ model AdEnhancement {
   specialEndDate   DateTime?
 
   // پله
-  ladders            AdLadder[]
+  ladders AdLadder[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -907,61 +906,61 @@ model Transaction {
 }
 
 model Payment {
-  id              String    @id @default(uuid())
-  userId          String
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  amount          BigInt    // IRT
-  authority       String?   // کد ارجاع درگاه (Authority)
-  refId           String?   // کد پیگیری درگاه (Reference ID)
-  status          PaymentStatus @default(PENDING)
-  paymentMethod   PaymentMethod
-  description     String?   
-  referenceId     String?   // شناسه آگهی یا افزونه‌ای که برای آن پرداخت شده
-  referenceType   String?   // "AD" یا "ENHANCEMENT"
-  metadata        Json?     // اطلاعات اضافی
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id            String        @id @default(uuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount        BigInt // IRT
+  authority     String? // کد ارجاع درگاه (Authority)
+  refId         String? // کد پیگیری درگاه (Reference ID)
+  status        PaymentStatus @default(PENDING)
+  paymentMethod PaymentMethod
+  description   String?
+  referenceId   String? // شناسه آگهی یا افزونه‌ای که برای آن پرداخت شده
+  referenceType String? // "AD" یا "ENHANCEMENT"
+  metadata      Json? // اطلاعات اضافی
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 }
 
 enum PaymentStatus {
-  PENDING        // منتظر پرداخت
-  PAID           // پرداخت موفق
-  FAILED         // پرداخت ناموفق
-  CANCELED       // لغو شده توسط کاربر
-  VERIFYING      // در حال تایید
+  PENDING // منتظر پرداخت
+  PAID // پرداخت موفق
+  FAILED // پرداخت ناموفق
+  CANCELED // لغو شده توسط کاربر
+  VERIFYING // در حال تایید
 }
 
 model VipCode {
-  id            String          @id @default(uuid())
-  code          String          @unique
-  title         String
+  id    String @id @default(uuid())
+  code  String @unique
+  title String
 
-  maxUses       Int             @default(1)
-  usedCount     Int             @default(0)
-  vipDuration   Int             @default(30) // days
+  maxUses     Int @default(1)
+  usedCount   Int @default(0)
+  vipDuration Int @default(30) // days
 
-  isActive      Boolean         @default(true)
-  isPublic      Boolean         @default(false) 
+  isActive Boolean @default(true)
+  isPublic Boolean @default(false)
 
   // If it's exclusive (isPublic = false)
-  targetUserId  String?
-  targetUser    User?           @relation(fields: [targetUserId], references: [id])
+  targetUserId String?
+  targetUser   User?   @relation(fields: [targetUserId], references: [id])
 
-  usages        VipCodeUsage[]
+  usages VipCodeUsage[]
 
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model VipCodeUsage {
-  id          String     @id @default(uuid())
-  vipCodeId   String
-  vipCode     VipCode    @relation(fields: [vipCodeId], references: [id], onDelete: Cascade)
-  userId      String
-  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  usedAt      DateTime   @default(now())
-  expiresAt   DateTime? 
-  isRevoked   Boolean  @default(false)
+  id        String    @id @default(uuid())
+  vipCodeId String
+  vipCode   VipCode   @relation(fields: [vipCodeId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  usedAt    DateTime  @default(now())
+  expiresAt DateTime?
+  isRevoked Boolean   @default(false)
 
   @@index([userId])
   @@index([vipCodeId])
@@ -974,30 +973,30 @@ enum ArticleStatus {
 }
 
 model ArticleCategory {
-  id          String   @id @default(uuid())
-  name        String   @unique
-  slug        String   @unique
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(uuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  articles    Article[]
+  articles Article[]
 }
 
 model Article {
-  id            String         @id @default(uuid())
+  id            String          @id @default(uuid())
   title         String
-  slug          String         @unique
+  slug          String          @unique
   categoryId    String
   category      ArticleCategory @relation(fields: [categoryId], references: [id])
-  featuredImage String?         
-  content       Json           
-  plaintext     String?        
-  status        ArticleStatus  @default(DRAFT)
+  featuredImage String?
+  content       Json
+  plaintext     String?
+  status        ArticleStatus   @default(DRAFT)
   authorId      String
-  author        Admin          @relation(fields: [authorId], references: [id])
-  viewCount     Int            @default(0)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  author        Admin           @relation(fields: [authorId], references: [id])
+  viewCount     Int             @default(0)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
   publishedAt   DateTime?
 
   @@index([categoryId])
@@ -1012,15 +1011,15 @@ enum IdempotencyStatus {
 }
 
 model Idempotency {
-  id          String             @id @default(uuid())
-  key         String             @unique
+  id          String            @id @default(uuid())
+  key         String            @unique
   userId      String
-  action      String             // "AD_PURCHASE" | "ENHANCEMENT_PURCHASE" | "WALLET_DEPOSIT"
-  referenceId String?            // adId or userId
-  status      IdempotencyStatus  @default(PENDING)
-  response    Json?              
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
+  action      String // "AD_PURCHASE" | "ENHANCEMENT_PURCHASE" | "WALLET_DEPOSIT"
+  referenceId String? // adId or userId
+  status      IdempotencyStatus @default(PENDING)
+  response    Json?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
 
   @@index([userId])
   @@index([createdAt])

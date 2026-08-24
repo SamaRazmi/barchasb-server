@@ -1,0 +1,9 @@
+-- Make registration fields optional
+ALTER TABLE "User"
+ALTER COLUMN "name" DROP NOT NULL,
+ALTER COLUMN "lastName" DROP NOT NULL,
+ALTER COLUMN "nationalCode" DROP NOT NULL,
+ALTER COLUMN "birthDate" DROP NOT NULL,
+ALTER COLUMN "gender" DROP NOT NULL,
+ALTER COLUMN "province" DROP NOT NULL,
+ALTER COLUMN "city" DROP NOT NULL;
