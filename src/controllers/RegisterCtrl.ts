@@ -253,9 +253,9 @@ export const registerUser = async (
     const newUser = await prisma.user.create({
       data: {
         // اطلاعات اختیاری
-        // مقدار خالی به NULL تبدیل می‌شود
-        name: name?.trim() || null,
-        lastName: lastName?.trim() || null,
+        // ✅ تغییر: به جای null، مقدار خالی ("") ذخیره می‌شود
+        name: name?.trim() ?? "",
+        lastName: lastName?.trim() ?? "",
         nationalCode:
           nationalCode?.trim() || null,
 
