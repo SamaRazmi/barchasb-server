@@ -67,6 +67,7 @@ import inAppNotificationRoutes from "./routes/inAppNotificationRoutes";
 import SuggestionRoutes from "./routes/SuggestionRoutes";
 import profileRoutes from "./routes/UserProfileRoutes"; // مسیر صحیح
 import AdsRouter from "./routes/AdsRouter";
+import ArticlesRouter from "./routes/ArticlesRouter";
 // ===== اضافه شده: مسیرهای مدیریت گزارش توسط ادمین =====
 // import adminReportRoutes from "./routes/admin/adminReportRoutes"; // ✅ کامنت شد
 
@@ -314,6 +315,7 @@ app.use("/api", purchaseRoutes);
 app.use("/api", paymentRoutes);
 app.use("/api", vipRoutes);
 app.use("/api", inAppNotificationRoutes);
+app.use("/api", ArticlesRouter);
 // extensions routes
 app.use("/api/tests", TestRoutes);
 app.use("/api/resume", ResumeRoutes);
